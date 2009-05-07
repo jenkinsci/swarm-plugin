@@ -37,7 +37,7 @@ public class PluginImpl extends Plugin {
         SecurityContextHolder.getContext().setAuthentication(ACL.SYSTEM);
         try {
             SwarmSlave slave = new SwarmSlave(name, "Swam slave from "+req.getRemoteHost()+" : "+description,
-                    remoteFsRoot, String.valueOf(executors), Util.fixNull(labels));
+                    remoteFsRoot, String.valueOf(executors), "swarm "+Util.fixNull(labels));
 
             // overwrite the node, even if it already exists
             final Hudson hudson = Hudson.getInstance();
