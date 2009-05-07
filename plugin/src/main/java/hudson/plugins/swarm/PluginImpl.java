@@ -21,7 +21,7 @@ import java.io.IOException;
  */
 public class PluginImpl extends Plugin {
     /**
-     * Adds a new slave.
+     * Adds a new swarm slave.
      */
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name, @QueryParameter String description, @QueryParameter int executors,
                               @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret) throws IOException, FormException {

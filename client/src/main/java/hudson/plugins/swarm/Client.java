@@ -7,6 +7,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.CmdLineException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -15,12 +18,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
@@ -44,13 +49,32 @@ public class Client {
      */
     protected Candidate target;
 
-    /**
-     * Name of this slave.
-     */
-    protected String name;
+    @Option(name="-name",usage="Name of the slave")
+    public String name;
 
-    public static void main(String[] args) throws InterruptedException, IOException {
-        new Client().run();
+    @Option(name="-description",usage="Description to be put on the slave")
+    public String description;
+
+    @Option(name="-labels",usage="Whitespace-separated list of labels to be assigned for this slave")
+    public String labels;
+
+    @Option(name="-fsroot",usage="Directory where Hudson places files")
+    public File remoteFsRoot = new File(".");
+
+    @Option(name="-executors",usage="Number of executors")
+    public int executors = Runtime.getRuntime().availableProcessors();
+
+    public static void main(String... args) throws InterruptedException, IOException {
+        Client client = new Client();
+        CmdLineParser p = new CmdLineParser(client);
+        try {
+            p.parseArgument(args);
+        } catch (CmdLineException e) {
+            System.out.println(e.getMessage());
+            p.printUsage(System.out);
+            System.exit(-1);
+        }
+        client.run();
     }
 
     public Client() throws IOException {
@@ -185,13 +209,20 @@ public class Client {
 
     protected void createSwarmSlave() throws IOException, InterruptedException, RetryException {
         HttpURLConnection con = (HttpURLConnection)new URL(target.url + "/plugin/swarm/createSlave?name=" + name +
-                "&executors=" + Runtime.getRuntime().availableProcessors() +
-                "&remoteFsRoot=" + new File(".").getAbsolutePath() +
+                "&executors=" + executors +
+                param("remoteFsRoot",remoteFsRoot.getAbsolutePath()) +
+                param("description",description)+
+                param("labels", labels)+
                 "&secret=" + target.secret).openConnection();
         if(con.getResponseCode()!=200) {
             copy(con.getErrorStream(),System.out);
             throw new RetryException("Failed to create a slave on Hudson: "+con.getResponseCode()+" "+con.getResponseMessage());
         }
+    }
+
+    private String param(String name, String value) throws UnsupportedEncodingException {
+        if(value==null) return "";
+        return "&"+name+"="+ URLEncoder.encode(value,"UTF-8");
     }
 
     protected void verifyThatUrlIsHudson() throws InterruptedException, RetryException {
