@@ -36,11 +36,16 @@ public class PluginImpl extends Plugin {
         // so bypass the regular security check, and only rely on secret.
         SecurityContextHolder.getContext().setAuthentication(ACL.SYSTEM);
         try {
+            final Hudson hudson = Hudson.getInstance();
+
+            // try to make the name unique. Swarm clients are often repliated VMs, and they may have the same name.
+            if(hudson.getNode(name)!=null)
+                name = name+'-'+req.getRemoteAddr();
+
             SwarmSlave slave = new SwarmSlave(name, "Swam slave from "+req.getRemoteHost()+" : "+description,
                     remoteFsRoot, String.valueOf(executors), "swarm "+Util.fixNull(labels));
 
-            // overwrite the node, even if it already exists
-            final Hudson hudson = Hudson.getInstance();
+            // if this still results in a dupliate, so be it
             synchronized (hudson) {
                 Node n = hudson.getNode(name);
                 if(n!=null) hudson.removeNode(n);
