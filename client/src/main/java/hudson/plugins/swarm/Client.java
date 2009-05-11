@@ -123,7 +123,7 @@ public class Client {
                     }
                     String url = getChildElementString(xml.getDocumentElement(), "url");
                     if(url==null) {
-                        System.out.println("No <url> in XML from "+recv.getAddress()+": "+ responseXml);
+                        System.out.println(recv.getAddress()+" doesn't have the URL configuration yet. "+ responseXml);
                         continue;
                     }
                     candidates.add(new Candidate(url,swarm));
