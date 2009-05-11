@@ -3,4 +3,4 @@
 # placed in /lib/svc/method
 vmopts="$(svcprop -p hudson/jvm_options $SMF_FMRI)"
 opts="$(svcprop -p hudson/options $SMF_FMRI)"
-exec java $vmopts -jar /usr/local/bin/hudson-swarm-client.jar $opts
+exec java $vmopts -jar /var/lib/hudson/hudson-swarm-client.jar
