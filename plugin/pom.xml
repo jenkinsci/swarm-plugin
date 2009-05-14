@@ -9,7 +9,7 @@
 
   <artifactId>swarm</artifactId>
   <packaging>hpi</packaging>
-  <name>Hudson Self-Organizing Swarm Plug-in</name>
+  <name>Hudson Self-Organizing Swarm Plug-in Modules</name>
   <url>http://wiki.hudson-ci.org/display/HUDSON/Swarm+Plugin</url>
 
   <dependencies>
