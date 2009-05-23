@@ -49,4 +49,9 @@
       <version>${hudson.version}</version>
     </dependency>
   </dependencies>
+
+  <scm>
+    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm/client</connection>
+    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm/client</developerConnection>
+  </scm>
 </project>
