@@ -25,6 +25,6 @@
   </modules>
   
   <properties>
-    <hudson.version>1.304-SNAPSHOT</hudson.version>
+    <hudson.version>1.307</hudson.version>
   </properties>
 </project>
