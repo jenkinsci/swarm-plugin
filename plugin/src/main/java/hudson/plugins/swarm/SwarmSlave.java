@@ -17,7 +17,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.IOException;
 import java.util.Collections;
 
-/**
+/**app
  * {@link Slave} created by ad-hoc local systems.
  *
  * <p>
@@ -46,7 +46,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
          * We only create this kind of nodes programatically.
          */
         @Override
-        public boolean isInstanciable() {
+        public boolean isInstantiable() {
             return false;
         }
     }
