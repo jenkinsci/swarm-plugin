@@ -17,7 +17,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.IOException;
 import java.util.Collections;
 
-/**app
+/**
  * {@link Slave} created by ad-hoc local systems.
  *
  * <p>
