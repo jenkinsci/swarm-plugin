@@ -67,6 +67,9 @@ public class Client {
     @Option(name="-master",usage="Host name or IP address of the master. If this option is specified, auto-discovery will be skipped")
     public String master;
 
+    @Option(name="-help",aliases="--help",usage="Show the help screen")
+    public boolean help;
+
     public static void main(String... args) throws InterruptedException, IOException {
         Client client = new Client();
         CmdLineParser p = new CmdLineParser(client);
@@ -76,6 +79,10 @@ public class Client {
             System.out.println(e.getMessage());
             p.printUsage(System.out);
             System.exit(-1);
+        }
+        if(client.help) {
+            p.printUsage(System.out);
+            System.exit(0);
         }
         client.run();
     }
