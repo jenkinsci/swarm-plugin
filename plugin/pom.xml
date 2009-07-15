@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>swarm-plugin</artifactId>
-    <version>1.1</version>
+    <version>1.2-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -35,8 +35,8 @@
   </dependencies>
 
   <scm>
-    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/tags/swarm-plugin-1.1/plugin</connection>
-    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/swarm-plugin-1.1/plugin</developerConnection>
-    <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/swarm-plugin/swarm/tags/swarm-plugin-1.1/swarm</url>
+    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm/plugin</connection>
+    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm/plugin</developerConnection>
+    <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/swarm-plugin/swarm</url>
   </scm>
 </project>
