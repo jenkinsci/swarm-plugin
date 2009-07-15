@@ -64,6 +64,9 @@ public class Client {
     @Option(name="-executors",usage="Number of executors")
     public int executors = Runtime.getRuntime().availableProcessors();
 
+    @Option(name="-master",usage="Host name or IP address of the master. If this option is specified, auto-discovery will be skipped")
+    public String master;
+
     public static void main(String... args) throws InterruptedException, IOException {
         Client client = new Client();
         CmdLineParser p = new CmdLineParser(client);
@@ -123,7 +126,7 @@ public class Client {
                     }
                     String url = getChildElementString(xml.getDocumentElement(), "url");
                     if(url==null) {
-                        System.out.println(recv.getAddress()+" doesn't have the URL configuration yet. "+ responseXml);
+                        System.out.println(recv.getAddress()+" doesn't have the configuration set yet. Please go to the sytem configuration page of this Hudson and submit it: "+ responseXml);
                         continue;
                     }
                     candidates.add(new Candidate(url,swarm));
@@ -189,7 +192,7 @@ public class Client {
 
     protected void sendBroadcast() throws IOException {
         DatagramPacket packet = new DatagramPacket(new byte[0], 0);
-        packet.setAddress(InetAddress.getByName("255.255.255.255"));
+        packet.setAddress(InetAddress.getByName(master!=null ? master : "255.255.255.255"));
         packet.setPort(Integer.getInteger("hudson.udp",33848));
         socket.send(packet);
     }
