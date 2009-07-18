@@ -42,7 +42,7 @@ public class PluginImpl extends Plugin {
             if(hudson.getNode(name)!=null)
                 name = name+'-'+req.getRemoteAddr();
 
-            SwarmSlave slave = new SwarmSlave(name, "Swam slave from "+req.getRemoteHost()+" : "+description,
+            SwarmSlave slave = new SwarmSlave(name, "Swarm slave from "+req.getRemoteHost()+" : "+description,
                     remoteFsRoot, String.valueOf(executors), "swarm "+Util.fixNull(labels));
 
             // if this still results in a dupliate, so be it
