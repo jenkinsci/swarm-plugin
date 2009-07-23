@@ -55,8 +55,8 @@ public class Client {
     @Option(name="-description",usage="Description to be put on the slave")
     public String description;
 
-    @Option(name="-labels",usage="Whitespace-separated list of labels to be assigned for this slave")
-    public String labels;
+    @Option(name="-labels",usage="Whitespace-separated list of labels to be assigned for this slave. Multiple options are allowed.")
+    public List<String> labels = new ArrayList<String>();
 
     @Option(name="-fsroot",usage="Directory where Hudson places files")
     public File remoteFsRoot = new File(".");
@@ -218,11 +218,17 @@ public class Client {
     }
 
     protected void createSwarmSlave() throws IOException, InterruptedException, RetryException {
+        StringBuilder labelStr = new StringBuilder();
+        for (String l : labels) {
+            if(labelStr.length()>0) labelStr.append(' ');
+            labelStr.append(l);
+        }
+
         HttpURLConnection con = (HttpURLConnection)new URL(target.url + "/plugin/swarm/createSlave?name=" + name +
                 "&executors=" + executors +
                 param("remoteFsRoot",remoteFsRoot.getAbsolutePath()) +
                 param("description",description)+
-                param("labels", labels)+
+                param("labels", labelStr.toString())+
                 "&secret=" + target.secret).openConnection();
         if(con.getResponseCode()!=200) {
             copy(con.getErrorStream(),System.out);
