@@ -190,8 +190,12 @@ public class Client {
                 responses.add(recv);
             } catch (SocketTimeoutException e) {
                 // timed out
-                if(responses.isEmpty())
-                    throw new RetryException("Failed to receive a reply to broadcast.");
+                if(responses.isEmpty()) {
+                    if (master!=null)
+                        throw new RetryException("Failed to receive a reply from "+master);
+                    else
+                        throw new RetryException("Failed to receive a reply to broadcast.");
+                }
                 return responses;
             }
         }
