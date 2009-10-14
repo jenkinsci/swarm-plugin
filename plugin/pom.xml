@@ -11,32 +11,4 @@
   <packaging>hpi</packaging>
   <name>Hudson Self-Organizing Swarm Plug-in Modules</name>
   <url>http://wiki.hudson-ci.org/display/HUDSON/Swarm+Plugin</url>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.jvnet.hudson.main</groupId>
-      <artifactId>hudson-war</artifactId>
-      <type>war</type>
-      <version>${hudson.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jvnet.hudson.main</groupId>
-      <artifactId>hudson-core</artifactId>
-      <version>${hudson.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jvnet.hudson.main</groupId>
-      <artifactId>hudson-test-harness</artifactId>
-      <version>${hudson.version}</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
-  <scm>
-    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm/plugin</connection>
-    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm/plugin</developerConnection>
-    <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/swarm-plugin/swarm</url>
-  </scm>
 </project>

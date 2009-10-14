@@ -23,14 +23,4 @@
     <module>plugin</module>
     <module>client</module>
   </modules>
-
-  <scm>
-    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm</connection>
-    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm</developerConnection>
-    <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/swarm-plugin</url>
-  </scm>
-
-  <properties>
-    <hudson.version>1.307</hudson.version>
-  </properties>
 </project>

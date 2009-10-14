@@ -41,18 +41,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.jvnet.hudson.main</groupId>
-      <artifactId>remoting</artifactId>
-      <version>${hudson.version}</version>
-    </dependency>
-  </dependencies>
-
-  <scm>
-    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm/client</connection>
-    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm/client</developerConnection>
-    <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/swarm-plugin/swarm-client</url>
-  </scm>
 </project>
