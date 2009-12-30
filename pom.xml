@@ -10,7 +10,7 @@
   <artifactId>swarm-plugin</artifactId>
   <packaging>pom</packaging>
   <name>Hudson Self-Organizing Swarm Plug-in</name>
-  <version>1.2-SNAPSHOT</version>
+  <version>1.2</version>
 
   <licenses>
     <license>
@@ -25,8 +25,8 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm</connection>
-    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm</developerConnection>
-    <url>https://hudson.dev.java.net/source/browse/hudson/trunk/hudson/plugins/swarm</url>
+    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/tags/swarm-plugin-1.2</connection>
+    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/swarm-plugin-1.2</developerConnection>
+    <url>https://hudson.dev.java.net/source/browse/hudson/tags/swarm-plugin-1.2</url>
   </scm>
 </project>
