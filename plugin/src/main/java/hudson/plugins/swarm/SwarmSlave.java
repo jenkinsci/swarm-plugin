@@ -1,6 +1,7 @@
 package hudson.plugins.swarm;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson;
 import hudson.model.Node;
@@ -16,6 +17,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * {@link Slave} created by ad-hoc local systems.
@@ -26,10 +28,16 @@ import java.util.Collections;
  * @author Kohsuke Kawaguchi
  */
 public class SwarmSlave extends Slave implements EphemeralNode {
-    @DataBoundConstructor
+
     public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, String label) throws IOException, FormException {
         super(name, nodeDescription, remoteFS, numExecutors, Mode.NORMAL, label,
                 SELF_CLEANUP_LAUNCHER, RetentionStrategy.NOOP, Collections.<NodeProperty<?>>emptyList());
+    }
+
+    @DataBoundConstructor
+    public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode, String labelString,
+            ComputerLauncher launcher, RetentionStrategy retentionStrategy, List<? extends NodeProperty<?>> nodeProperties) throws FormException, IOException {
+        super(name,nodeDescription, remoteFS, Util.tryParseNumber(numExecutors, 1).intValue(), mode, labelString, launcher, retentionStrategy, nodeProperties);
     }
 
     public Node asNode() {
