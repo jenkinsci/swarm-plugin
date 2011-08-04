@@ -76,13 +76,13 @@ public class Client {
     @Option(name = "-executors", usage = "Number of executors")
     public int executors = Runtime.getRuntime().availableProcessors();
 
-    @Option(name = "-master", usage = "The complete target Hudson URL like 'http://server:8080/hudson'. If this option is specified, auto-discovery will be skipped")
+    @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins'. If this option is specified, auto-discovery will be skipped")
     public String master;
 
-    @Option(name = "-username", usage = "The Hudson username for authentication")
+    @Option(name = "-username", usage = "The Jenkins username for authentication")
     public String username;
 
-    @Option(name = "-password", usage = "The Hudson user password")
+    @Option(name = "-password", usage = "The Jenkins user password")
     public String password;
 
     @Option(name = "-help", aliases = "--help", usage = "Show the help screen")
@@ -123,13 +123,13 @@ public class Client {
     }
 
     /**
-     * Finds a Hudson master that supports swarming, and join it.
+     * Finds a Jenkins master that supports swarming, and join it.
      * 
      * This method never returns.
      */
 
     public void run() throws InterruptedException {
-	System.out.println("Discovering Hudson master");
+	System.out.println("Discovering Jenkins master");
 
 	// wait until we get the ACK back
 	while (true) {
@@ -167,7 +167,7 @@ public class Client {
 		    if (url == null) {
 			System.out
 				.println(recv.getAddress()
-					+ " doesn't have the configuration set yet. Please go to the sytem configuration page of this Hudson and submit it: "
+					+ " doesn't have the configuration set yet. Please go to the sytem configuration page of this Jenkins and submit it: "
 					+ responseXml);
 			continue;
 		    }
@@ -176,11 +176,11 @@ public class Client {
 
 		if (candidates.size() == 0)
 		    throw new RetryException(
-			    "No nearby Hudson supports swarming");
+			    "No nearby Jenkins supports swarming");
 
 		System.out.println("Found " + candidates.size()
-			+ " eligible Hudson.");
-		// randomly pick up the Hudson to connect to
+			+ " eligible Jenkins.");
+		// randomly pick up the Jenkins to connect to
 		target = candidates
 			.get(new Random().nextInt(candidates.size()));
 		if (password == null && username == null) {
@@ -208,9 +208,9 @@ public class Client {
     }
 
     /**
-     * Discovers Hudson running nearby.
+     * Discovers Jenkins running nearby.
      * 
-     * To give every nearby Hudson a fair chance, wait for some time until we
+     * To give every nearby Jenkins a fair chance, wait for some time until we
      * hear all the responses.
      */
     protected List<DatagramPacket> discover() throws IOException,
@@ -331,7 +331,7 @@ public class Client {
 	if (responseCode != 200) {
 
 	    throw new RetryException(
-		    "Failed to create a slave on Hudson CODE: " + responseCode);
+		    "Failed to create a slave on Jenkins CODE: " + responseCode);
 
 	}
     }
@@ -353,12 +353,12 @@ public class Client {
 
 	    if (con.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN) {
 		throw new RetryException(
-			"This hudson server requires Authentication!.");
+			"This jenkins server requires Authentication!.");
 	    }
 
 	    String v = con.getHeaderField("X-Hudson");
 	    if (v == null)
-		throw new RetryException("This URL doesn't look like Hudson.");
+		throw new RetryException("This URL doesn't look like Jenkins.");
 	} catch (IOException e) {
 	    throw new RetryException("Failed to connect to " + target.url, e);
 	}
