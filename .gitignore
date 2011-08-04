@@ -1,0 +1,10 @@
+client/target/
+plugin/target/
+target
+.classpath
+.settings
+.project
+*.iml
+*.ipr
+*.iws
+work

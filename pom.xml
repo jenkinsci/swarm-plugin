@@ -1,32 +1,33 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>plugin</artifactId>
+        <version>1.408</version>
+    </parent>
+
     <groupId>org.jvnet.hudson.plugins</groupId>
-    <artifactId>plugin</artifactId>
-    <version>1.371</version>
-    <relativePath>../pom.xml</relativePath>
-  </parent>
+    <artifactId>swarm-plugin</artifactId>
+    <packaging>pom</packaging>
+    <name>Jenkins Self-Organizing Swarm Plug-in</name>
+    <version>1.5-SNAPSHOT</version>
 
-  <artifactId>swarm-plugin</artifactId>
-  <packaging>pom</packaging>
-  <name>Hudson Self-Organizing Swarm Plug-in</name>
-  <version>1.5-SNAPSHOT</version>
+    <licenses>
+        <license>
+            <name>MIT license</name>
+            <comments>All source code is under the MIT license.</comments>
+        </license>
+    </licenses>
 
-  <licenses>
-    <license>
-      <name>MIT license</name>
-      <comments>All source code is under the MIT license.</comments>
-    </license>
-  </licenses>
+    <modules>
+        <module>plugin</module>
+        <module>client</module>
+    </modules>
 
-  <modules>
-    <module>plugin</module>
-    <module>client</module>
-  </modules>
+    <scm>
+        <connection>scm:git:git://github.com/jenkinsci/swarm-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/swarm-plugin.git</developerConnection>
+        <url>http://github.com/jenkinsci/swarm-plugin</url>
+    </scm>
 
-  <scm>
-    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm</connection>
-    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/trunk/hudson/plugins/swarm</developerConnection>
-    <url>https://hudson.dev.java.net/source/browse/hudson/trunk/hudson/plugins/swarm</url>
-  </scm>
 </project>
