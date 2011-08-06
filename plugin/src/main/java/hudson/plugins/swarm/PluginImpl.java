@@ -20,14 +20,15 @@ import java.io.IOException;
  * @author Kohsuke Kawaguchi
  */
 public class PluginImpl extends Plugin {
+
     /**
      * Adds a new swarm slave.
      */
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name, @QueryParameter String description, @QueryParameter int executors,
-                              @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret) throws IOException, FormException {
+            @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret) throws IOException, FormException {
 
         // only allow nearby nodes to connect
-        if(!UDPFragmentImpl.all().get(UDPFragmentImpl.class).secret.toString().equals(secret)) {
+        if (!UDPFragmentImpl.all().get(UDPFragmentImpl.class).secret.toString().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
             return;
         }
@@ -39,16 +40,19 @@ public class PluginImpl extends Plugin {
             final Hudson hudson = Hudson.getInstance();
 
             // try to make the name unique. Swarm clients are often repliated VMs, and they may have the same name.
-            if(hudson.getNode(name)!=null)
-                name = name+'-'+req.getRemoteAddr();
+            if (hudson.getNode(name) != null) {
+                name = name + '-' + req.getRemoteAddr();
+            }
 
-            SwarmSlave slave = new SwarmSlave(name, "Swarm slave from "+req.getRemoteHost()+" : "+description,
-                    remoteFsRoot, String.valueOf(executors), "swarm "+Util.fixNull(labels));
+            SwarmSlave slave = new SwarmSlave(name, "Swarm slave from " + req.getRemoteHost() + " : " + description,
+                    remoteFsRoot, String.valueOf(executors), "swarm " + Util.fixNull(labels));
 
             // if this still results in a dupliate, so be it
             synchronized (hudson) {
                 Node n = hudson.getNode(name);
-                if(n!=null) hudson.removeNode(n);
+                if (n != null) {
+                    hudson.removeNode(n);
+                }
                 hudson.addNode(slave);
             }
         } catch (FormException e) {

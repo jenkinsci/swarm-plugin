@@ -6,6 +6,7 @@ package hudson.plugins.swarm;
  * @author Kohsuke Kawaguchi
  */
 public class RetryException extends Exception {
+
     public RetryException(String message) {
         super(message);
     }

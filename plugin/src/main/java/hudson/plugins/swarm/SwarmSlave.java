@@ -37,7 +37,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
     @DataBoundConstructor
     public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode, String labelString,
             ComputerLauncher launcher, RetentionStrategy retentionStrategy, List<? extends NodeProperty<?>> nodeProperties) throws FormException, IOException {
-        super(name,nodeDescription, remoteFS, Util.tryParseNumber(numExecutors, 1).intValue(), mode, labelString, launcher, retentionStrategy, nodeProperties);
+        super(name, nodeDescription, remoteFS, Util.tryParseNumber(numExecutors, 1).intValue(), mode, labelString, launcher, retentionStrategy, nodeProperties);
     }
 
     public Node asNode() {
@@ -46,6 +46,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
 
     @Extension
     public static final class DescriptorImpl extends SlaveDescriptor {
+
         public String getDisplayName() {
             return "Swarm Slave";
         }
@@ -63,6 +64,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
      * {@link ComputerLauncher} that destroys itself upon a connection termination.
      */
     private static final JNLPLauncher SELF_CLEANUP_LAUNCHER = new JNLPLauncher() {
+
         @Override
         public void afterDisconnect(SlaveComputer computer, TaskListener listener) {
             try {

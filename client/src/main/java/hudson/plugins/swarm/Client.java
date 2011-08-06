@@ -51,6 +51,7 @@ import org.xml.sax.SAXException;
  * 
  */
 public class Client {
+
     /**
      * Used to discover the server.
      */
@@ -89,37 +90,39 @@ public class Client {
     public boolean help;
 
     public static void main(String... args) throws InterruptedException,
-	    IOException {
-	Client client = new Client();
-	CmdLineParser p = new CmdLineParser(client);
-	try {
-	    p.parseArgument(args);
-	} catch (CmdLineException e) {
-	    System.out.println(e.getMessage());
-	    p.printUsage(System.out);
-	    System.exit(-1);
-	}
-	if (client.help) {
-	    p.printUsage(System.out);
-	    System.exit(0);
-	}
-	client.run();
+            IOException {
+        Client client = new Client();
+        CmdLineParser p = new CmdLineParser(client);
+        try {
+            p.parseArgument(args);
+        } catch (CmdLineException e) {
+            System.out.println(e.getMessage());
+            p.printUsage(System.out);
+            System.exit(-1);
+        }
+        if (client.help) {
+            p.printUsage(System.out);
+            System.exit(0);
+        }
+        client.run();
     }
 
     public Client() throws IOException {
-	socket = new DatagramSocket();
-	socket.setBroadcast(true);
-	name = InetAddress.getLocalHost().getCanonicalHostName();
+        socket = new DatagramSocket();
+        socket.setBroadcast(true);
+        name = InetAddress.getLocalHost().getCanonicalHostName();
     }
 
     class Candidate {
-	final String url;
-	final String secret;
 
-	Candidate(String url, String secret) {
-	    this.url = url;
-	    this.secret = secret;
-	}
+        final String url;
+
+        final String secret;
+
+        Candidate(String url, String secret) {
+            this.url = url;
+            this.secret = secret;
+        }
     }
 
     /**
@@ -127,83 +130,79 @@ public class Client {
      * 
      * This method never returns.
      */
-
     public void run() throws InterruptedException {
-	System.out.println("Discovering Jenkins master");
+        System.out.println("Discovering Jenkins master");
 
-	// wait until we get the ACK back
-	while (true) {
-	    try {
-		List<Candidate> candidates = new ArrayList<Candidate>();
-		for (DatagramPacket recv : discover()) {
+        // wait until we get the ACK back
+        while (true) {
+            try {
+                List<Candidate> candidates = new ArrayList<Candidate>();
+                for (DatagramPacket recv : discover()) {
 
-		    String responseXml = new String(recv.getData(), 0,
-			    recv.getLength());
+                    String responseXml = new String(recv.getData(), 0,
+                            recv.getLength());
 
-		    Document xml;
-		    System.out.println();
+                    Document xml;
+                    System.out.println();
 
-		    try {
-			xml = DocumentBuilderFactory
-				.newInstance()
-				.newDocumentBuilder()
-				.parse(new ByteArrayInputStream(recv.getData(),
-					0, recv.getLength()));
-		    } catch (SAXException e) {
-			System.out.println("Invalid response XML from "
-				+ recv.getAddress() + ": " + responseXml);
-			continue;
-		    }
-		    String swarm = getChildElementString(
-			    xml.getDocumentElement(), "swarm");
-		    if (swarm == null) {
-			System.out.println(recv.getAddress()
-				+ " doesn't support swarm");
-			continue;
-		    }
+                    try {
+                        xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(recv.getData(),
+                                0, recv.getLength()));
+                    } catch (SAXException e) {
+                        System.out.println("Invalid response XML from "
+                                + recv.getAddress() + ": " + responseXml);
+                        continue;
+                    }
+                    String swarm = getChildElementString(
+                            xml.getDocumentElement(), "swarm");
+                    if (swarm == null) {
+                        System.out.println(recv.getAddress()
+                                + " doesn't support swarm");
+                        continue;
+                    }
 
-		    String url = master == null ? getChildElementString(
-			    xml.getDocumentElement(), "url") : master;
-		    if (url == null) {
-			System.out
-				.println(recv.getAddress()
-					+ " doesn't have the configuration set yet. Please go to the sytem configuration page of this Jenkins and submit it: "
-					+ responseXml);
-			continue;
-		    }
-		    candidates.add(new Candidate(url, swarm));
-		}
+                    String url = master == null ? getChildElementString(
+                            xml.getDocumentElement(), "url") : master;
+                    if (url == null) {
+                        System.out.println(recv.getAddress()
+                                + " doesn't have the configuration set yet. Please go to the sytem configuration page of this Jenkins and submit it: "
+                                + responseXml);
+                        continue;
+                    }
+                    candidates.add(new Candidate(url, swarm));
+                }
 
-		if (candidates.size() == 0)
-		    throw new RetryException(
-			    "No nearby Jenkins supports swarming");
+                if (candidates.isEmpty()) {
+                    throw new RetryException(
+                            "No nearby Jenkins supports swarming");
+                }
 
-		System.out.println("Found " + candidates.size()
-			+ " eligible Jenkins.");
-		// randomly pick up the Jenkins to connect to
-		target = candidates
-			.get(new Random().nextInt(candidates.size()));
-		if (password == null && username == null) {
-		    verifyThatUrlIsHudson();
-		}
+                System.out.println("Found " + candidates.size()
+                        + " eligible Jenkins.");
+                // randomly pick up the Jenkins to connect to
+                target = candidates.get(new Random().nextInt(candidates.size()));
+                if (password == null && username == null) {
+                    verifyThatUrlIsHudson();
+                }
 
-		// create a new swarm slave
-		createSwarmSlave();
-		connect();
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    } catch (ParserConfigurationException e) {
-		e.printStackTrace();
-	    } catch (RetryException e) {
-		System.out.println(e.getMessage());
-		if (e.getCause() != null)
-		    e.getCause().printStackTrace();
-	    }
+                // create a new swarm slave
+                createSwarmSlave();
+                connect();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ParserConfigurationException e) {
+                e.printStackTrace();
+            } catch (RetryException e) {
+                System.out.println(e.getMessage());
+                if (e.getCause() != null) {
+                    e.getCause().printStackTrace();
+                }
+            }
 
-	    // retry
-	    System.out.println("Retrying in 10 seconds");
-	    Thread.sleep(10 * 1000);
-	}
+            // retry
+            System.out.println("Retrying in 10 seconds");
+            Thread.sleep(10 * 1000);
+        }
 
     }
 
@@ -214,179 +213,180 @@ public class Client {
      * hear all the responses.
      */
     protected List<DatagramPacket> discover() throws IOException,
-	    InterruptedException, RetryException {
-	sendBroadcast();
+            InterruptedException, RetryException {
+        sendBroadcast();
 
-	List<DatagramPacket> responses = new ArrayList<DatagramPacket>();
+        List<DatagramPacket> responses = new ArrayList<DatagramPacket>();
 
-	// wait for 5 secs to gather up all the replies
-	long limit = System.currentTimeMillis() + 5 * 1000;
-	while (true) {
-	    try {
-		socket.setSoTimeout(Math.max(1,
-			(int) (limit - System.currentTimeMillis())));
+        // wait for 5 secs to gather up all the replies
+        long limit = System.currentTimeMillis() + 5 * 1000;
+        while (true) {
+            try {
+                socket.setSoTimeout(Math.max(1,
+                        (int) (limit - System.currentTimeMillis())));
 
-		DatagramPacket recv = new DatagramPacket(new byte[2048], 2048);
-		socket.receive(recv);
-		responses.add(recv);
-	    } catch (SocketTimeoutException e) {
-		// timed out
-		if (responses.isEmpty()) {
+                DatagramPacket recv = new DatagramPacket(new byte[2048], 2048);
+                socket.receive(recv);
+                responses.add(recv);
+            } catch (SocketTimeoutException e) {
+                // timed out
+                if (responses.isEmpty()) {
 
-		    if (master != null)
-			throw new RetryException(
-				"Failed to receive a reply from " + master);
-		    else
-			throw new RetryException(
-				"Failed to receive a reply to broadcast.");
-		}
-		return responses;
-	    }
-	}
+                    if (master != null) {
+                        throw new RetryException(
+                                "Failed to receive a reply from " + master);
+                    } else {
+                        throw new RetryException(
+                                "Failed to receive a reply to broadcast.");
+                    }
+                }
+                return responses;
+            }
+        }
     }
 
     protected void sendBroadcast() throws IOException {
 
-	URL url = null;
-	if (master != null) {
-	    url = new URL(master);
-	}
+        URL url = null;
+        if (master != null) {
+            url = new URL(master);
+        }
 
-	DatagramPacket packet = new DatagramPacket(new byte[0], 0);
-	packet.setAddress(InetAddress.getByName(url != null ? url.getHost()
-		: "255.255.255.255"));
-	packet.setPort(Integer.getInteger("hudson.udp", 33848));
-	socket.send(packet);
+        DatagramPacket packet = new DatagramPacket(new byte[0], 0);
+        packet.setAddress(InetAddress.getByName(url != null ? url.getHost()
+                : "255.255.255.255"));
+        packet.setPort(Integer.getInteger("hudson.udp", 33848));
+        socket.send(packet);
     }
 
     protected void connect() throws InterruptedException {
-	try {
-	    Launcher launcher = new Launcher();
+        try {
+            Launcher launcher = new Launcher();
 
-	    launcher.slaveJnlpURL = new URL(target.url + "/computer/" + name
-		    + "/slave-agent.jnlp");
+            launcher.slaveJnlpURL = new URL(target.url + "/computer/" + name
+                    + "/slave-agent.jnlp");
 
-	    if (username != null && password != null) {
-		launcher.auth = username + ":" + password;
-		launcher.slaveJnlpCredentials = username + ":" + password;
-	    }
+            if (username != null && password != null) {
+                launcher.auth = username + ":" + password;
+                launcher.slaveJnlpCredentials = username + ":" + password;
+            }
 
-	    List<String> jnlpArgs = launcher.parseJnlpArguments();
+            List<String> jnlpArgs = launcher.parseJnlpArguments();
 
-	    if (username != null && password != null) {
+            List<String> args = new LinkedList<String>();
+            args.add(jnlpArgs.get(0));
+            args.add(jnlpArgs.get(1));
 
-	    }
+            args.add("-url");
+            args.add(target.url);
+            args.add("-credentials");
+            args.add(username + ":" + password);
+            args.add("-headless");
+            args.add("-noreconnect");
 
-	    List<String> args = new LinkedList<String>();
-	    args.add(jnlpArgs.get(0));
-	    args.add(jnlpArgs.get(1));
-
-	    args.add("-url");
-	    args.add(target.url);
-	    args.add("-credentials");
-	    args.add(username + ":" + password);
-	    args.add("-headless");
-	    args.add("-noreconnect");
-
-	    Main.main(args.toArray(new String[args.size()]));
-	} catch (Exception e) {
-	    e.printStackTrace();
-	    System.out.println("Failed to establish JNLP connection to "
-		    + target.url);
-	    Thread.sleep(10 * 1000);
-	}
+            Main.main(args.toArray(new String[args.size()]));
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Failed to establish JNLP connection to "
+                    + target.url);
+            Thread.sleep(10 * 1000);
+        }
     }
 
     protected void createSwarmSlave() throws IOException, InterruptedException,
-	    RetryException {
-	StringBuilder labelStr = new StringBuilder();
-	for (String l : labels) {
-	    if (labelStr.length() > 0)
-		labelStr.append(' ');
-	    labelStr.append(l);
-	}
-	URL url = new URL(target.url);
-	HttpClient client = new HttpClient();
+            RetryException {
+        StringBuilder labelStr = new StringBuilder();
+        for (String l : labels) {
+            if (labelStr.length() > 0) {
+                labelStr.append(' ');
+            }
+            labelStr.append(l);
+        }
+        URL url = new URL(target.url);
+        HttpClient client = new HttpClient();
 
-	if (username != null && password != null)
-	    client.getState().setCredentials(
-		    new AuthScope(url.getHost(), url.getPort()),
-		    new UsernamePasswordCredentials(username, password));
+        if (username != null && password != null) {
+            client.getState().setCredentials(
+                    new AuthScope(url.getHost(), url.getPort()),
+                    new UsernamePasswordCredentials(username, password));
+        }
 
-	// Hudson does not do any authentication negotiation,
-	// ie. it does not return a 401 (Unauthorized)
-	// but immediately a 403 (Forbidden)
+        // Hudson does not do any authentication negotiation,
+        // ie. it does not return a 401 (Unauthorized)
+        // but immediately a 403 (Forbidden)
 
-	client.getParams().setAuthenticationPreemptive(true);
-	PostMethod post = new PostMethod(target.url
-		+ "/plugin/swarm/createSlave?name=" + name + "&executors="
-		+ executors
-		+ param("remoteFsRoot", remoteFsRoot.getAbsolutePath())
-		+ param("description", description)
-		+ param("labels", labelStr.toString()) + "&secret="
-		+ target.secret);
+        client.getParams().setAuthenticationPreemptive(true);
+        PostMethod post = new PostMethod(target.url
+                + "/plugin/swarm/createSlave?name=" + name + "&executors="
+                + executors
+                + param("remoteFsRoot", remoteFsRoot.getAbsolutePath())
+                + param("description", description)
+                + param("labels", labelStr.toString()) + "&secret="
+                + target.secret);
 
-	post.setDoAuthentication(true);
-	int responseCode = client.executeMethod(post);
-	if (responseCode != 200) {
+        post.setDoAuthentication(true);
+        int responseCode = client.executeMethod(post);
+        if (responseCode != 200) {
 
-	    throw new RetryException(
-		    "Failed to create a slave on Jenkins CODE: " + responseCode);
+            throw new RetryException(
+                    "Failed to create a slave on Jenkins CODE: " + responseCode);
 
-	}
+        }
     }
 
     private String param(String name, String value)
-	    throws UnsupportedEncodingException {
-	if (value == null)
-	    return "";
-	return "&" + name + "=" + URLEncoder.encode(value, "UTF-8");
+            throws UnsupportedEncodingException {
+        if (value == null) {
+            return "";
+        }
+        return "&" + name + "=" + URLEncoder.encode(value, "UTF-8");
     }
 
     protected void verifyThatUrlIsHudson() throws InterruptedException,
-	    RetryException {
-	try {
-	    System.out.println("Connecting to " + target.url);
-	    HttpURLConnection con = (HttpURLConnection) new URL(target.url)
-		    .openConnection();
-	    con.connect();
+            RetryException {
+        try {
+            System.out.println("Connecting to " + target.url);
+            HttpURLConnection con = (HttpURLConnection) new URL(target.url).openConnection();
+            con.connect();
 
-	    if (con.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN) {
-		throw new RetryException(
-			"This jenkins server requires Authentication!.");
-	    }
+            if (con.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN) {
+                throw new RetryException(
+                        "This jenkins server requires Authentication!.");
+            }
 
-	    String v = con.getHeaderField("X-Hudson");
-	    if (v == null)
-		throw new RetryException("This URL doesn't look like Jenkins.");
-	} catch (IOException e) {
-	    throw new RetryException("Failed to connect to " + target.url, e);
-	}
+            String v = con.getHeaderField("X-Hudson");
+            if (v == null) {
+                throw new RetryException("This URL doesn't look like Jenkins.");
+            }
+        } catch (IOException e) {
+            throw new RetryException("Failed to connect to " + target.url, e);
+        }
     }
 
     private static void copy(InputStream in, OutputStream out)
-	    throws IOException {
-	byte[] buf = new byte[8192];
-	int len;
-	while ((len = in.read(buf)) >= 0)
-	    out.write(buf, 0, len);
+            throws IOException {
+        byte[] buf = new byte[8192];
+        int len;
+        while ((len = in.read(buf)) >= 0) {
+            out.write(buf, 0, len);
+        }
     }
 
     private static String getChildElementString(Element parent, String tagName) {
-	for (Node n = parent.getFirstChild(); n != null; n = n.getNextSibling()) {
-	    if (n instanceof Element) {
-		Element e = (Element) n;
-		if (e.getTagName().equals(tagName)) {
-		    StringBuilder buf = new StringBuilder();
-		    for (n = e.getFirstChild(); n != null; n = n
-			    .getNextSibling()) {
-			if (n instanceof Text)
-			    buf.append(n.getTextContent());
-		    }
-		    return buf.toString();
-		}
-	    }
-	}
-	return null;
+        for (Node n = parent.getFirstChild(); n != null; n = n.getNextSibling()) {
+            if (n instanceof Element) {
+                Element e = (Element) n;
+                if (e.getTagName().equals(tagName)) {
+                    StringBuilder buf = new StringBuilder();
+                    for (n = e.getFirstChild(); n != null; n = n.getNextSibling()) {
+                        if (n instanceof Text) {
+                            buf.append(n.getTextContent());
+                        }
+                    }
+                    return buf.toString();
+                }
+            }
+        }
+        return null;
     }
 }
