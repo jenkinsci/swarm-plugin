@@ -2,10 +2,13 @@ package hudson.plugins.swarm;
 
 import hudson.Plugin;
 import hudson.Util;
+import hudson.model.Computer;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.security.ACL;
+import hudson.security.Permission;
+import hudson.slaves.SlaveComputer;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -33,12 +36,11 @@ public class PluginImpl extends Plugin {
             return;
         }
 
-        // this is used by swarm clients that otherwise have no access to the system,
-        // so bypass the regular security check, and only rely on secret.
-        SecurityContextHolder.getContext().setAuthentication(ACL.SYSTEM);
         try {
             final Hudson hudson = Hudson.getInstance();
 
+            hudson.checkPermission(SlaveComputer.CREATE);
+            
             // try to make the name unique. Swarm clients are often repliated VMs, and they may have the same name.
             if (hudson.getNode(name) != null) {
                 name = name + '-' + req.getRemoteAddr();
@@ -57,8 +59,6 @@ public class PluginImpl extends Plugin {
             }
         } catch (FormException e) {
             e.printStackTrace();
-        } finally {
-            SecurityContextHolder.clearContext();
         }
     }
 }
