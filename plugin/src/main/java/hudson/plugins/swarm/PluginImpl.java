@@ -2,14 +2,10 @@ package hudson.plugins.swarm;
 
 import hudson.Plugin;
 import hudson.Util;
-import hudson.model.Computer;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson;
 import hudson.model.Node;
-import hudson.security.ACL;
-import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
