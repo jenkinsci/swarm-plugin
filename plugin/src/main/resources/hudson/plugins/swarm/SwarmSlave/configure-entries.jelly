@@ -39,7 +39,7 @@ THE SOFTWARE.
     <f:textbox />
   </f:entry>
 
-  <f:entry title="${%Labels}" fiels="labelString">
+  <f:entry title="${%Labels}" field="labelString">
     <f:textbox />
   </f:entry>
 
