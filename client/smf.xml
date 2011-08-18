@@ -24,12 +24,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
 
-<service_bundle type="manifest" name="Hudson">
+<service_bundle type="manifest" name="Jenkins">
 	<service name="application/hudson" type="service" version="1">
 		
 		<create_default_instance enabled="true" />
 		
-		<!-- Only one instance of Hudson should ever run per server -->
+		<!-- Only one instance of Jenkins should ever run per server -->
 		<single_instance />
 		
 		<dependency name="multi-user-server" type="service" grouping="require_all" restart_on="none">
@@ -63,10 +63,10 @@ THE SOFTWARE.
 
 		<template>
 			<common_name>
-				<loctext xml:lang='C'>Hudson Swarm Client</loctext>
+				<loctext xml:lang='C'>Jenkins Swarm Client</loctext>
 			</common_name>
 			<documentation>
-				<doc_link name='hudson.dev.java.net' uri='http://wiki.hudson-ci.org/display/HUDSON/Swarm+Plugin' />
+				<doc_link name='jenkins-ci.org' uri='http://wiki.jenkins-ci.org/display/JENKINS/Swarm+Plugin' />
 			</documentation>
 		</template>
 	</service>

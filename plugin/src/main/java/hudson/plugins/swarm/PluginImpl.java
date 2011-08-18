@@ -3,9 +3,9 @@ package hudson.plugins.swarm;
 import hudson.Plugin;
 import hudson.Util;
 import hudson.model.Descriptor.FormException;
-import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.slaves.SlaveComputer;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -33,12 +33,12 @@ public class PluginImpl extends Plugin {
         }
 
         try {
-            final Hudson hudson = Hudson.getInstance();
+            final Jenkins jenkins = Jenkins.getInstance();
 
-            hudson.checkPermission(SlaveComputer.CREATE);
+            jenkins.checkPermission(SlaveComputer.CREATE);
             
             // try to make the name unique. Swarm clients are often repliated VMs, and they may have the same name.
-            if (hudson.getNode(name) != null) {
+            if (jenkins.getNode(name) != null) {
                 name = name + '-' + req.getRemoteAddr();
             }
 
@@ -46,12 +46,12 @@ public class PluginImpl extends Plugin {
                     remoteFsRoot, String.valueOf(executors), "swarm " + Util.fixNull(labels));
 
             // if this still results in a dupliate, so be it
-            synchronized (hudson) {
-                Node n = hudson.getNode(name);
+            synchronized (jenkins) {
+                Node n = jenkins.getNode(name);
                 if (n != null) {
-                    hudson.removeNode(n);
+                    jenkins.removeNode(n);
                 }
-                hudson.addNode(slave);
+                jenkins.addNode(slave);
             }
         } catch (FormException e) {
             e.printStackTrace();

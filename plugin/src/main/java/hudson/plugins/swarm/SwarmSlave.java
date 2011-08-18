@@ -3,7 +3,6 @@ package hudson.plugins.swarm;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor.FormException;
-import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.model.Slave;
 import hudson.model.TaskListener;
@@ -13,6 +12,7 @@ import hudson.slaves.JNLPLauncher;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.RetentionStrategy;
 import hudson.slaves.SlaveComputer;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -68,7 +68,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
         @Override
         public void afterDisconnect(SlaveComputer computer, TaskListener listener) {
             try {
-                Hudson.getInstance().removeNode(computer.getNode());
+                Jenkins.getInstance().removeNode(computer.getNode());
             } catch (IOException e) {
                 e.printStackTrace(listener.error(e.getMessage()));
             }

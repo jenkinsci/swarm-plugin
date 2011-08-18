@@ -15,7 +15,7 @@ import java.util.UUID;
 public class UDPFragmentImpl extends UDPBroadcastFragment {
 
     /**
-     * This is the pass phrase that allows swarm slaves to create a new slave object on Hudson.
+     * This is the pass phrase that allows swarm slaves to create a new slave object on Jenkins.
      */
     public final UUID secret = UUID.randomUUID();
 

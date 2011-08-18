@@ -41,7 +41,7 @@ import org.xml.sax.SAXException;
  * Swarm client.
  * 
  * <p>
- * Discovers nearby Hudson via UDP broadcast, and pick eligible one randomly and
+ * Discovers nearby Jenkins via UDP broadcast, and pick eligible one randomly and
  * joins it.
  * 
  * @author Kohsuke Kawaguchi
@@ -58,7 +58,7 @@ public class Client {
     protected final DatagramSocket socket;
 
     /**
-     * The Hudson that we are trying to connect to.
+     * The Jenkins that we are trying to connect to.
      */
     protected Candidate target;
 
@@ -71,7 +71,7 @@ public class Client {
     @Option(name = "-labels", usage = "Whitespace-separated list of labels to be assigned for this slave. Multiple options are allowed.")
     public List<String> labels = new ArrayList<String>();
 
-    @Option(name = "-fsroot", usage = "Directory where Hudson places files")
+    @Option(name = "-fsroot", usage = "Directory where Jenkins places files")
     public File remoteFsRoot = new File(".");
 
     @Option(name = "-executors", usage = "Number of executors")
@@ -255,7 +255,7 @@ public class Client {
         DatagramPacket packet = new DatagramPacket(new byte[0], 0);
         packet.setAddress(InetAddress.getByName(url != null ? url.getHost()
                 : "255.255.255.255"));
-        packet.setPort(Integer.getInteger("hudson.udp", 33848));
+        packet.setPort(Integer.getInteger("jenkins.udp", Integer.getInteger("hudson.udp", 33848)));
         socket.send(packet);
     }
 
@@ -311,7 +311,7 @@ public class Client {
                     new UsernamePasswordCredentials(username, password));
         }
 
-        // Hudson does not do any authentication negotiation,
+        // Jenkins does not do any authentication negotiation,
         // ie. it does not return a 401 (Unauthorized)
         // but immediately a 403 (Forbidden)
 

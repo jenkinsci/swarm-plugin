@@ -1,9 +1,9 @@
 #!/bin/bash
 # shell script called by SMF to run a Hudson swarm client as a service.
 # placed in /lib/svc/method
-vmopts="$(svcprop -p hudson/jvm_options $SMF_FMRI)"
-opts="$(svcprop -p hudson/options $SMF_FMRI)"
+vmopts="$(svcprop -p jenkins/jvm_options $SMF_FMRI)"
+opts="$(svcprop -p jenkins/options $SMF_FMRI)"
 
 # generate unique name. 
 name=$(hostname)-$(python -c 'import random,string; print "".join([random.choice(string.letters) for i in range(10)])')
-exec java $vmopts -jar /var/lib/hudson/hudson-swarm-client.jar -name $name
+exec java $vmopts -jar /var/lib/jenkins/jenkins-swarm-client.jar -name $name
