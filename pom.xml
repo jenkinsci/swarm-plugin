@@ -36,6 +36,7 @@
         </repository>
     </repositories>
 
+    <!-- hopefully these entries aren't needed when we bump up to more recent Jenkins -->
     <build>
       <plugins>
         <plugin>
@@ -43,6 +44,12 @@
           <artifactId>maven-license-plugin</artifactId>
           <version>1.3</version>
         </plugin>
+        <plugin>
+          <groupId>org.kohsuke</groupId>
+          <artifactId>access-modifier-checker</artifactId>
+          <version>1.0</version>
+        </plugin>
+
       </plugins>
     </build>
 
