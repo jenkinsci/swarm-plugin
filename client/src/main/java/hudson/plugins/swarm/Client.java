@@ -259,6 +259,11 @@ public class Client {
         socket.send(packet);
     }
 
+    /**
+     * This method blocks while the swarm slave is serving as a slave.
+     *
+     * Interrupt the thread to abort it and return.
+     */
     protected void connect() throws InterruptedException {
         try {
             Launcher launcher = new Launcher();
