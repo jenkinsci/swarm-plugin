@@ -284,8 +284,10 @@ public class Client {
 
             args.add("-url");
             args.add(target.url);
-            args.add("-credentials");
-            args.add(username + ":" + password);
+            if (username != null && password != null) {
+                args.add("-credentials");
+                args.add(username + ":" + password);
+            }
             args.add("-headless");
             args.add("-noreconnect");
 
