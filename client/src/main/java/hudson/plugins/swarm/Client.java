@@ -16,6 +16,7 @@ import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -252,7 +253,10 @@ public class Client {
             url = new URL(master);
         }
 
-        DatagramPacket packet = new DatagramPacket(new byte[0], 0);
+        byte[] buffer = new byte[128];
+        Arrays.fill(buffer, (byte) 1);
+
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         packet.setAddress(InetAddress.getByName(url != null ? url.getHost()
                 : "255.255.255.255"));
         packet.setPort(Integer.getInteger("jenkins.udp", Integer.getInteger("hudson.udp", 33848)));
