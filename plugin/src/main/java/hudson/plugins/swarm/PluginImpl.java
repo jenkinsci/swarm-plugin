@@ -10,8 +10,10 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import java.io.IOException;
+import java.io.Writer;
+
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
 /**
  * Exposes an entry point to add a new swarm slave.
@@ -26,8 +28,7 @@ public class PluginImpl extends Plugin {
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name, @QueryParameter String description, @QueryParameter int executors,
             @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret) throws IOException, FormException {
 
-        // only allow nearby nodes to connect
-        if (!UDPFragmentImpl.all().get(UDPFragmentImpl.class).secret.toString().equals(secret)) {
+        if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
             return;
         }
@@ -56,5 +57,19 @@ public class PluginImpl extends Plugin {
         } catch (FormException e) {
             e.printStackTrace();
         }
+    }
+
+    static String getSwarmSecret() {
+        return UDPFragmentImpl.all().get(UDPFragmentImpl.class).secret.toString();
+    }
+
+    public void doSlaveInfo(StaplerRequest req, StaplerResponse rsp) throws IOException {
+        final Jenkins jenkins = Jenkins.getInstance();
+        jenkins.checkPermission(SlaveComputer.CREATE);
+
+        rsp.setContentType("text/xml");
+        Writer w = rsp.getCompressedWriter(req);
+        w.write("<slaveInfo><swarmSecret>" + getSwarmSecret() + "</swarmSecret></slaveInfo>");
+        w.close();
     }
 }
