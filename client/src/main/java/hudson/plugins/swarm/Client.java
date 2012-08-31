@@ -2,31 +2,10 @@ package hudson.plugins.swarm;
 
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -37,25 +16,35 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.net.*;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+
 /**
  * Swarm client.
- * 
- * <p>
+ * <p/>
+ * <p/>
  * Discovers nearby Jenkins via UDP broadcast, and pick eligible one randomly and
  * joins it.
- * 
+ *
  * @author Kohsuke Kawaguchi
  * @changes Marcelo Brunken
- * 
- * 
- * 
  */
 public class Client {
-
-    /**
-     * Used to discover the server.
-     */
-    protected final DatagramSocket socket;
 
     /**
      * The Jenkins that we are trying to connect to.
@@ -79,6 +68,12 @@ public class Client {
 
     @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins'. If this option is specified, auto-discovery will be skipped")
     public String master;
+
+    @Option(name = "-autoDiscoveryAddress", usage = "Use this address for udp-based auto-discovery (default 255.255.255.255)")
+    public String autoDiscoveryAddress = "255.255.255.255";
+
+    @Option(name = "-disableSslVerification", usage = "Disables SSL verification in the HttpClient.")
+    public boolean disableSslVerification;
 
     @Option(name = "-username", usage = "The Jenkins username for authentication")
     public String username;
@@ -108,8 +103,6 @@ public class Client {
     }
 
     public Client() throws IOException {
-        socket = new DatagramSocket();
-        socket.setBroadcast(true);
         name = InetAddress.getLocalHost().getCanonicalHostName();
     }
 
@@ -127,7 +120,7 @@ public class Client {
 
     /**
      * Finds a Jenkins master that supports swarming, and join it.
-     * 
+     * <p/>
      * This method never returns.
      */
     public void run() throws InterruptedException {
@@ -136,54 +129,17 @@ public class Client {
         // wait until we get the ACK back
         while (true) {
             try {
-                List<Candidate> candidates = new ArrayList<Candidate>();
-                for (DatagramPacket recv : discover()) {
-
-                    String responseXml = new String(recv.getData(), 0,
-                            recv.getLength());
-
-                    Document xml;
-                    System.out.println();
-
-                    try {
-                        xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(recv.getData(),
-                                0, recv.getLength()));
-                    } catch (SAXException e) {
-                        System.out.println("Invalid response XML from "
-                                + recv.getAddress() + ": " + responseXml);
-                        continue;
-                    }
-                    String swarm = getChildElementString(
-                            xml.getDocumentElement(), "swarm");
-                    if (swarm == null) {
-                        System.out.println(recv.getAddress()
-                                + " doesn't support swarm");
-                        continue;
-                    }
-
-                    String url = master == null ? getChildElementString(
-                            xml.getDocumentElement(), "url") : master;
-                    if (url == null) {
-                        System.out.println(recv.getAddress()
-                                + " doesn't have the configuration set yet. Please go to the sytem configuration page of this Jenkins and submit it: "
-                                + responseXml);
-                        continue;
-                    }
-                    candidates.add(new Candidate(url, swarm));
+                if (master == null) {
+                    target = discoverFromBroadcast();
+                } else {
+                    target = discoverFromMasterUrl();
                 }
 
-                if (candidates.isEmpty()) {
-                    throw new RetryException(
-                            "No nearby Jenkins supports swarming");
-                }
-
-                System.out.println("Found " + candidates.size()
-                        + " eligible Jenkins.");
-                // randomly pick up the Jenkins to connect to
-                target = candidates.get(new Random().nextInt(candidates.size()));
                 if (password == null && username == null) {
                     verifyThatUrlIsHudson();
                 }
+
+                System.out.println("Attempting to connect to " + target.url + " " + target.secret);
 
                 // create a new swarm slave
                 createSwarmSlave();
@@ -206,16 +162,73 @@ public class Client {
 
     }
 
-    /**
-     * Discovers Jenkins running nearby.
-     * 
-     * To give every nearby Jenkins a fair chance, wait for some time until we
-     * hear all the responses.
-     */
-    protected List<DatagramPacket> discover() throws IOException,
-            InterruptedException, RetryException {
-        sendBroadcast();
+    protected Candidate discoverFromBroadcast() throws IOException,
+            InterruptedException, RetryException, ParserConfigurationException {
 
+        DatagramSocket socket = new DatagramSocket();
+        socket.setBroadcast(true);
+
+        sendBroadcast(socket);
+        List<DatagramPacket> responses = collectBroadcastResponses(socket);
+        return getCandidateFromDatagramResponses(responses);
+    }
+
+    private Candidate getCandidateFromDatagramResponses(List<DatagramPacket> responses) throws ParserConfigurationException, IOException, RetryException {
+        List<Candidate> candidates = new ArrayList<Candidate>();
+        for (DatagramPacket recv : responses) {
+
+            String responseXml = new String(recv.getData(), 0,
+                    recv.getLength());
+
+            Document xml;
+            System.out.println();
+
+            try {
+                xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(recv.getData(),
+                        0, recv.getLength()));
+            } catch (SAXException e) {
+                System.out.println("Invalid response XML from "
+                        + recv.getAddress() + ": " + responseXml);
+                continue;
+            }
+            String swarm = getChildElementString(
+                    xml.getDocumentElement(), "swarm");
+            if (swarm == null) {
+                System.out.println(recv.getAddress()
+                        + " doesn't support swarm");
+                continue;
+            }
+
+            String url = master == null ? getChildElementString(
+                    xml.getDocumentElement(), "url") : master;
+            if (url == null) {
+                System.out.println(recv.getAddress()
+                        + " doesn't have the configuration set yet. Please go to the system configuration page of this Jenkins and submit it: "
+                        + responseXml);
+                continue;
+            }
+            candidates.add(new Candidate(url, swarm));
+        }
+
+        if (candidates.isEmpty()) {
+            throw new RetryException(
+                    "No nearby Jenkins supports swarming");
+        }
+
+        System.out.println("Found " + candidates.size()
+                + " eligible Jenkins.");
+
+        return candidates.get(new Random().nextInt(candidates.size()));
+    }
+
+    protected void sendBroadcast(DatagramSocket socket) throws IOException {
+        DatagramPacket packet = new DatagramPacket(new byte[0], 0);
+        packet.setAddress(InetAddress.getByName(autoDiscoveryAddress));
+        packet.setPort(Integer.getInteger("jenkins.udp", Integer.getInteger("hudson.udp", 33848)));
+        socket.send(packet);
+    }
+
+    protected List<DatagramPacket> collectBroadcastResponses(DatagramSocket socket) throws IOException, RetryException {
         List<DatagramPacket> responses = new ArrayList<DatagramPacket>();
 
         // wait for 5 secs to gather up all the replies
@@ -231,37 +244,40 @@ public class Client {
             } catch (SocketTimeoutException e) {
                 // timed out
                 if (responses.isEmpty()) {
-
-                    if (master != null) {
-                        throw new RetryException(
-                                "Failed to receive a reply from " + master);
-                    } else {
-                        throw new RetryException(
-                                "Failed to receive a reply to broadcast.");
-                    }
+                    throw new RetryException("Failed to receive a reply to broadcast.");
                 }
                 return responses;
             }
         }
     }
 
-    protected void sendBroadcast() throws IOException {
+    private Candidate discoverFromMasterUrl() throws IOException, ParserConfigurationException, RetryException {
+        HttpClient client = createHttpClient(new URL(master));
 
-        URL url = null;
-        if (master != null) {
-            url = new URL(master);
+        String url = master + "/plugin/swarm/slaveInfo";
+        GetMethod get = new GetMethod(url);
+        get.setDoAuthentication(true);
+        int responseCode = client.executeMethod(get);
+
+        if (responseCode != 200) {
+            throw new RetryException(
+                    "Failed to fetch slave info from Jenkins CODE: " + responseCode);
+
         }
 
-        DatagramPacket packet = new DatagramPacket(new byte[0], 0);
-        packet.setAddress(InetAddress.getByName(url != null ? url.getHost()
-                : "255.255.255.255"));
-        packet.setPort(Integer.getInteger("jenkins.udp", Integer.getInteger("hudson.udp", 33848)));
-        socket.send(packet);
+        Document xml;
+        try {
+            xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(get.getResponseBody()));
+        } catch (SAXException e) {
+            throw new RetryException("Invalid XML received from " + url);
+        }
+        String swarmSecret = getChildElementString(xml.getDocumentElement(), "swarmSecret");
+        return new Candidate(master, swarmSecret);
     }
 
     /**
      * This method blocks while the swarm slave is serving as a slave.
-     *
+     * <p/>
      * Interrupt the thread to abort it and return.
      */
     protected void connect() throws InterruptedException {
@@ -300,8 +316,40 @@ public class Client {
         }
     }
 
+    protected HttpClient createHttpClient(URL urlForAuth) {
+        if (disableSslVerification) {
+            try {
+                SSLContext ctx = SSLContext.getInstance("TLS");
+                ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
+                SSLContext.setDefault(ctx);
+            } catch (KeyManagementException e) {
+                throw new RuntimeException(e);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        HttpClient client = new HttpClient();
+
+        if (username != null && password != null) {
+            client.getState().setCredentials(
+                    new AuthScope(urlForAuth.getHost(), urlForAuth.getPort()),
+                    new UsernamePasswordCredentials(username, password));
+        }
+
+        client.getParams().setAuthenticationPreemptive(true);
+        return client;
+    }
+
     protected void createSwarmSlave() throws IOException, InterruptedException,
             RetryException {
+
+        HttpClient client = createHttpClient(new URL(target.url));
+
+        // Jenkins does not do any authentication negotiation,
+        // ie. it does not return a 401 (Unauthorized)
+        // but immediately a 403 (Forbidden)
+
         StringBuilder labelStr = new StringBuilder();
         for (String l : labels) {
             if (labelStr.length() > 0) {
@@ -309,20 +357,7 @@ public class Client {
             }
             labelStr.append(l);
         }
-        URL url = new URL(target.url);
-        HttpClient client = new HttpClient();
 
-        if (username != null && password != null) {
-            client.getState().setCredentials(
-                    new AuthScope(url.getHost(), url.getPort()),
-                    new UsernamePasswordCredentials(username, password));
-        }
-
-        // Jenkins does not do any authentication negotiation,
-        // ie. it does not return a 401 (Unauthorized)
-        // but immediately a 403 (Forbidden)
-
-        client.getParams().setAuthenticationPreemptive(true);
         PostMethod post = new PostMethod(target.url
                 + "/plugin/swarm/createSlave?name=" + name + "&executors="
                 + executors
@@ -334,7 +369,6 @@ public class Client {
         post.setDoAuthentication(true);
         int responseCode = client.executeMethod(post);
         if (responseCode != 200) {
-
             throw new RetryException(
                     "Failed to create a slave on Jenkins CODE: " + responseCode);
 
@@ -395,5 +429,18 @@ public class Client {
             }
         }
         return null;
+    }
+
+    private static class DefaultTrustManager implements X509TrustManager {
+
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+        }
+
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+        }
+
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
     }
 }
