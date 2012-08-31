@@ -16,10 +16,19 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.*;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,16 +36,13 @@ import java.util.Random;
 
 /**
  * Swarm client.
- * 
- * <p>
+ * <p/>
+ * <p/>
  * Discovers nearby Jenkins via UDP broadcast, and pick eligible one randomly and
  * joins it.
- * 
+ *
  * @author Kohsuke Kawaguchi
  * @changes Marcelo Brunken
- * 
- * 
- * 
  */
 public class Client {
 
@@ -65,6 +71,9 @@ public class Client {
 
     @Option(name = "-autoDiscoveryAddress", usage = "Use this address for udp-based auto-discovery (default 255.255.255.255)")
     public String autoDiscoveryAddress = "255.255.255.255";
+
+    @Option(name = "-disableSslVerification", usage = "Disables SSL verification in the HttpClient.")
+    public boolean disableSslVerification;
 
     @Option(name = "-username", usage = "The Jenkins username for authentication")
     public String username;
@@ -111,7 +120,7 @@ public class Client {
 
     /**
      * Finds a Jenkins master that supports swarming, and join it.
-     * 
+     * <p/>
      * This method never returns.
      */
     public void run() throws InterruptedException {
@@ -120,7 +129,7 @@ public class Client {
         // wait until we get the ACK back
         while (true) {
             try {
-                if(master == null) {
+                if (master == null) {
                     target = discoverFromBroadcast();
                 } else {
                     target = discoverFromMasterUrl();
@@ -130,7 +139,7 @@ public class Client {
                     verifyThatUrlIsHudson();
                 }
 
-                System.out.println("Attempting to connect to "+target.url+" "+target.secret);
+                System.out.println("Attempting to connect to " + target.url + " " + target.secret);
 
                 // create a new swarm slave
                 createSwarmSlave();
@@ -260,7 +269,7 @@ public class Client {
         try {
             xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(get.getResponseBody()));
         } catch (SAXException e) {
-            throw new RetryException("Invalid XML received from "+url);
+            throw new RetryException("Invalid XML received from " + url);
         }
         String swarmSecret = getChildElementString(xml.getDocumentElement(), "swarmSecret");
         return new Candidate(master, swarmSecret);
@@ -268,7 +277,7 @@ public class Client {
 
     /**
      * This method blocks while the swarm slave is serving as a slave.
-     *
+     * <p/>
      * Interrupt the thread to abort it and return.
      */
     protected void connect() throws InterruptedException {
@@ -308,6 +317,18 @@ public class Client {
     }
 
     protected HttpClient createHttpClient(URL urlForAuth) {
+        if (disableSslVerification) {
+            try {
+                SSLContext ctx = SSLContext.getInstance("TLS");
+                ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
+                SSLContext.setDefault(ctx);
+            } catch (KeyManagementException e) {
+                throw new RuntimeException(e);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         HttpClient client = new HttpClient();
 
         if (username != null && password != null) {
@@ -408,5 +429,18 @@ public class Client {
             }
         }
         return null;
+    }
+
+    private static class DefaultTrustManager implements X509TrustManager {
+
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+        }
+
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+        }
+
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
     }
 }
