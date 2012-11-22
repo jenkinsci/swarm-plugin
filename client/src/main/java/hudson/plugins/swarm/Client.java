@@ -30,6 +30,7 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -222,7 +223,9 @@ public class Client {
     }
 
     protected void sendBroadcast(DatagramSocket socket) throws IOException {
-        DatagramPacket packet = new DatagramPacket(new byte[0], 0);
+        byte[] buffer= new byte[128];
+        Arrays.fill(buffer, (byte) 1);
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         packet.setAddress(InetAddress.getByName(autoDiscoveryAddress));
         packet.setPort(Integer.getInteger("jenkins.udp", Integer.getInteger("hudson.udp", 33848)));
         socket.send(packet);
