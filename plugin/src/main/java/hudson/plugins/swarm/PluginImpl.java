@@ -26,7 +26,7 @@ public class PluginImpl extends Plugin {
      * Adds a new swarm slave.
      */
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name, @QueryParameter String description, @QueryParameter int executors,
-            @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret) throws IOException, FormException {
+            @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret, @QueryParameter Node.Mode mode) throws IOException, FormException {
 
         if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
@@ -44,7 +44,7 @@ public class PluginImpl extends Plugin {
             }
 
             SwarmSlave slave = new SwarmSlave(name, "Swarm slave from " + req.getRemoteHost() + " : " + description,
-                    remoteFsRoot, String.valueOf(executors), "swarm " + Util.fixNull(labels));
+                    remoteFsRoot, String.valueOf(executors), mode, "swarm " + Util.fixNull(labels));
 
             // if this still results in a dupliate, so be it
             synchronized (jenkins) {

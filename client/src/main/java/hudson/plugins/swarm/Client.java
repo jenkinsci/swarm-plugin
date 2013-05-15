@@ -76,6 +76,15 @@ public class Client {
     @Option(name = "-disableSslVerification", usage = "Disables SSL verification in the HttpClient.")
     public boolean disableSslVerification;
 
+    @Option(
+            name = "-mode",
+            usage = "The mode controlling how Jenkins allocates jobs to slaves. Can be either '" + ModeOptionHandler.NORMAL + "' " +
+                    "(utilize this slave as much as possible) or '" + ModeOptionHandler.EXCLUSIVE + "' (leave this machine for tied " +
+                    "jobs only). Default is " + ModeOptionHandler.NORMAL + ".",
+            handler = ModeOptionHandler.class
+    )
+    public String mode = ModeOptionHandler.NORMAL;
+
     @Option(name = "-username", usage = "The Jenkins username for authentication")
     public String username;
 
@@ -367,7 +376,8 @@ public class Client {
                 + param("remoteFsRoot", remoteFsRoot.getAbsolutePath())
                 + param("description", description)
                 + param("labels", labelStr.toString()) + "&secret="
-                + target.secret);
+                + target.secret
+                + param("mode", mode.toUpperCase()));
 
         post.setDoAuthentication(true);
         int responseCode = client.executeMethod(post);
