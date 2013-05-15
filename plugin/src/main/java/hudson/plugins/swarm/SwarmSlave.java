@@ -29,8 +29,8 @@ import java.util.List;
  */
 public class SwarmSlave extends Slave implements EphemeralNode {
 
-    public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, String label) throws IOException, FormException {
-        super(name, nodeDescription, remoteFS, numExecutors, Mode.NORMAL, label,
+    public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode, String label) throws IOException, FormException {
+        super(name, nodeDescription, remoteFS, numExecutors, mode, label,
                 SELF_CLEANUP_LAUNCHER, RetentionStrategy.NOOP, Collections.<NodeProperty<?>>emptyList());
     }
 
