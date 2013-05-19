@@ -43,5 +43,7 @@ THE SOFTWARE.
     <f:textbox />
   </f:entry>
 
+  <f:slave-mode name="mode" node="${it}" />
+
   <f:descriptorList title="${%Node Properties}" descriptors="${h.getNodePropertyDescriptors(descriptor.clazz)}" field="nodeProperties" />
 </j:jelly>
