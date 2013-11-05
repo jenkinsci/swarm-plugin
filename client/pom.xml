@@ -62,5 +62,22 @@
             <version>3.1</version>
         </dependency>
 
+
+        <!-- Some plugins (at least FindBugs v4.51) requires commons-codec >= 1.4.
+             This used to be a dependency in org.jenkins-ci.main:remoting, so was
+             included in swarm-client-jar-with-dependencies.jar; however, for
+             org.jenkins-ci.main:remoting:2.21 and later, the dependency on
+             commons-codec has been removed.  Because of this, the
+             swarm-client-jar-with-dependencies.jar includes version 1.2 of
+             commons-codec.
+
+             The real solution is for plugins and remoting to agree on what API
+             is available; however, as a work-around, we make this dependency
+             explicit -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.4</version>
+        </dependency>
     </dependencies>
 </project>
