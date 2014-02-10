@@ -9,7 +9,7 @@
     <artifactId>swarm-plugin</artifactId>
     <packaging>pom</packaging>
     <name>Jenkins Self-Organizing Swarm Plug-in</name>
-    <version>1.14-SNAPSHOT</version>
+    <version>1.15-SNAPSHOT</version>
 
     <licenses>
         <license>
@@ -51,6 +51,23 @@
         </plugin>
 
       </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.4.2</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.scm</groupId>
+              <artifactId>maven-scm-provider-gitexe</artifactId>
+              <version>1.9</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
     </build>
 
 
