@@ -3,6 +3,7 @@ package hudson.plugins.swarm;
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -364,6 +365,22 @@ public class Client {
         return client;
     }
 
+    private Crumb getCsrfCrumb(HttpClient client) throws IOException {
+        GetMethod httpGet = new GetMethod(target.url + "crumbIssuer/api/xml?xpath=" + URLEncoder.encode("concat(//crumbRequestField,\":\",//crumb)", "UTF-8"));
+        httpGet.setDoAuthentication(true);
+        int responseCode = client.executeMethod(httpGet);
+        if (responseCode != HttpStatus.SC_OK) {
+            System.out.println("Could not obtain CSRF crumb. Response code: " + responseCode);
+            return null;
+        }
+        String[] crumbResponse = httpGet.getResponseBodyAsString().split(":");
+        if (crumbResponse.length != 2) {
+            System.out.println("Unexpected CSRF crumb response: " + httpGet.getResponseBodyAsString());
+            return null;
+        }
+        return new Crumb(crumbResponse[0], crumbResponse[1]);
+    }
+
     protected void createSwarmSlave() throws IOException, InterruptedException,
             RetryException {
 
@@ -391,6 +408,12 @@ public class Client {
                 + param("mode", mode.toUpperCase()));
 
         post.setDoAuthentication(true);
+
+        Crumb csrfCrumb = getCsrfCrumb(client);
+        if (csrfCrumb != null) {
+            post.addRequestHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+        }
+
         int responseCode = client.executeMethod(post);
         if (responseCode != 200) {
             throw new RetryException(
@@ -467,4 +490,17 @@ public class Client {
             return new X509Certificate[0];
         }
     }
+
+    private static class Crumb {
+
+        private final String crumb;
+        private final String crumbRequestField;
+
+        Crumb(String crumbRequestField, String crumb) {
+            this.crumbRequestField = crumbRequestField;
+            this.crumb = crumb;
+        }
+
+    }
+
 }
