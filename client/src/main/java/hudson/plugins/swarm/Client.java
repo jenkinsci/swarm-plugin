@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.text.MessageFormat;
 
 /**
  * Swarm client.
@@ -67,7 +68,7 @@ public class Client {
     @Option(name = "-executors", usage = "Number of executors")
     public int executors = Runtime.getRuntime().availableProcessors();
 
-    @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins'. If this option is specified, auto-discovery will be skipped")
+    @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'. If this option is specified, auto-discovery will be skipped")
     public String master;
 
     @Option(name = "-autoDiscoveryAddress", usage = "Use this address for udp-based auto-discovery (default 255.255.255.255)")
@@ -264,9 +265,19 @@ public class Client {
     }
 
     private Candidate discoverFromMasterUrl() throws IOException, ParserConfigurationException, RetryException {
-        HttpClient client = createHttpClient(new URL(master));
+        if (!master.endsWith("/")) {
+            master += "/";
+        }
+        URL masterURL;
+        try {
+            masterURL = new URL(master);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(MessageFormat.format("The master URL \"{0}\" is invalid", master), e);
+        }
 
-        String url = master + "/plugin/swarm/slaveInfo";
+        HttpClient client = createHttpClient(masterURL);
+
+        String url = masterURL.toExternalForm() + "plugin/swarm/slaveInfo";
         GetMethod get = new GetMethod(url);
         get.setDoAuthentication(true);
         int responseCode = client.executeMethod(get);
@@ -284,7 +295,7 @@ public class Client {
             throw new RetryException("Invalid XML received from " + url);
         }
         String swarmSecret = getChildElementString(xml.getDocumentElement(), "swarmSecret");
-        return new Candidate(master, swarmSecret);
+        return new Candidate(masterURL.toExternalForm(), swarmSecret);
     }
 
     /**
@@ -296,7 +307,7 @@ public class Client {
         try {
             Launcher launcher = new Launcher();
 
-            launcher.slaveJnlpURL = new URL(target.url + "/computer/" + name
+            launcher.slaveJnlpURL = new URL(target.url + "computer/" + name
                     + "/slave-agent.jnlp");
 
             if (username != null && password != null) {
@@ -371,7 +382,7 @@ public class Client {
         }
 
         PostMethod post = new PostMethod(target.url
-                + "/plugin/swarm/createSlave?name=" + name + "&executors="
+                + "plugin/swarm/createSlave?name=" + name + "&executors="
                 + executors
                 + param("remoteFsRoot", remoteFsRoot.getAbsolutePath())
                 + param("description", description)
