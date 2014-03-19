@@ -2,6 +2,7 @@ package hudson.plugins.swarm;
 
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.Descriptor;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
 import hudson.model.Slave;
@@ -64,6 +65,14 @@ public class SwarmSlave extends Slave implements EphemeralNode {
      * {@link ComputerLauncher} that destroys itself upon a connection termination.
      */
     private static final JNLPLauncher SELF_CLEANUP_LAUNCHER = new JNLPLauncher() {
+
+        @Override public Descriptor<ComputerLauncher> getDescriptor() {
+            return new Descriptor<ComputerLauncher>() {
+                @Override public String getDisplayName() {
+                    return "Launch swarm slaves";
+                }
+            };
+        }
 
         @Override
         public void afterDisconnect(SlaveComputer computer, TaskListener listener) {
