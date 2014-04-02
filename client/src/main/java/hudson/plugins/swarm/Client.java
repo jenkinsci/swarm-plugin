@@ -371,7 +371,7 @@ public class Client {
         }
 
         PostMethod post = new PostMethod(target.url
-                + "/plugin/swarm/createSlave?name=" + name + "&executors="
+                + "/plugin/swarm/createSlave?name=" + encode(name) + "&executors="
                 + executors
                 + param("remoteFsRoot", remoteFsRoot.getAbsolutePath())
                 + param("description", description)
@@ -388,12 +388,16 @@ public class Client {
         }
     }
 
+    private String encode(String value) throws UnsupportedEncodingException {
+        return URLEncoder.encode(value, "UTF-8");
+    }
+
     private String param(String name, String value)
             throws UnsupportedEncodingException {
         if (value == null) {
             return "";
         }
-        return "&" + name + "=" + URLEncoder.encode(value, "UTF-8");
+        return "&" + name + "=" + encode(value);
     }
 
     protected void verifyThatUrlIsHudson() throws InterruptedException,
