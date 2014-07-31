@@ -3,6 +3,7 @@ package hudson.plugins.swarm;
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -34,6 +35,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.text.MessageFormat;
 
 /**
  * Swarm client.
@@ -67,7 +69,7 @@ public class Client {
     @Option(name = "-executors", usage = "Number of executors")
     public int executors = Runtime.getRuntime().availableProcessors();
 
-    @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins'. If this option is specified, auto-discovery will be skipped")
+    @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'. If this option is specified, auto-discovery will be skipped")
     public String master;
 
     @Option(name = "-autoDiscoveryAddress", usage = "Use this address for udp-based auto-discovery (default 255.255.255.255)")
@@ -284,9 +286,19 @@ public class Client {
     }
 
     private Candidate discoverFromMasterUrl() throws IOException, ParserConfigurationException, RetryException {
-        HttpClient client = createHttpClient(new URL(master));
+        if (!master.endsWith("/")) {
+            master += "/";
+        }
+        URL masterURL;
+        try {
+            masterURL = new URL(master);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(MessageFormat.format("The master URL \"{0}\" is invalid", master), e);
+        }
 
-        String url = master + "/plugin/swarm/slaveInfo";
+        HttpClient client = createHttpClient(masterURL);
+
+        String url = masterURL.toExternalForm() + "plugin/swarm/slaveInfo";
         GetMethod get = new GetMethod(url);
         get.setDoAuthentication(true);
         int responseCode = client.executeMethod(get);
@@ -304,7 +316,7 @@ public class Client {
             throw new RetryException("Invalid XML received from " + url);
         }
         String swarmSecret = getChildElementString(xml.getDocumentElement(), "swarmSecret");
-        return new Candidate(master, swarmSecret);
+        return new Candidate(masterURL.toExternalForm(), swarmSecret);
     }
 
     /**
@@ -316,7 +328,7 @@ public class Client {
         try {
             Launcher launcher = new Launcher();
 
-            launcher.slaveJnlpURL = new URL(target.url + "/computer/" + name
+            launcher.slaveJnlpURL = new URL(target.url + "computer/" + name
                     + "/slave-agent.jnlp");
 
             if (username != null && password != null) {
@@ -373,6 +385,22 @@ public class Client {
         return client;
     }
 
+    private Crumb getCsrfCrumb(HttpClient client) throws IOException {
+        GetMethod httpGet = new GetMethod(target.url + "crumbIssuer/api/xml?xpath=" + URLEncoder.encode("concat(//crumbRequestField,\":\",//crumb)", "UTF-8"));
+        httpGet.setDoAuthentication(true);
+        int responseCode = client.executeMethod(httpGet);
+        if (responseCode != HttpStatus.SC_OK) {
+            System.out.println("Could not obtain CSRF crumb. Response code: " + responseCode);
+            return null;
+        }
+        String[] crumbResponse = httpGet.getResponseBodyAsString().split(":");
+        if (crumbResponse.length != 2) {
+            System.out.println("Unexpected CSRF crumb response: " + httpGet.getResponseBodyAsString());
+            return null;
+        }
+        return new Crumb(crumbResponse[0], crumbResponse[1]);
+    }
+
     protected void createSwarmSlave() throws IOException, InterruptedException,
             RetryException {
 
@@ -391,7 +419,7 @@ public class Client {
         }
 
         PostMethod post = new PostMethod(target.url
-                + "/plugin/swarm/createSlave?name=" + encode(name) + "&executors="
+                + "/plugin/swarm/createSlave?name=" + name + "&executors="
                 + executors
                 + param("remoteFsRoot", remoteFsRoot.getAbsolutePath())
                 + param("description", description)
@@ -400,6 +428,12 @@ public class Client {
                 + param("mode", mode.toUpperCase()));
 
         post.setDoAuthentication(true);
+
+        Crumb csrfCrumb = getCsrfCrumb(client);
+        if (csrfCrumb != null) {
+            post.addRequestHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+        }
+
         int responseCode = client.executeMethod(post);
         if (responseCode != 200) {
             throw new RetryException(
@@ -480,4 +514,17 @@ public class Client {
             return new X509Certificate[0];
         }
     }
+
+    private static class Crumb {
+
+        private final String crumb;
+        private final String crumbRequestField;
+
+        Crumb(String crumbRequestField, String crumb) {
+            this.crumbRequestField = crumbRequestField;
+            this.crumb = crumb;
+        }
+
+    }
+
 }
