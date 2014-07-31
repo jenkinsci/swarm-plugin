@@ -76,6 +76,12 @@ public class Client {
     @Option(name = "-disableSslVerification", usage = "Disables SSL verification in the HttpClient.")
     public boolean disableSslVerification;
 
+    @Option(name = "-noRetryAfterConnected", usage = "Do not retry if a successful connection gets closed.")
+    public boolean noRetryAfterConnected;
+
+    @Option(name = "-retry", usage = "Number of retries before giving up. Unlimited if not specified.")
+    public int retry = -1;
+
     @Option(
             name = "-mode",
             usage = "The mode controlling how Jenkins allocates jobs to slaves. Can be either '" + ModeOptionHandler.NORMAL + "' " +
@@ -154,6 +160,10 @@ public class Client {
                 // create a new swarm slave
                 createSwarmSlave();
                 connect();
+                if (noRetryAfterConnected) {
+                    System.out.println("Connection closed, exiting...");
+                    System.exit(0);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (ParserConfigurationException e) {
@@ -162,6 +172,16 @@ public class Client {
                 System.out.println(e.getMessage());
                 if (e.getCause() != null) {
                     e.getCause().printStackTrace();
+                }
+            }
+
+            if (retry >= 0) {
+                if (retry == 0) {
+                    System.out.println("Retry limit reached, exiting...");
+                    System.exit(-1);
+                } else {
+                    System.out.println("Remaining retries: " + retry);
+                    retry--;
                 }
             }
 
