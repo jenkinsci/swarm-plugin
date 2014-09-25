@@ -105,7 +105,5 @@ public class Client {
             System.out.println("Retrying in 10 seconds");
             Thread.sleep(10 * 1000);
         }
-
     }
-
 }
