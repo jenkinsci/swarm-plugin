@@ -8,6 +8,7 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -92,6 +93,9 @@ public class Client {
             handler = ModeOptionHandler.class
     )
     public String mode = ModeOptionHandler.NORMAL;
+    
+    @Option(name = "-toolLocations", usage = "Whitespace-separated list of tool locations to be defined on this slave. A tool location is specified as 'toolname:location'")
+    public List<String> toolLocations = new ArrayList<String>();
 
     @Option(name = "-username", usage = "The Jenkins username for authentication")
     public String username;
@@ -410,21 +414,17 @@ public class Client {
         // ie. it does not return a 401 (Unauthorized)
         // but immediately a 403 (Forbidden)
 
-        StringBuilder labelStr = new StringBuilder();
-        for (String l : labels) {
-            if (labelStr.length() > 0) {
-                labelStr.append(' ');
-            }
-            labelStr.append(l);
-        }
+        String labelStr = StringUtils.join(labels, ' ');
+        String toolLocationsStr = StringUtils.join(toolLocations, ' ');
 
         PostMethod post = new PostMethod(target.url
-                + "/plugin/swarm/createSlave?name=" + name + "&executors="
-                + executors
+                + "/plugin/swarm/createSlave?name=" + name 
+                + "&executors=" + executors
                 + param("remoteFsRoot", remoteFsRoot.getAbsolutePath())
                 + param("description", description)
-                + param("labels", labelStr.toString()) + "&secret="
-                + target.secret
+                + param("toolLocations", toolLocationsStr)
+                + param("labels", labelStr) 
+                + "&secret=" + target.secret
                 + param("mode", mode.toUpperCase()));
 
         post.setDoAuthentication(true);
@@ -441,7 +441,7 @@ public class Client {
 
         }
     }
-
+    
     private String encode(String value) throws UnsupportedEncodingException {
         return URLEncoder.encode(value, "UTF-8");
     }
