@@ -26,7 +26,8 @@ public class PluginImpl extends Plugin {
      * Adds a new swarm slave.
      */
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name, @QueryParameter String description, @QueryParameter int executors,
-            @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret, @QueryParameter Node.Mode mode) throws IOException, FormException {
+            @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret, @QueryParameter Node.Mode mode, 
+            @QueryParameter String toolLocations) throws IOException, FormException {
 
         if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
@@ -38,7 +39,7 @@ public class PluginImpl extends Plugin {
 
             jenkins.checkPermission(SlaveComputer.CREATE);
             
-            // try to make the name unique. Swarm clients are often repliated VMs, and they may have the same name.
+            // try to make the name unique. Swarm clients are often replicated VMs, and they may have the same name.
             if (jenkins.getNode(name) != null) {
                 name = name + '-' + req.getRemoteAddr();
             }
