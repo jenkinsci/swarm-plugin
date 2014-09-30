@@ -5,6 +5,8 @@ import hudson.Util;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
 import hudson.slaves.SlaveComputer;
+import hudson.tools.ToolDescriptor;
+import hudson.tools.ToolInstallation;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -38,6 +40,20 @@ public class PluginImpl extends Plugin {
             final Jenkins jenkins = Jenkins.getInstance();
 
             jenkins.checkPermission(SlaveComputer.CREATE);
+            
+            
+            String[] toolLocsArray = toolLocations.split(" ");
+            for (String toolLocKeyValue : toolLocsArray) {
+            	String[] toolLoc = toolLocKeyValue.split(":");
+            	
+            	for (ToolDescriptor<?> desc : ToolInstallation.all()) {
+            		for (ToolInstallation inst : desc.getInstallations()) {
+            			if (inst.getName().equalsIgnoreCase(toolLoc[0])) {
+            				System.out.println(inst.getClass().getCanonicalName().toString() + "$DescriptorImpl@" + inst.getName() + ":" + toolLoc[1]);
+            			}
+            		}
+            	}
+            }                        
             
             // try to make the name unique. Swarm clients are often replicated VMs, and they may have the same name.
             if (jenkins.getNode(name) != null) {
