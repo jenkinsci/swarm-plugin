@@ -198,9 +198,7 @@ public class Client {
 
     }
 
-    protected Candidate discoverFromBroadcast() throws IOException,
-            InterruptedException, RetryException, ParserConfigurationException {
-
+    protected Candidate discoverFromBroadcast() throws IOException, RetryException, ParserConfigurationException {
         DatagramSocket socket = new DatagramSocket();
         socket.setBroadcast(true);
 
@@ -405,8 +403,7 @@ public class Client {
         return new Crumb(crumbResponse[0], crumbResponse[1]);
     }
 
-    protected void createSwarmSlave() throws IOException, InterruptedException,
-            RetryException {
+    protected void createSwarmSlave() throws IOException, RetryException {
 
         HttpClient client = createHttpClient(new URL(target.url));
 
@@ -454,8 +451,7 @@ public class Client {
         return "&" + name + "=" + encode(value);
     }
 
-    protected void verifyThatUrlIsHudson() throws InterruptedException,
-            RetryException {
+    protected void verifyThatUrlIsHudson() throws RetryException {
         try {
             System.out.println("Connecting to " + target.url);
             HttpURLConnection con = (HttpURLConnection) new URL(target.url).openConnection();
@@ -472,15 +468,6 @@ public class Client {
             }
         } catch (IOException e) {
             throw new RetryException("Failed to connect to " + target.url, e);
-        }
-    }
-
-    private static void copy(InputStream in, OutputStream out)
-            throws IOException {
-        byte[] buf = new byte[8192];
-        int len;
-        while ((len = in.read(buf)) >= 0) {
-            out.write(buf, 0, len);
         }
     }
 
