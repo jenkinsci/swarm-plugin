@@ -1,11 +1,12 @@
 package hudson.plugins.swarm;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.InetAddress;
+
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 /**
  * Swarm client.
@@ -107,5 +108,4 @@ public class Client {
         }
 
     }
-
 }
