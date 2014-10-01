@@ -2,24 +2,7 @@ package hudson.plugins.swarm;
 
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.Text;
-import org.xml.sax.SAXException;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,9 +28,26 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-/**
- *
- */
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.lang.StringUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.Text;
+import org.xml.sax.SAXException;
+
 public class SwarmClient {
 
     private final Options options;
@@ -57,7 +57,7 @@ public class SwarmClient {
     }
 
     public Candidate discoverFromBroadcast() throws IOException,
-            InterruptedException, RetryException, ParserConfigurationException {
+            RetryException, ParserConfigurationException {
 
         DatagramSocket socket = new DatagramSocket();
         socket.setBroadcast(true);
@@ -273,21 +273,17 @@ public class SwarmClient {
         // ie. it does not return a 401 (Unauthorized)
         // but immediately a 403 (Forbidden)
 
-        StringBuilder labelStr = new StringBuilder();
-        for (String l : options.labels) {
-            if (labelStr.length() > 0) {
-                labelStr.append(' ');
-            }
-            labelStr.append(l);
-        }
+        String labelStr = StringUtils.join(options.labels, ' ');
+        String toolLocationsStr = StringUtils.join(options.toolLocations, ' ');
 
         PostMethod post = new PostMethod(target.url
-                + "/plugin/swarm/createSlave?name=" + options.name + "&executors="
-                + options.executors
+                + "/plugin/swarm/createSlave?name=" + options.name 
+                + "&executors=" + options.executors
                 + param("remoteFsRoot", options.remoteFsRoot.getAbsolutePath())
                 + param("description", options.description)
-                + param("labels", labelStr.toString()) + "&secret="
-                + target.secret
+                + param("labels", labelStr)
+                + param("toolLocations", toolLocationsStr)
+                + "&secret=" + target.secret
                 + param("mode", options.mode.toUpperCase()));
 
         post.setDoAuthentication(true);
@@ -301,7 +297,6 @@ public class SwarmClient {
         if (responseCode != 200) {
             throw new RetryException(
                     "Failed to create a slave on Jenkins CODE: " + responseCode);
-
         }
     }
 

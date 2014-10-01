@@ -49,6 +49,9 @@ public class Options {
             handler = ModeOptionHandler.class
     )
     public String mode = ModeOptionHandler.NORMAL;
+    
+    @Option(name = "-toolLocations", usage = "Whitespace-separated list of tool locations to be defined on this slave. A tool location is specified as 'toolName:location'")
+    public List<String> toolLocations = new ArrayList<String>();
 
     @Option(name = "-username", usage = "The Jenkins username for authentication")
     public String username;
