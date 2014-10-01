@@ -5,6 +5,7 @@ import hudson.Plugin;
 import hudson.Util;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
+import hudson.slaves.NodeProperty;
 import hudson.slaves.SlaveComputer;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
