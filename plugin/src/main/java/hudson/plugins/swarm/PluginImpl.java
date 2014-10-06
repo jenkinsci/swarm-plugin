@@ -5,7 +5,6 @@ import hudson.Plugin;
 import hudson.Util;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
-import hudson.slaves.NodeProperty;
 import hudson.slaves.SlaveComputer;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
@@ -18,6 +17,7 @@ import java.util.List;
 
 import jenkins.model.Jenkins;
 
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -48,15 +48,19 @@ public class PluginImpl extends Plugin {
 
             jenkins.checkPermission(SlaveComputer.CREATE);
             
-    		ToolLocationNodeProperty toolLocationNodeProperty = new ToolLocationNodeProperty(parseToolLocations(toolLocations));
+            List<ToolLocationNodeProperty> nodeProperties = Lists.newArrayList();
+            if (StringUtils.isNotBlank(toolLocations)) {
+            	List<ToolLocation> parsedToolLocations = parseToolLocations(toolLocations);
+				nodeProperties = Lists.newArrayList(new ToolLocationNodeProperty(parsedToolLocations));
+            }
     		
             // try to make the name unique. Swarm clients are often replicated VMs, and they may have the same name.
             if (jenkins.getNode(name) != null) {
                 name = name + '-' + req.getRemoteAddr();
             }
 
-            SwarmSlave slave = new SwarmSlave(name, "Swarm slave from " + req.getRemoteHost() + " : " + description,
-                    remoteFsRoot, String.valueOf(executors), mode, "swarm " + Util.fixNull(labels), Lists.newArrayList(toolLocationNodeProperty));
+			SwarmSlave slave = new SwarmSlave(name, "Swarm slave from " + req.getRemoteHost() + " : " + description,
+                    remoteFsRoot, String.valueOf(executors), mode, "swarm " + Util.fixNull(labels), nodeProperties);
 
             // if this still results in a duplicate, so be it
             synchronized (jenkins) {
