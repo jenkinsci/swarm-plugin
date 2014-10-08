@@ -81,7 +81,10 @@ public class PluginImpl extends Plugin {
 		String[] toolLocsArray = toolLocations.split(" ");
 		for (String toolLocKeyValue : toolLocsArray) {
 			boolean found = false;
-			String[] toolLoc = toolLocKeyValue.split(":");
+			// Limit the split on only the first occurence
+			// of ':', so that the tool location path can
+			// contain ':' characters.
+			String[] toolLoc = toolLocKeyValue.split(":", 2);
 			
 			for (ToolDescriptor<?> desc : ToolInstallation.all()) {
 				for (ToolInstallation inst : desc.getInstallations()) {
