@@ -90,11 +90,10 @@ public class PluginImpl extends Plugin {
 				for (ToolInstallation inst : desc.getInstallations()) {
 					if (inst.getName().equals(toolLoc[0])) {
 						found = true;
-						
-						String key = inst.getClass().getCanonicalName().toString() + "$DescriptorImpl@" + inst.getName();
+                        
 						String location = toolLoc[1];
 		
-						ToolLocationNodeProperty.ToolLocation toolLocation = new ToolLocationNodeProperty.ToolLocation(key, location);
+						ToolLocationNodeProperty.ToolLocation toolLocation = new ToolLocationNodeProperty.ToolLocation(desc, inst.getName(), location);
 						result.add(toolLocation);
 					}
 				}
