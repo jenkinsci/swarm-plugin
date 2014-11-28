@@ -29,6 +29,11 @@ public class Options {
     @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'. If this option is specified, auto-discovery will be skipped")
     public String master;
 
+    @Option(name = "-tunnel", usage = "Connect to the specified host and port, instead of connecting directly to Jenkins. " +
+                    "Useful when connection to Hudson needs to be tunneled. Can be also HOST: or :PORT, " +
+                    "in which case the missing portion will be auto-configured like the default behavior")
+    public String tunnel;
+
     @Option(name = "-noRetryAfterConnected", usage = "Do not retry if a successful connection gets closed.")
     public boolean noRetryAfterConnected;
 

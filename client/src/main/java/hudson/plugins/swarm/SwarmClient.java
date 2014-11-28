@@ -207,6 +207,14 @@ public class SwarmClient {
 
             args.add("-url");
             args.add(target.url);
+
+            // if the tunnel option is set in the command line, use it
+            if (options.tunnel != null) {
+                args.add("-tunnel");
+                args.add(options.tunnel);
+                System.out.println("Using tunnel through " + options.tunnel);
+            }
+
             if (options.username != null && options.password != null) {
                 args.add("-credentials");
                 args.add(options.username + ":" + options.password);
