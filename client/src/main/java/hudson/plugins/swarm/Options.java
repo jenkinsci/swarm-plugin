@@ -67,4 +67,7 @@ public class Options {
     @Option(name = "-help", aliases = "--help", usage = "Show the help screen")
     public boolean help;
 
+    @Option(name = "-passwordEnvVariable", usage = "Environment variable that the password is stored in")
+    public String passwordEnvVariable;
+
 }
