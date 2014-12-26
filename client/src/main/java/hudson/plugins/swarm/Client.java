@@ -39,7 +39,7 @@ public class Client {
             System.exit(0);
         }
         // Check to see if passwordEnvVariable is set, if so pull down the
-        // password from the env and set ass password.
+        // password from the env and set as password.
         if (options.passwordEnvVariable != null) {
             options.password = System.getenv(options.passwordEnvVariable);
         }
