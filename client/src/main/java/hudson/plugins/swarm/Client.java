@@ -38,6 +38,11 @@ public class Client {
             p.printUsage(System.out);
             System.exit(0);
         }
+        // Check to see if passwordEnvVariable is set, if so pull down the
+        // password from the env and set as password.
+        if (options.passwordEnvVariable != null) {
+            options.password = System.getenv(options.passwordEnvVariable);
+        }
         client.run();
     }
 
