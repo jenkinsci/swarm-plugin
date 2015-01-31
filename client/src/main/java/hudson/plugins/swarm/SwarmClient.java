@@ -82,13 +82,17 @@ public class SwarmClient {
                         0, recv.getLength()));
             } catch (SAXException e) {
                 System.out.println("Invalid response XML from "
-                        + recv.getAddress() + ": " + responseXml);
+                        + printable(recv.getAddress()) + ": " + responseXml);
+                continue;
+            }
+            if (!StringUtils.isBlank(options.candidateTag)){
+                System.out.println(printable(recv.getAddress())+options.candidateTag);
                 continue;
             }
             String swarm = getChildElementString(
                     xml.getDocumentElement(), "swarm");
             if (swarm == null) {
-                System.out.println(recv.getAddress()
+                System.out.println(printable(recv.getAddress())
                         + " doesn't support swarm");
                 continue;
             }
@@ -96,7 +100,7 @@ public class SwarmClient {
             String url = options.master == null ? getChildElementString(
                     xml.getDocumentElement(), "url") : options.master;
             if (url == null) {
-                System.out.println(recv.getAddress()
+                System.out.println(printable(recv.getAddress())
                         + " doesn't have the configuration set yet. Please go to the system configuration page of this Jenkins and submit it: "
                         + responseXml);
                 continue;
@@ -366,6 +370,14 @@ public class SwarmClient {
             }
         }
         return null;
+    }
+    
+    private String printable(InetAddress ia){
+        if (options.showHostName){
+            return ia.getHostName();
+        }else{
+            return ia.toString();
+        }
     }
 
     private static class DefaultTrustManager implements X509TrustManager {
