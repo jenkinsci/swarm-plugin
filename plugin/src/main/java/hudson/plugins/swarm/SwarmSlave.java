@@ -74,7 +74,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
                 }
             };
         }
-        
+
         @Override
         public void afterDisconnect(SlaveComputer computer, TaskListener listener) {
             final Slave node = computer.getNode();
