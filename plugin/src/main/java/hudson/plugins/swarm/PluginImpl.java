@@ -3,6 +3,7 @@ package hudson.plugins.swarm;
 import com.google.common.collect.Lists;
 import hudson.Plugin;
 import hudson.Util;
+import hudson.model.Computer;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
 import hudson.slaves.SlaveComputer;
@@ -69,10 +70,14 @@ public class PluginImpl extends Plugin {
             // check for existing connections
             {
                 Node n = jenkins.getNode(name);
-                if (n != null && n.toComputer().isOnline()) {
-                    // this is an existing connection, we'll only cause issues if we trample over an online connection
-                    rsp.setStatus(SC_CONFLICT);
-                    return;
+                if (n != null) {
+                    Computer c = n.toComputer();
+                    if (c != null && c.isOnline()) {
+                        // this is an existing connection, we'll only cause issues if we trample over an online connection
+                        
+                        rsp.setStatus(SC_CONFLICT);
+                        return;
+                    }
                 }
             }
 
