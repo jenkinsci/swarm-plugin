@@ -58,10 +58,13 @@ public class SwarmClient {
     private final Options options;
     
     private final String hash;
+    
+    private String name;
 
     public SwarmClient(Options options) {
         this.options = options;
         this.hash = hash(options.remoteFsRoot);
+        this.name = options.name;
     }
 
     public String getHash() {
@@ -203,7 +206,7 @@ public class SwarmClient {
         try {
             Launcher launcher = new Launcher();
 
-            launcher.slaveJnlpURL = new URL(target.url + "computer/" + options.name
+            launcher.slaveJnlpURL = new URL(target.url + "computer/" + name
                     + "/slave-agent.jnlp");
 
             if (options.username != null && options.password != null) {
@@ -322,13 +325,14 @@ public class SwarmClient {
         }
         String name = post.getResponseBodyAsString();
         if (name == null) {
+            this.name = options.name;
             return;
         }
         name = name.trim();
         if (name.isEmpty()) {
             return;
         }
-        options.name = name;
+        this.name = name;
     }
 
     private String encode(String value) throws UnsupportedEncodingException {
