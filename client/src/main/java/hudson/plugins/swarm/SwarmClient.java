@@ -2,39 +2,6 @@ package hudson.plugins.swarm;
 
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -48,12 +15,57 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.HttpURLConnection;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+
 public class SwarmClient {
 
     private final Options options;
+    
+    private final String hash;
 
     public SwarmClient(Options options) {
         this.options = options;
+        this.hash = hash(options.remoteFsRoot);
+    }
+
+    public String getHash() {
+        return hash;
     }
 
     public Candidate discoverFromBroadcast() throws IOException,
@@ -292,7 +304,9 @@ public class SwarmClient {
                 + param("labels", labelStr)
                 + param("toolLocations", toolLocationsStr)
                 + "&secret=" + target.secret
-                + param("mode", options.mode.toUpperCase()));
+                + param("mode", options.mode.toUpperCase())
+                + param("hash", hash)
+        );
 
         post.setDoAuthentication(true);
 
@@ -306,6 +320,15 @@ public class SwarmClient {
             throw new RetryException(
                     "Failed to create a slave on Jenkins CODE: " + responseCode);
         }
+        String name = post.getResponseBodyAsString();
+        if (name == null) {
+            return;
+        }
+        name = name.trim();
+        if (name.isEmpty()) {
+            return;
+        }
+        options.name = name;
     }
 
     private String encode(String value) throws UnsupportedEncodingException {
@@ -368,6 +391,53 @@ public class SwarmClient {
         return null;
     }
 
+    /**
+     * Returns a hash that should be consistent for any individual swarm client (as long as it has a persistent IP)
+     * and should be unique to that client.
+     *
+     * @param remoteFsRoot the file system root should be part of the hash (to support multiple swarm clients from 
+     *                     the same machine)
+     * @return our best effort at a consistent hash
+     */
+    public static String hash(File remoteFsRoot) {
+        StringBuilder buf = new StringBuilder();
+        try {
+            buf.append(remoteFsRoot.getCanonicalPath()).append('\n');
+        } catch (IOException e) {
+            buf.append(remoteFsRoot.getAbsolutePath()).append('\n');
+        }
+        try {
+            for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                for (InetAddress ia : Collections.list(ni.getInetAddresses())) {
+                    if (ia instanceof Inet4Address) {
+                        buf.append(ia.getHostAddress()).append('\n');
+                    }
+                }
+                byte[] hardwareAddress = ni.getHardwareAddress();
+                if (hardwareAddress != null) {
+                    buf.append(Arrays.toString(hardwareAddress));
+                }
+            }
+        } catch (SocketException e) {
+            // oh well we tried
+        }
+        return getDigestOf(buf.toString()).substring(0, 8);
+    }
+
+    public static String getDigestOf(String text) {
+        try {
+            return toHexString(MessageDigest.getInstance("MD5").digest(text.getBytes("UTF-8")));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("MD5 not installed", e);    // impossible according to JLS
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("UTF-8 not supported", e);    // impossible according to JLS
+        }
+    }
+
+    public static String toHexString(byte[] bytes) {
+        return String.format("%0" + (bytes.length * 2) + "x", new BigInteger(1, bytes));
+    }
+    
     private static class DefaultTrustManager implements X509TrustManager {
 
         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {

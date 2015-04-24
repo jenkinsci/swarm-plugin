@@ -1,6 +1,6 @@
 package hudson.plugins.swarm;
 
-import static javax.servlet.http.HttpServletResponse.*;
+import com.google.common.collect.Lists;
 import hudson.Plugin;
 import hudson.Util;
 import hudson.model.Descriptor.FormException;
@@ -10,19 +10,21 @@ import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolLocationNodeProperty.ToolLocation;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.util.List;
-
 import jenkins.model.Jenkins;
-
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import com.google.common.collect.Lists;
+import javax.servlet.ServletOutputStream;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.List;
+
+import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
+import static javax.servlet.http.HttpServletResponse.SC_EXPECTATION_FAILED;
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static javax.servlet.http.HttpServletResponse.SC_SERVICE_UNAVAILABLE;
 
 /**
  * Exposes an entry point to add a new swarm slave.
@@ -36,7 +38,7 @@ public class PluginImpl extends Plugin {
      */
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name, @QueryParameter String description, @QueryParameter int executors,
             @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret, @QueryParameter Node.Mode mode, 
-            @QueryParameter String toolLocations) throws IOException {
+            @QueryParameter String toolLocations, @QueryParameter(fixEmpty = true) String hash) throws IOException {
 
         if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
@@ -54,9 +56,24 @@ public class PluginImpl extends Plugin {
 				nodeProperties = Lists.newArrayList(new ToolLocationNodeProperty(parsedToolLocations));
             }
     		
-            // try to make the name unique. Swarm clients are often replicated VMs, and they may have the same name.
-            if (jenkins.getNode(name) != null) {
-                name = name + '-' + req.getRemoteAddr();
+            if (hash == null && jenkins.getNode(name) != null) {
+                // this is a legacy client, they won't be able to pick up the new name, so throw them away
+                // perhaps they can find another master to connect to
+                rsp.setStatus(SC_CONFLICT);
+                return;
+            }
+            if (hash != null) {
+                // try to make the name unique. Swarm clients are often replicated VMs, and they may have the same name.
+                name = name + '-' + hash;
+            }
+            // check for existing connections
+            {
+                Node n = jenkins.getNode(name);
+                if (n != null && n.toComputer().isOnline()) {
+                    // this is an existing connection, we'll only cause issues if we trample over an online connection
+                    rsp.setStatus(SC_CONFLICT);
+                    return;
+                }
             }
 
 			SwarmSlave slave = new SwarmSlave(name, "Swarm slave from " + req.getRemoteHost() + " : " + description,
@@ -70,6 +87,12 @@ public class PluginImpl extends Plugin {
                 }
                 jenkins.addNode(slave);
             }
+            rsp.setContentType("text/plain; UTF-8");
+            byte[] response = name.getBytes("UTF-8");
+            rsp.setContentLength(response.length);
+            ServletOutputStream outputStream = rsp.getOutputStream();
+            outputStream.write(response);
+            outputStream.flush();
         } catch (FormException e) {
             e.printStackTrace();
         }
