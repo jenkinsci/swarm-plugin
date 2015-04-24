@@ -1,10 +1,16 @@
-client/target/
-plugin/target/
-target
-.classpath
-.settings
-.project
+target/
+work*/
+
+# IntelliJ project files 
 *.iml
 *.ipr
 *.iws
-work
+.idea/
+
+# eclipse project file
+.settings
+.classpath
+.project
+build/
+
+/nb-configuration.xml
