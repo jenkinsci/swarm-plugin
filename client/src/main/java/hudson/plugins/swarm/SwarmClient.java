@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Random;
 
 public class SwarmClient {
@@ -324,13 +325,23 @@ public class SwarmClient {
             throw new RetryException(
                     "Failed to create a slave on Jenkins CODE: " + responseCode);
         }
-        String name = post.getResponseBodyAsString();
+        Properties props = new Properties();
+        InputStream stream = post.getResponseBodyAsStream();
+        if (stream != null) {
+            try {
+                props.load(stream);
+            } finally {
+                stream.close();
+            }
+        }
+        String name = props.getProperty("name");
         if (name == null) {
             this.name = options.name;
             return;
         }
         name = name.trim();
         if (name.isEmpty()) {
+            this.name = options.name;
             return;
         }
         this.name = name;

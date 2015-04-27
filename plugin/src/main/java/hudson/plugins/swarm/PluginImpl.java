@@ -18,9 +18,11 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
+import java.util.Properties;
 
 import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 import static javax.servlet.http.HttpServletResponse.SC_EXPECTATION_FAILED;
@@ -61,6 +63,10 @@ public class PluginImpl extends Plugin {
                 // this is a legacy client, they won't be able to pick up the new name, so throw them away
                 // perhaps they can find another master to connect to
                 rsp.setStatus(SC_CONFLICT);
+                rsp.setContentType("text/plain; UTF-8");
+                rsp.getWriter().printf(
+                        "A slave called '%s' already exists and legacy clients do not support name disambiguation%n",
+                        name);
                 return;
             }
             if (hash != null) {
@@ -76,6 +82,8 @@ public class PluginImpl extends Plugin {
                         // this is an existing connection, we'll only cause issues if we trample over an online connection
                         
                         rsp.setStatus(SC_CONFLICT);
+                        rsp.setContentType("text/plain; UTF-8");
+                        rsp.getWriter().printf("A slave called '%s' is already created and on-line%n", name);
                         return;
                     }
                 }
@@ -93,7 +101,11 @@ public class PluginImpl extends Plugin {
                 jenkins.addNode(slave);
             }
             rsp.setContentType("text/plain; UTF-8");
-            byte[] response = name.getBytes("UTF-8");
+            Properties props = new Properties();
+            props.put("name", name);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            props.store(bos, "");
+            byte[] response = bos.toByteArray();
             rsp.setContentLength(response.length);
             ServletOutputStream outputStream = rsp.getOutputStream();
             outputStream.write(response);
