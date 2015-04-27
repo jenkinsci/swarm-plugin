@@ -77,10 +77,15 @@ public class SwarmSlave extends Slave implements EphemeralNode {
 
         @Override
         public void afterDisconnect(SlaveComputer computer, TaskListener listener) {
-            try {
-                Jenkins.getInstance().removeNode(computer.getNode());
-            } catch (IOException e) {
-                e.printStackTrace(listener.error(e.getMessage()));
+            final Slave node = computer.getNode();
+            if (node != null) {
+                try {
+                    Jenkins.getInstance().removeNode(node);
+                } catch (IOException e) {
+                    e.printStackTrace(listener.error(e.getMessage()));
+                }
+            } else {
+                listener.getLogger().printf("Could not remove node for %s as it appears to have been removed already%n", computer);
             }
         }
     };
