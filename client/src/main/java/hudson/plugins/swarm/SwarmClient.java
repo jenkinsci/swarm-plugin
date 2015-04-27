@@ -32,6 +32,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
 import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.NetworkInterface;
@@ -414,6 +415,8 @@ public class SwarmClient {
             for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
                 for (InetAddress ia : Collections.list(ni.getInetAddresses())) {
                     if (ia instanceof Inet4Address) {
+                        buf.append(ia.getHostAddress()).append('\n');
+                    } else if (ia instanceof Inet6Address) {
                         buf.append(ia.getHostAddress()).append('\n');
                     }
                 }
