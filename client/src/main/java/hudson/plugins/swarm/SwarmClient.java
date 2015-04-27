@@ -53,6 +53,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
 
@@ -310,7 +311,7 @@ public class SwarmClient {
                 + param("labels", labelStr)
                 + param("toolLocations", toolLocationsStr)
                 + "&secret=" + target.secret
-                + param("mode", options.mode.toUpperCase())
+                + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
                 + param("hash", hash)
         );
 
