@@ -2,6 +2,7 @@ package hudson.plugins.swarm;
 
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -439,23 +440,9 @@ public class SwarmClient {
         } catch (SocketException e) {
             // oh well we tried
         }
-        return getDigestOf(buf.toString()).substring(0, 8);
+        return DigestUtils.md5Hex(buf.toString()).substring(0, 8);
     }
 
-    public static String getDigestOf(String text) {
-        try {
-            return toHexString(MessageDigest.getInstance("MD5").digest(text.getBytes("UTF-8")));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("MD5 not installed", e);    // impossible according to JLS
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("UTF-8 not supported", e);    // impossible according to JLS
-        }
-    }
-
-    public static String toHexString(byte[] bytes) {
-        return String.format("%0" + (bytes.length * 2) + "x", new BigInteger(1, bytes));
-    }
-    
     private static class DefaultTrustManager implements X509TrustManager {
 
         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
