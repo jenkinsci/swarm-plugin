@@ -96,32 +96,32 @@ public class SwarmClient {
             Document xml;
             System.out.println();
 
+            String address = printable(recv.getAddress());
+
             try {
                 xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(recv.getData(),
                         0, recv.getLength()));
             } catch (SAXException e) {
                 System.out.println("Invalid response XML from "
-                        + printable(recv.getAddress()) + ": " + responseXml);
+                        + address + ": " + responseXml);
                 continue;
             }
-            if (!StringUtils.isBlank(options.candidateTag)){
-                System.out.println(printable(recv.getAddress())+options.candidateTag);
+            if (!StringUtils.isBlank(options.candidateTag)) {
+                System.out.println(address + options.candidateTag);
                 continue;
             }
             String swarm = getChildElementString(
                     xml.getDocumentElement(), "swarm");
             if (swarm == null) {
-                System.out.println(printable(recv.getAddress())
-                        + " doesn't support swarm");
+                System.out.println(address + " doesn't support swarm");
                 continue;
             }
 
             String url = options.master == null ? getChildElementString(
                     xml.getDocumentElement(), "url") : options.master;
+
             if (url == null) {
-                System.out.println(printable(recv.getAddress())
-                        + " doesn't have the configuration set yet. Please go to the system configuration page of this Jenkins and submit it: "
-                        + responseXml);
+                System.out.println("Jenkins master at '" + address + "' doesn't have a valid Jenkins URL configuration set. Please go to <jenkins url>/configure and set a valid URL.");
                 continue;
             }
             candidates.add(new Candidate(url, swarm));
@@ -308,7 +308,7 @@ public class SwarmClient {
         String toolLocationsStr = StringUtils.join(options.toolLocations, ' ');
 
         PostMethod post = new PostMethod(target.url
-                + "/plugin/swarm/createSlave?name=" + options.name 
+                + "/plugin/swarm/createSlave?name=" + options.name
                 + "&executors=" + options.executors
                 + param("remoteFsRoot", options.remoteFsRoot.getAbsolutePath())
                 + param("description", options.description)
@@ -412,11 +412,11 @@ public class SwarmClient {
         }
         return null;
     }
-    
+
     private String printable(InetAddress ia){
-        if (options.showHostName){
+        if (options.showHostName) {
             return ia.getHostName();
-        }else{
+        } else {
             return ia.toString();
         }
     }
