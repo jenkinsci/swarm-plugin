@@ -70,4 +70,10 @@ public class Options {
     @Option(name = "-passwordEnvVariable", usage = "Environment variable that the password is stored in")
     public String passwordEnvVariable;
 
+    @Option(name = "-showHostName", aliases = "--showHostName", usage = "Show hostnames instead of IP address")
+    public boolean showHostName;
+    
+    @Option(name = "-candidateTag", usage = "Show swarm candidate with tag only")
+    public String candidateTag;
+
 }
