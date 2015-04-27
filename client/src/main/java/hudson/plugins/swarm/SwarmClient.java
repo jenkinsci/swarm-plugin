@@ -2,39 +2,7 @@ package hudson.plugins.swarm;
 
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -48,12 +16,63 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.HttpURLConnection;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Properties;
+import java.util.Random;
+
 public class SwarmClient {
 
     private final Options options;
+    
+    private final String hash;
+    
+    private String name;
 
     public SwarmClient(Options options) {
         this.options = options;
+        this.hash = hash(options.remoteFsRoot);
+        this.name = options.name;
+    }
+
+    public String getHash() {
+        return hash;
     }
 
     public Candidate discoverFromBroadcast() throws IOException,
@@ -195,7 +214,7 @@ public class SwarmClient {
         try {
             Launcher launcher = new Launcher();
 
-            launcher.slaveJnlpURL = new URL(target.url + "computer/" + options.name
+            launcher.slaveJnlpURL = new URL(target.url + "computer/" + name
                     + "/slave-agent.jnlp");
 
             if (options.username != null && options.password != null) {
@@ -296,7 +315,9 @@ public class SwarmClient {
                 + param("labels", labelStr)
                 + param("toolLocations", toolLocationsStr)
                 + "&secret=" + target.secret
-                + param("mode", options.mode.toUpperCase()));
+                + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
+                + param("hash", hash)
+        );
 
         post.setDoAuthentication(true);
 
@@ -307,9 +328,29 @@ public class SwarmClient {
 
         int responseCode = client.executeMethod(post);
         if (responseCode != 200) {
-            throw new RetryException(
-                    "Failed to create a slave on Jenkins CODE: " + responseCode);
+            throw new RetryException(String.format("Failed to create a slave on Jenkins CODE: %s%n%s",responseCode, 
+                    post.getResponseBodyAsString()) );
         }
+        Properties props = new Properties();
+        InputStream stream = post.getResponseBodyAsStream();
+        if (stream != null) {
+            try {
+                props.load(stream);
+            } finally {
+                stream.close();
+            }
+        }
+        String name = props.getProperty("name");
+        if (name == null) {
+            this.name = options.name;
+            return;
+        }
+        name = name.trim();
+        if (name.isEmpty()) {
+            this.name = options.name;
+            return;
+        }
+        this.name = name;
     }
 
     private String encode(String value) throws UnsupportedEncodingException {
@@ -378,6 +419,41 @@ public class SwarmClient {
         }else{
             return ia.toString();
         }
+    }
+
+    /**
+     * Returns a hash that should be consistent for any individual swarm client (as long as it has a persistent IP)
+     * and should be unique to that client.
+     *
+     * @param remoteFsRoot the file system root should be part of the hash (to support multiple swarm clients from 
+     *                     the same machine)
+     * @return our best effort at a consistent hash
+     */
+    public static String hash(File remoteFsRoot) {
+        StringBuilder buf = new StringBuilder();
+        try {
+            buf.append(remoteFsRoot.getCanonicalPath()).append('\n');
+        } catch (IOException e) {
+            buf.append(remoteFsRoot.getAbsolutePath()).append('\n');
+        }
+        try {
+            for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                for (InetAddress ia : Collections.list(ni.getInetAddresses())) {
+                    if (ia instanceof Inet4Address) {
+                        buf.append(ia.getHostAddress()).append('\n');
+                    } else if (ia instanceof Inet6Address) {
+                        buf.append(ia.getHostAddress()).append('\n');
+                    }
+                }
+                byte[] hardwareAddress = ni.getHardwareAddress();
+                if (hardwareAddress != null) {
+                    buf.append(Arrays.toString(hardwareAddress));
+                }
+            }
+        } catch (SocketException e) {
+            // oh well we tried
+        }
+        return DigestUtils.md5Hex(buf.toString()).substring(0, 8);
     }
 
     private static class DefaultTrustManager implements X509TrustManager {

@@ -77,7 +77,7 @@ public class Client {
                     swarmClient.verifyThatUrlIsHudson(target);
                 }
 
-                System.out.println("Attempting to connect to " + target.url + " " + target.secret);
+                System.out.println("Attempting to connect to " + target.url + " " + target.secret + " with ID " + swarmClient.getHash());
 
                 // create a new swarm slave
                 swarmClient.createSwarmSlave(target);
