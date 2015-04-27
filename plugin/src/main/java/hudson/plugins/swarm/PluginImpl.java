@@ -100,7 +100,7 @@ public class PluginImpl extends Plugin {
                 }
                 jenkins.addNode(slave);
             }
-            rsp.setContentType("text/plain; UTF-8");
+            rsp.setContentType("text/plain; charset=iso-8859-1");
             Properties props = new Properties();
             props.put("name", name);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
