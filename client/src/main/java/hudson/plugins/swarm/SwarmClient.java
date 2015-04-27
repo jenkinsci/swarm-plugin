@@ -322,8 +322,8 @@ public class SwarmClient {
 
         int responseCode = client.executeMethod(post);
         if (responseCode != 200) {
-            throw new RetryException(
-                    "Failed to create a slave on Jenkins CODE: " + responseCode);
+            throw new RetryException(String.format("Failed to create a slave on Jenkins CODE: %s%n%s",responseCode, 
+                    post.getResponseBodyAsString()) );
         }
         Properties props = new Properties();
         InputStream stream = post.getResponseBodyAsStream();
