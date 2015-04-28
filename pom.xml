@@ -9,7 +9,7 @@
     <artifactId>swarm-plugin</artifactId>
     <packaging>pom</packaging>
     <name>Jenkins Self-Organizing Swarm Plug-in</name>
-    <version>1.24</version>
+    <version>1.25-SNAPSHOT</version>
 
     <licenses>
         <license>
@@ -27,7 +27,7 @@
         <connection>scm:git:git://github.com/jenkinsci/swarm-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/swarm-plugin.git</developerConnection>
         <url>http://github.com/jenkinsci/swarm-plugin</url>
-        <tag>swarm-plugin-1.24</tag>
+        <tag>HEAD</tag>
   </scm>
 
     <repositories>
