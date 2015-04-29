@@ -1,10 +1,12 @@
 package hudson.plugins.swarm;
 
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.MapOptionHandler;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -55,8 +57,12 @@ public class Options {
     )
     public String mode = ModeOptionHandler.NORMAL;
     
-    @Option(name = "-toolLocations", usage = "Whitespace-separated list of tool locations to be defined on this slave. A tool location is specified as 'toolName:location'")
-    public List<String> toolLocations = new ArrayList<String>();
+    @Option(
+            name = "-t", aliases = "--toolLocation",
+            usage = "A tool location to be defined on this slave. It is specified as 'toolName=location'", 
+            handler = MapOptionHandler.class
+    )
+    public Map<String,String> toolLocations;
 
     @Option(name = "-username", usage = "The Jenkins username for authentication")
     public String username;

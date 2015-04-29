@@ -12,7 +12,7 @@ import hudson.tools.ToolInstallation;
 import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolLocationNodeProperty.ToolLocation;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -41,7 +41,7 @@ public class PluginImpl extends Plugin {
      */
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name, @QueryParameter String description, @QueryParameter int executors,
             @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret, @QueryParameter Node.Mode mode, 
-            @QueryParameter String toolLocations, @QueryParameter(fixEmpty = true) String hash) throws IOException {
+            @QueryParameter(fixEmpty = true) String hash) throws IOException {
 
         if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
@@ -53,8 +53,9 @@ public class PluginImpl extends Plugin {
 
             jenkins.checkPermission(SlaveComputer.CREATE);
             
+            String[] toolLocations = req.getParameterValues("toolLocation");
             List<ToolLocationNodeProperty> nodeProperties = Lists.newArrayList();
-            if (StringUtils.isNotBlank(toolLocations)) {
+            if (!ArrayUtils.isEmpty(toolLocations)) {
             	List<ToolLocation> parsedToolLocations = parseToolLocations(toolLocations);
 				nodeProperties = Lists.newArrayList(new ToolLocationNodeProperty(parsedToolLocations));
             }
@@ -115,11 +116,10 @@ public class PluginImpl extends Plugin {
         }
     }
 
-	private List<ToolLocation> parseToolLocations(String toolLocations) {
+	private List<ToolLocation> parseToolLocations(String[] toolLocations) {
 		List<ToolLocationNodeProperty.ToolLocation> result = Lists.newArrayList();
 		
-		String[] toolLocsArray = toolLocations.split(" ");
-		for (String toolLocKeyValue : toolLocsArray) {
+		for (String toolLocKeyValue : toolLocations) {
 			boolean found = false;
 			// Limit the split on only the first occurence
 			// of ':', so that the tool location path can
