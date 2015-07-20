@@ -186,8 +186,9 @@ public class SwarmClient {
         String url = masterURL.toExternalForm() + "plugin/swarm/slaveInfo";
         GetMethod get = new GetMethod(url);
         get.setDoAuthentication(true);
-        int responseCode = client.executeMethod(get);
+        get.addRequestHeader("Connection", "close");
 
+        int responseCode = client.executeMethod(get);
         if (responseCode != 200) {
             throw new RetryException(
                     "Failed to fetch slave info from Jenkins CODE: " + responseCode);
@@ -320,6 +321,7 @@ public class SwarmClient {
         );
 
         post.setDoAuthentication(true);
+        post.addRequestHeader("Connection", "close");
 
         Crumb csrfCrumb = getCsrfCrumb(client, target);
         if (csrfCrumb != null) {
