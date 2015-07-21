@@ -60,10 +60,6 @@ public class Client {
 	if (options.name == null) {
 	    try {
 		client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
-	    } catch (UnknownHostException e) {
-		System.out.println("Failed to lookup the canonical hostname of this slave, please check system settings.");
-		System.out.println("If not possible to resolve please specify a node name using the '-name' option");
-		System.exit(-1);
 	    } catch (IOException e) {
 		System.out.println("Failed to lookup the canonical hostname of this slave, please check system settings.");
 		System.out.println("If not possible to resolve please specify a node name using the '-name' option");
