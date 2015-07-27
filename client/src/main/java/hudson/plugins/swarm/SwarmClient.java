@@ -15,7 +15,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
-
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -54,6 +53,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
 
@@ -306,7 +306,10 @@ public class SwarmClient {
         // but immediately a 403 (Forbidden)
 
         String labelStr = StringUtils.join(options.labels, ' ');
-        String toolLocationsStr = StringUtils.join(options.toolLocations, ' ');
+        StringBuilder toolLocationBuilder = new StringBuilder();
+        for (Entry<String, String> toolLocation : options.toolLocations.entrySet()){
+            toolLocationBuilder.append(param("toolLocation",toolLocation.getKey()+":"+toolLocation.getValue()));
+        }
 
         PostMethod post = new PostMethod(target.url
                 + "/plugin/swarm/createSlave?name=" + options.name
@@ -314,7 +317,7 @@ public class SwarmClient {
                 + param("remoteFsRoot", options.remoteFsRoot.getAbsolutePath())
                 + param("description", options.description)
                 + param("labels", labelStr)
-                + param("toolLocations", toolLocationsStr)
+                + toolLocationBuilder.toString()
                 + "&secret=" + target.secret
                 + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
                 + param("hash", hash)
