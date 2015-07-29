@@ -3,32 +3,10 @@ package hudson.plugins.swarm;
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.lang.StringUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.Text;
-import org.xml.sax.SAXException;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -57,6 +35,27 @@ import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.lang.StringUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.Text;
+import org.xml.sax.SAXException;
 
 public class SwarmClient {
 
@@ -395,16 +394,6 @@ public class SwarmClient {
             }
         } catch (IOException e) {
             throw new RetryException("Failed to connect to " + target.url, e);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    private static void copy(InputStream in, OutputStream out)
-            throws IOException {
-        byte[] buf = new byte[8192];
-        int len;
-        while ((len = in.read(buf)) >= 0) {
-            out.write(buf, 0, len);
         }
     }
 
