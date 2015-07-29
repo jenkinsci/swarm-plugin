@@ -25,9 +25,7 @@ import java.util.List;
 import java.util.Properties;
 
 import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
-import static javax.servlet.http.HttpServletResponse.SC_EXPECTATION_FAILED;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_SERVICE_UNAVAILABLE;
 
 /**
  * Exposes an entry point to add a new swarm slave.

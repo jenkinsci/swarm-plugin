@@ -25,6 +25,7 @@ public class ModeOptionHandler extends OneArgumentOptionHandler<String> {
         super(parser, option, setter);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public String parse(final String argument) throws NumberFormatException, CmdLineException {
         final int index = ACCEPTABLE_VALUES.indexOf(argument);

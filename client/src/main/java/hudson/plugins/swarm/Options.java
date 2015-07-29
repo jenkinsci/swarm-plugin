@@ -48,6 +48,9 @@ public class Options {
     @Option(name = "-disableSslVerification", usage = "Disables SSL verification in the HttpClient.")
     public boolean disableSslVerification;
 
+    @Option(name = "-disableClientsUniqueId", usage = "Disables Clients unique ID.")
+    public boolean disableClientsUniqueId;
+
     @Option(
             name = "-mode",
             usage = "The mode controlling how Jenkins allocates jobs to slaves. Can be either '" + ModeOptionHandler.NORMAL + "' " +

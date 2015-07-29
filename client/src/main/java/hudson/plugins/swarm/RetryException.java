@@ -7,6 +7,8 @@ package hudson.plugins.swarm;
  */
 public class RetryException extends Exception {
 
+    private static final long serialVersionUID = -9058647821506211062L;
+
     public RetryException(String message) {
         super(message);
     }
