@@ -17,7 +17,6 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -33,7 +32,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
     private static final long serialVersionUID = -1527777529814020243L;
 
     public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode, String label, 
-    		List<? extends NodeProperty<?>> nodeProperties) throws IOException, FormException {
+            List<? extends NodeProperty<?>> nodeProperties) throws IOException, FormException {
         super(name, nodeDescription, remoteFS, numExecutors, mode, label,
                 SELF_CLEANUP_LAUNCHER, RetentionStrategy.NOOP, nodeProperties);
     }

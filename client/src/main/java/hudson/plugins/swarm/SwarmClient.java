@@ -197,7 +197,6 @@ public class SwarmClient {
         if (responseCode != 200) {
             throw new RetryException(
                     "Failed to fetch slave info from Jenkins CODE: " + responseCode);
-
         }
 
         Document xml;

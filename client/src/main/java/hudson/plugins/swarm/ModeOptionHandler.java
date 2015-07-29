@@ -25,12 +25,11 @@ public class ModeOptionHandler extends OneArgumentOptionHandler<String> {
         super(parser, option, setter);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public String parse(final String argument) throws NumberFormatException, CmdLineException {
         final int index = ACCEPTABLE_VALUES.indexOf(argument);
         if (index == -1) {
-            throw new CmdLineException(owner, "Invalid mode");
+            throw new CmdLineException(owner, "Invalid mode", null);
         }
 
         return argument;

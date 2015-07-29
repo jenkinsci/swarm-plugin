@@ -44,29 +44,29 @@ public class Client {
             options.password = System.getenv(options.passwordEnvVariable);
         }
 
-	// Only look up the hostname if we have not already specified
-	// name of the slave. Also in certain cases this lookup might fail.
-	// E.g.
-	// Querying a external DNS server which might not be informed
-	// of a newly created slave from a DHCP server.
-	//
-	// From https://docs.oracle.com/javase/8/docs/api/java/net/InetAddress.html#getCanonicalHostName--
-	//
-	// "Gets the fully qualified domain name for this IP
-	// address. Best effort method, meaning we may not be able to
-	// return the FQDN depending on the underlying system
-	// configuration."
-	if (options.name == null) {
-	    try {
-		client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
-	    } catch (IOException e) {
-		System.out.println("Failed to lookup the canonical hostname of this slave, please check system settings.");
-		System.out.println("If not possible to resolve please specify a node name using the '-name' option");
-		System.exit(-1);
-	    }
-	}
+    // Only look up the hostname if we have not already specified
+    // name of the slave. Also in certain cases this lookup might fail.
+    // E.g.
+    // Querying a external DNS server which might not be informed
+    // of a newly created slave from a DHCP server.
+    //
+    // From https://docs.oracle.com/javase/8/docs/api/java/net/InetAddress.html#getCanonicalHostName--
+    //
+    // "Gets the fully qualified domain name for this IP
+    // address. Best effort method, meaning we may not be able to
+    // return the FQDN depending on the underlying system
+    // configuration."
+    if (options.name == null) {
+        try {
+        client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
+        } catch (IOException e) {
+        System.out.println("Failed to lookup the canonical hostname of this slave, please check system settings.");
+        System.out.println("If not possible to resolve please specify a node name using the '-name' option");
+        System.exit(-1);
+        }
+    }
 
-	client.run();
+    client.run();
     }
 
     public Client(Options options) {

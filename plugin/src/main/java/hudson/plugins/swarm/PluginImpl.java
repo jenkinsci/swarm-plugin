@@ -54,10 +54,10 @@ public class PluginImpl extends Plugin {
             String[] toolLocations = req.getParameterValues("toolLocation");
             List<ToolLocationNodeProperty> nodeProperties = Lists.newArrayList();
             if (!ArrayUtils.isEmpty(toolLocations)) {
-            	List<ToolLocation> parsedToolLocations = parseToolLocations(toolLocations);
-				nodeProperties = Lists.newArrayList(new ToolLocationNodeProperty(parsedToolLocations));
+                List<ToolLocation> parsedToolLocations = parseToolLocations(toolLocations);
+                nodeProperties = Lists.newArrayList(new ToolLocationNodeProperty(parsedToolLocations));
             }
-    		
+            
             if (hash == null && jenkins.getNode(name) != null) {
                 // this is a legacy client, they won't be able to pick up the new name, so throw them away
                 // perhaps they can find another master to connect to
@@ -88,7 +88,7 @@ public class PluginImpl extends Plugin {
                 }
             }
 
-			SwarmSlave slave = new SwarmSlave(name, "Swarm slave from " + req.getRemoteHost() + " : " + description,
+            SwarmSlave slave = new SwarmSlave(name, "Swarm slave from " + req.getRemoteHost() + " : " + description,
                     remoteFsRoot, String.valueOf(executors), mode, "swarm " + Util.fixNull(labels), nodeProperties);
 
             // if this still results in a duplicate, so be it
@@ -114,37 +114,37 @@ public class PluginImpl extends Plugin {
         }
     }
 
-	private List<ToolLocation> parseToolLocations(String[] toolLocations) {
-		List<ToolLocationNodeProperty.ToolLocation> result = Lists.newArrayList();
-		
-		for (String toolLocKeyValue : toolLocations) {
-			boolean found = false;
-			// Limit the split on only the first occurence
-			// of ':', so that the tool location path can
-			// contain ':' characters.
-			String[] toolLoc = toolLocKeyValue.split(":", 2);
-			
-			for (ToolDescriptor<?> desc : ToolInstallation.all()) {
-				for (ToolInstallation inst : desc.getInstallations()) {
-					if (inst.getName().equals(toolLoc[0])) {
-						found = true;
+    private List<ToolLocation> parseToolLocations(String[] toolLocations) {
+        List<ToolLocationNodeProperty.ToolLocation> result = Lists.newArrayList();
+        
+        for (String toolLocKeyValue : toolLocations) {
+            boolean found = false;
+            // Limit the split on only the first occurence
+            // of ':', so that the tool location path can
+            // contain ':' characters.
+            String[] toolLoc = toolLocKeyValue.split(":", 2);
+            
+            for (ToolDescriptor<?> desc : ToolInstallation.all()) {
+                for (ToolInstallation inst : desc.getInstallations()) {
+                    if (inst.getName().equals(toolLoc[0])) {
+                        found = true;
                         
-						String location = toolLoc[1];
-		
-						ToolLocationNodeProperty.ToolLocation toolLocation = new ToolLocationNodeProperty.ToolLocation(desc, inst.getName(), location);
-						result.add(toolLocation);
-					}
-				}
-			}
-			
-			// don't fail silently, inform the user what tool is missing
-			if (!found) {
-				throw new RuntimeException("No tool '" + toolLoc[0] + "' is defined on Jenkins.");
-			}
-		}
-		
-		return result;
-	}
+                        String location = toolLoc[1];
+        
+                        ToolLocationNodeProperty.ToolLocation toolLocation = new ToolLocationNodeProperty.ToolLocation(desc, inst.getName(), location);
+                        result.add(toolLocation);
+                    }
+                }
+            }
+            
+            // don't fail silently, inform the user what tool is missing
+            if (!found) {
+                throw new RuntimeException("No tool '" + toolLoc[0] + "' is defined on Jenkins.");
+            }
+        }
+        
+        return result;
+    }
 
     static String getSwarmSecret() {
         return UDPFragmentImpl.all().get(UDPFragmentImpl.class).secret.toString();
