@@ -2,7 +2,6 @@ package hudson.plugins.swarm;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import javax.xml.parsers.ParserConfigurationException;
 

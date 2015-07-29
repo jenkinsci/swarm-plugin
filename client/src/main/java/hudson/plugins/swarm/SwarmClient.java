@@ -2,6 +2,7 @@ package hudson.plugins.swarm;
 
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -15,19 +16,20 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
+
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
@@ -41,7 +43,6 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
@@ -67,7 +68,11 @@ public class SwarmClient {
 
     public SwarmClient(Options options) {
         this.options = options;
-        this.hash = hash(options.remoteFsRoot);
+        if (!options.disableClientsUniqueId) {
+            this.hash = hash(options.remoteFsRoot);
+        } else {
+            this.hash = "";
+        }
         this.name = options.name;
     }
 
@@ -307,8 +312,10 @@ public class SwarmClient {
 
         String labelStr = StringUtils.join(options.labels, ' ');
         StringBuilder toolLocationBuilder = new StringBuilder();
-        for (Entry<String, String> toolLocation : options.toolLocations.entrySet()){
-            toolLocationBuilder.append(param("toolLocation",toolLocation.getKey()+":"+toolLocation.getValue()));
+        if (options.toolLocations != null) {
+            for (Entry<String, String> toolLocation : options.toolLocations.entrySet()){
+                toolLocationBuilder.append(param("toolLocation",toolLocation.getKey()+":"+toolLocation.getValue()));
+            }
         }
 
         PostMethod post = new PostMethod(target.url
@@ -391,6 +398,7 @@ public class SwarmClient {
         }
     }
 
+    @SuppressWarnings("unused")
     private static void copy(InputStream in, OutputStream out)
             throws IOException {
         byte[] buf = new byte[8192];

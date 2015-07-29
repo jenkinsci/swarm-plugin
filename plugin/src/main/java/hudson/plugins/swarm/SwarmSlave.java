@@ -30,6 +30,8 @@ import java.util.List;
  */
 public class SwarmSlave extends Slave implements EphemeralNode {
 
+    private static final long serialVersionUID = -1527777529814020243L;
+
     public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode, String label, 
     		List<? extends NodeProperty<?>> nodeProperties) throws IOException, FormException {
         super(name, nodeDescription, remoteFS, numExecutors, mode, label,
@@ -38,7 +40,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
 
     @DataBoundConstructor
     public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode, String labelString,
-            ComputerLauncher launcher, RetentionStrategy retentionStrategy, List<? extends NodeProperty<?>> nodeProperties) throws FormException, IOException {
+            ComputerLauncher launcher, RetentionStrategy<?> retentionStrategy, List<? extends NodeProperty<?>> nodeProperties) throws FormException, IOException {
         super(name, nodeDescription, remoteFS, Util.tryParseNumber(numExecutors, 1).intValue(), mode, labelString, launcher, retentionStrategy, nodeProperties);
     }
 
