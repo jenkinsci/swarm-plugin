@@ -26,15 +26,8 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Random;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
@@ -67,7 +60,11 @@ public class SwarmClient {
 
     public SwarmClient(Options options) {
         this.options = options;
-        if (!options.disableClientsUniqueId) {
+        Map<String, String> env = System.getenv();
+        if(env.containsKey("MESOS_TASK_ID") && StringUtils.isNotEmpty(env.get("MESOS_TASK_ID"))){
+            this.hash = env.get("MESOS_TASK_ID");
+        }
+        else if (!options.disableClientsUniqueId) {
             this.hash = hash(options.remoteFsRoot);
         } else {
             this.hash = "";
