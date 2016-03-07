@@ -31,16 +31,18 @@ public class SwarmSlave extends Slave implements EphemeralNode {
 
     private static final long serialVersionUID = -1527777529814020243L;
 
-    public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode, String label, 
-            List<? extends NodeProperty<?>> nodeProperties) throws IOException, FormException {
+    public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode,
+                      String label, List<? extends NodeProperty<?>> nodeProperties) throws IOException, FormException {
         super(name, nodeDescription, remoteFS, numExecutors, mode, label,
                 SELF_CLEANUP_LAUNCHER, RetentionStrategy.NOOP, nodeProperties);
     }
 
     @DataBoundConstructor
-    public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode, String labelString,
-            ComputerLauncher launcher, RetentionStrategy<?> retentionStrategy, List<? extends NodeProperty<?>> nodeProperties) throws FormException, IOException {
-        super(name, nodeDescription, remoteFS, Util.tryParseNumber(numExecutors, 1).intValue(), mode, labelString, launcher, retentionStrategy, nodeProperties);
+    public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode,
+                      String labelString, ComputerLauncher launcher, RetentionStrategy<?> retentionStrategy,
+                      List<? extends NodeProperty<?>> nodeProperties) throws FormException, IOException {
+        super(name, nodeDescription, remoteFS, Util.tryParseNumber(numExecutors, 1).intValue(), mode, labelString,
+                launcher, retentionStrategy, nodeProperties);
     }
 
     public Node asNode() {
@@ -86,7 +88,8 @@ public class SwarmSlave extends Slave implements EphemeralNode {
                     e.printStackTrace(listener.error(e.getMessage()));
                 }
             } else {
-                listener.getLogger().printf("Could not remove node for %s as it appears to have been removed already%n", computer);
+                listener.getLogger().printf("Could not remove node for %s as it appears to have been removed already%n",
+                        computer);
             }
         }
     };

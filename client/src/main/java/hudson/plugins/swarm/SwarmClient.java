@@ -2,40 +2,6 @@ package hudson.plugins.swarm;
 
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.HttpURLConnection;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.text.MessageFormat;
-import java.util.*;
-import java.util.Map.Entry;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -49,6 +15,23 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.net.*;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class SwarmClient {
 
@@ -87,7 +70,8 @@ public class SwarmClient {
         return getCandidateFromDatagramResponses(responses);
     }
 
-    private Candidate getCandidateFromDatagramResponses(List<DatagramPacket> responses) throws ParserConfigurationException, IOException, RetryException {
+    private Candidate getCandidateFromDatagramResponses(List<DatagramPacket> responses)
+            throws ParserConfigurationException, IOException, RetryException {
         List<Candidate> candidates = new ArrayList<Candidate>();
         for (DatagramPacket recv : responses) {
 
@@ -100,8 +84,8 @@ public class SwarmClient {
             String address = printable(recv.getAddress());
 
             try {
-                xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(recv.getData(),
-                        0, recv.getLength()));
+                xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+                        new ByteArrayInputStream(recv.getData(), 0, recv.getLength()));
             } catch (SAXException e) {
                 System.out.println("Invalid response XML from "
                         + address + ": " + responseXml);
@@ -191,13 +175,18 @@ public class SwarmClient {
 
         int responseCode = client.executeMethod(get);
         if (responseCode != 200) {
-            throw new RetryException(
-                    "Failed to fetch slave info from Jenkins CODE: " + responseCode);
+            if (responseCode == 404) {
+                throw new RetryException("Failed to fetch swarm information from Jenkins, plugin not installed?");
+            } else {
+                throw new RetryException("Failed to fetch slave info from Jenkins, HTTP response code: " +
+                        responseCode);
+            }
         }
 
         Document xml;
         try {
-            xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(get.getResponseBodyAsStream());
+            xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(
+                    get.getResponseBody()));
         } catch (SAXException e) {
             throw new RetryException("Invalid XML received from " + url);
         }
@@ -281,7 +270,8 @@ public class SwarmClient {
     }
 
     private Crumb getCsrfCrumb(HttpClient client, Candidate target) throws IOException {
-        GetMethod httpGet = new GetMethod(target.url + "crumbIssuer/api/xml?xpath=" + URLEncoder.encode("concat(//crumbRequestField,\":\",//crumb)", "UTF-8"));
+        GetMethod httpGet = new GetMethod(target.url + "crumbIssuer/api/xml?xpath=" +
+                URLEncoder.encode("concat(//crumbRequestField,\":\",//crumb)", "UTF-8"));
         httpGet.setDoAuthentication(true);
         int responseCode = client.executeMethod(httpGet);
         if (responseCode != HttpStatus.SC_OK) {

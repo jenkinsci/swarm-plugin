@@ -18,4 +18,4 @@ RUN echo "deb http://pkg.jenkins-ci.org/debian-stable binary/" >> /etc/apt/sourc
 RUN service jenkins start && sleep 60 && curl -s http://localhost:8080/jnlpJars/jenkins-cli.jar > jenkins-cli.jar
 RUN service jenkins start && sleep 60 && JENKINS_URL=http://localhost:8080 java -jar jenkins-cli.jar install-plugin swarm
 
-CMD su -l jenkins -c "java -jar /usr/share/jenkins/jenkins.war"
+ENTRYPOINT ["su",  "-l",  "jenkins",  "-c",  "java", "-jar", "/usr/share/jenkins/jenkins.war"]

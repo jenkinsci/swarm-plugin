@@ -1,12 +1,11 @@
 package hudson.plugins.swarm;
 
-import java.io.IOException;
-import java.net.InetAddress;
-
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.net.InetAddress;
 
 /**
  * Swarm client.
@@ -99,7 +98,8 @@ public class Client {
                     swarmClient.verifyThatUrlIsHudson(target);
                 }
 
-                System.out.println("Attempting to connect to " + target.url + " " + target.secret + " with ID " + swarmClient.getHash());
+                System.out.println("Attempting to connect to " + target.url + " " + target.secret + " with ID " +
+                        swarmClient.getHash());
 
                 // create a new swarm slave
                 swarmClient.createSwarmSlave(target);

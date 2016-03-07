@@ -37,9 +37,11 @@ public class PluginImpl extends Plugin {
     /**
      * Adds a new swarm slave.
      */
-    public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name, @QueryParameter String description, @QueryParameter int executors,
-            @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret, @QueryParameter Node.Mode mode, 
-            @QueryParameter(fixEmpty = true) String hash, @QueryParameter boolean deleteExistingClients) throws IOException {
+    public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
+                              @QueryParameter String description, @QueryParameter int executors,
+                              @QueryParameter String remoteFsRoot, @QueryParameter String labels,
+                              @QueryParameter String secret, @QueryParameter Node.Mode mode,
+                              @QueryParameter(fixEmpty = true) String hash) throws IOException {
 
         if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
@@ -78,8 +80,8 @@ public class PluginImpl extends Plugin {
                 if (n != null && !deleteExistingClients) {
                     Computer c = n.toComputer();
                     if (c != null && c.isOnline()) {
-                        // this is an existing connection, we'll only cause issues if we trample over an online connection
-                        
+                        // this is an existing connection, we'll only cause issues
+                        // if we trample over an online connection
                         rsp.setStatus(SC_CONFLICT);
                         rsp.setContentType("text/plain; UTF-8");
                         rsp.getWriter().printf("A slave called '%s' is already created and on-line%n", name);
@@ -119,7 +121,7 @@ public class PluginImpl extends Plugin {
         
         for (String toolLocKeyValue : toolLocations) {
             boolean found = false;
-            // Limit the split on only the first occurence
+            // Limit the split on only the first occurrence
             // of ':', so that the tool location path can
             // contain ':' characters.
             String[] toolLoc = toolLocKeyValue.split(":", 2);
@@ -131,7 +133,8 @@ public class PluginImpl extends Plugin {
                         
                         String location = toolLoc[1];
         
-                        ToolLocationNodeProperty.ToolLocation toolLocation = new ToolLocationNodeProperty.ToolLocation(desc, inst.getName(), location);
+                        ToolLocationNodeProperty.ToolLocation toolLocation = new ToolLocationNodeProperty
+                                .ToolLocation(desc, inst.getName(), location);
                         result.add(toolLocation);
                     }
                 }
