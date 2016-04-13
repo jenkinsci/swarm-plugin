@@ -197,7 +197,7 @@ public class SwarmClient {
 
         Document xml;
         try {
-            xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(get.getResponseBody()));
+            xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(get.getResponseBodyAsStream());
         } catch (SAXException e) {
             throw new RetryException("Invalid XML received from " + url);
         }
