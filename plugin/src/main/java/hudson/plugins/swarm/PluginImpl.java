@@ -39,7 +39,7 @@ public class PluginImpl extends Plugin {
      */
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name, @QueryParameter String description, @QueryParameter int executors,
             @QueryParameter String remoteFsRoot, @QueryParameter String labels, @QueryParameter String secret, @QueryParameter Node.Mode mode, 
-            @QueryParameter(fixEmpty = true) String hash) throws IOException {
+            @QueryParameter(fixEmpty = true) String hash, @QueryParameter boolean deleteExistingClients) throws IOException {
 
         if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
@@ -58,7 +58,7 @@ public class PluginImpl extends Plugin {
                 nodeProperties = Lists.newArrayList(new ToolLocationNodeProperty(parsedToolLocations));
             }
             
-            if (hash == null && jenkins.getNode(name) != null) {
+            if (hash == null && jenkins.getNode(name) != null && !deleteExistingClients) {
                 // this is a legacy client, they won't be able to pick up the new name, so throw them away
                 // perhaps they can find another master to connect to
                 rsp.setStatus(SC_CONFLICT);
@@ -75,7 +75,7 @@ public class PluginImpl extends Plugin {
             // check for existing connections
             {
                 Node n = jenkins.getNode(name);
-                if (n != null) {
+                if (n != null && !deleteExistingClients) {
                     Computer c = n.toComputer();
                     if (c != null && c.isOnline()) {
                         // this is an existing connection, we'll only cause issues if we trample over an online connection

@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- */
 public class Options {
 
     @Option(name = "-name", usage = "Name of the slave")
@@ -50,6 +47,9 @@ public class Options {
 
     @Option(name = "-disableClientsUniqueId", usage = "Disables Clients unique ID.")
     public boolean disableClientsUniqueId;
+
+    @Option(name = "-deleteExistingClients", usage = "Deletes any existing slave with the same name.")
+    public boolean deleteExistingClients;
 
     @Option(
             name = "-mode",
