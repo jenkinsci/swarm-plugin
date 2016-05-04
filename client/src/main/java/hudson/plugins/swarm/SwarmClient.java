@@ -323,6 +323,7 @@ public class SwarmClient {
                 + "&secret=" + target.secret
                 + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
                 + param("hash", hash)
+                + param("deleteExistingClients", Boolean.toString(options.deleteExistingClients))
         );
 
         post.setDoAuthentication(true);
