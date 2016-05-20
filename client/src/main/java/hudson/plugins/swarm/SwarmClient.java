@@ -36,9 +36,9 @@ import java.util.Map.Entry;
 public class SwarmClient {
 
     private final Options options;
-    
+
     private final String hash;
-    
+
     private String name;
 
     public SwarmClient(Options options) {
@@ -166,6 +166,7 @@ public class SwarmClient {
             throw new RuntimeException(MessageFormat.format("The master URL \"{0}\" is invalid", options.master), e);
         }
 
+        System.out.println("Connecting to " + masterURL + " to configure swarm client.");
         HttpClient client = createHttpClient(masterURL);
 
         String url = masterURL.toExternalForm() + "plugin/swarm/slaveInfo";
@@ -326,7 +327,8 @@ public class SwarmClient {
 
         int responseCode = client.executeMethod(post);
         if (responseCode != 200) {
-            throw new RetryException(String.format("Failed to create a slave on Jenkins CODE: %s%n%s",responseCode, 
+            throw new RetryException(String.format("Failed to create a slave on Jenkins, response code: %s%n%s",
+                    responseCode,
                     post.getResponseBodyAsString()) );
         }
         Properties props = new Properties();
@@ -414,7 +416,7 @@ public class SwarmClient {
      * Returns a hash that should be consistent for any individual swarm client (as long as it has a persistent IP)
      * and should be unique to that client.
      *
-     * @param remoteFsRoot the file system root should be part of the hash (to support multiple swarm clients from 
+     * @param remoteFsRoot the file system root should be part of the hash (to support multiple swarm clients from
      *                     the same machine)
      * @return our best effort at a consistent hash
      */

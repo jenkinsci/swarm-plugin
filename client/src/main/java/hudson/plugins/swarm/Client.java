@@ -89,6 +89,7 @@ public class Client {
         while (true) {
             try {
                 if (options.master == null) {
+                    System.out.println("No Jenkins master supplied on command line, performing auto-discovery");
                     target = swarmClient.discoverFromBroadcast();
                 } else {
                     target = swarmClient.discoverFromMasterUrl();
