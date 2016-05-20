@@ -42,38 +42,38 @@
         <plugins>
             <plugin>
                 <groupId>com.cloudbees</groupId>
-		<artifactId>maven-license-plugin</artifactId>
-		<version>1.4</version>
+                <artifactId>maven-license-plugin</artifactId>
+                <version>1.4</version>
             </plugin>
             <plugin>
                 <groupId>org.kohsuke</groupId>
                 <artifactId>access-modifier-checker</artifactId>
                 <version>1.0</version>
             </plugin>
-	    <plugin>
-	        <groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-javadoc-plugin</artifactId>
-		<configuration>
-		  <additionalparam>-Xdoclint:none</additionalparam>
-		</configuration>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
             </plugin>
-	</plugins>
-	<pluginManagement>
-	    <plugins>
+        </plugins>
+        <pluginManagement>
+            <plugins>
                 <plugin>
-		    <groupId>org.apache.maven.plugins</groupId>
-		    <artifactId>maven-release-plugin</artifactId>
-		    <version>2.4.2</version>
-		    <dependencies>
-		        <dependency>
-			    <groupId>org.apache.maven.scm</groupId>
-			    <artifactId>maven-scm-provider-gitexe</artifactId>
-			    <version>1.9</version>
-			</dependency>
-		    </dependencies>
-		</plugin>
-	    </plugins>
-	</pluginManagement>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.4.2</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.scm</groupId>
+                            <artifactId>maven-scm-provider-gitexe</artifactId>
+                            <version>1.9</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
     <pluginRepositories>
         <pluginRepository>
@@ -81,5 +81,4 @@
             <url>http://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
-</project>  
-
+</project>

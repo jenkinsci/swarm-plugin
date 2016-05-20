@@ -7,7 +7,7 @@ import java.net.SocketAddress;
 import java.util.UUID;
 
 /**
- * Adds a secret pass-pharse to UDP broadcast, to allow nearby nodes to register themselves as slaves. 
+ * Adds a secret pass-phrase to UDP broadcast, to allow nearby nodes to register themselves as slaves.
  *
  * @author Kohsuke Kawaguchi
  */
