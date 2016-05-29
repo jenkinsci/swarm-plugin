@@ -84,5 +84,11 @@ public class Options {
     
     @Option(name = "-candidateTag", usage = "Show swarm candidate with tag only")
     public String candidateTag;
-
+    
+    @Option(name = "-labelsFile", usage="File location with space delimited list of labels.  If the file changes, restarts this client.")
+    public String labelsFile;
+    
+    @Option(name = "-logFile", usage="File to write STDOUT and STDERR to. (Deprecated, use -Djava.util.logging.config.file={path}logging.properties instead)")
+    public String logFile;
+    
 }

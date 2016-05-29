@@ -33,7 +33,12 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.Map.Entry;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.logging.*;
+
 public class SwarmClient {
+    private static final Logger logger =  Logger.getLogger(SwarmClient.class.getPackage().getName());
 
     private final Options options;
 
@@ -42,10 +47,13 @@ public class SwarmClient {
     private String name;
 
     public SwarmClient(Options options) {
+        logger.config("SwarmClient constructed with " + options);
+        
         this.options = options;
         Map<String, String> env = System.getenv();
         if(env.containsKey("MESOS_TASK_ID") && StringUtils.isNotEmpty(env.get("MESOS_TASK_ID"))){
             this.hash = env.get("MESOS_TASK_ID");
+            logger.info("Using MESOS_TASK_ID: " + this.hash);
         }
         else if (!options.disableClientsUniqueId) {
             this.hash = hash(options.remoteFsRoot);
@@ -53,6 +61,21 @@ public class SwarmClient {
             this.hash = "";
         }
         this.name = options.name;
+        
+        if(options.labelsFile != null) {
+            logger.info("Loading labels from " + options.labelsFile + "...");
+            try {
+                String labels = new String(Files.readAllBytes(Paths.get(options.labelsFile)));
+                options.labels.addAll(Arrays.asList(labels.split(" ")));
+                logger.info("Labels found in file: " + labels);
+                logger.info("Effective label list: " + Arrays.toString(options.labels.toArray()).replaceAll("\n","").replaceAll("\r",""));
+            }
+            catch(IOException e) {
+                logger.log(Level.SEVERE, "Problem reading labels from file " + options.labelsFile, e);
+                e.printStackTrace();
+                System.exit(-1);
+            }
+        }
     }
 
     public String getHash() {
@@ -62,6 +85,8 @@ public class SwarmClient {
     public Candidate discoverFromBroadcast() throws IOException,
             RetryException, ParserConfigurationException {
 
+        logger.config("discoverFromBroadcast() invoked");
+        
         DatagramSocket socket = new DatagramSocket();
         socket.setBroadcast(true);
 
@@ -72,6 +97,10 @@ public class SwarmClient {
 
     private Candidate getCandidateFromDatagramResponses(List<DatagramPacket> responses)
             throws ParserConfigurationException, IOException, RetryException {
+        
+                
+        logger.finer("getCandidateFromDatagramResponses() invoked");
+
         List<Candidate> candidates = new ArrayList<Candidate>();
         for (DatagramPacket recv : responses) {
 
@@ -79,7 +108,6 @@ public class SwarmClient {
                     recv.getLength());
 
             Document xml;
-            System.out.println();
 
             String address = printable(recv.getAddress());
 
@@ -87,18 +115,16 @@ public class SwarmClient {
                 xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
                         new ByteArrayInputStream(recv.getData(), 0, recv.getLength()));
             } catch (SAXException e) {
-                System.out.println("Invalid response XML from "
-                        + address + ": " + responseXml);
+                logger.severe("Invalid response XML from " + address + ": " + responseXml);
                 continue;
             }
             if (!StringUtils.isBlank(options.candidateTag)) {
-                System.out.println(address + options.candidateTag);
+                logger.finer(address + options.candidateTag);
                 continue;
             }
-            String swarm = getChildElementString(
-                    xml.getDocumentElement(), "swarm");
+            String swarm = getChildElementString(xml.getDocumentElement(), "swarm");
             if (swarm == null) {
-                System.out.println(address + " doesn't support swarm");
+                logger.warning(address + " doesn't support swarm");
                 continue;
             }
 
@@ -106,24 +132,27 @@ public class SwarmClient {
                     xml.getDocumentElement(), "url") : options.master;
 
             if (url == null) {
-                System.out.println("Jenkins master at '" + address + "' doesn't have a valid Jenkins URL configuration set. Please go to <jenkins url>/configure and set a valid URL.");
+                logger.warning("Jenkins master at '" + address + "' doesn't have a valid Jenkins URL configuration set. Please go to <jenkins url>/configure and set a valid URL.");
                 continue;
             }
             candidates.add(new Candidate(url, swarm));
         }
 
         if (candidates.isEmpty()) {
+            logger.severe("No nearby Jenkins supports swarming");
             throw new RetryException(
                     "No nearby Jenkins supports swarming");
         }
 
-        System.out.println("Found " + candidates.size()
-                + " eligible Jenkins.");
+        logger.finer("Found " + candidates.size() + " eligible Jenkins.");
 
         return candidates.get(new Random().nextInt(candidates.size()));
     }
 
     protected void sendBroadcast(DatagramSocket socket) throws IOException {
+        
+        logger.fine("sendBroadcast() invoked");
+       
         byte[] buffer= new byte[128];
         Arrays.fill(buffer, (byte) 1);
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -135,8 +164,10 @@ public class SwarmClient {
     protected List<DatagramPacket> collectBroadcastResponses(DatagramSocket socket) throws IOException, RetryException {
         List<DatagramPacket> responses = new ArrayList<DatagramPacket>();
 
+        logger.fine("collectBroadcastResponses() invoked");
+        
         // wait for 5 secs to gather up all the replies
-        long limit = System.currentTimeMillis() + 5 * 1000;
+        long limit = System.currentTimeMillis() + (5 * 1000);
         while (true) {
             try {
                 socket.setSoTimeout(Math.max(1,
@@ -147,8 +178,11 @@ public class SwarmClient {
                 responses.add(recv);
             } catch (SocketTimeoutException e) {
                 // timed out
+                logger.log(Level.FINEST, "SocketTimeoutException occurred, may be normal.", e);
                 if (responses.isEmpty()) {
-                    throw new RetryException("Failed to receive a reply to broadcast.");
+                    String msg = "Failed to receive a reply to broadcast.";
+                    logger.log(Level.WARNING, msg , e);
+                    throw new RetryException(msg);
                 }
                 return responses;
             }
@@ -156,6 +190,9 @@ public class SwarmClient {
     }
 
     public Candidate discoverFromMasterUrl() throws IOException, ParserConfigurationException, RetryException {
+        
+        logger.config("discoverFromMasterUrl() invoked");
+
         if (!options.master.endsWith("/")) {
             options.master += "/";
         }
@@ -163,10 +200,12 @@ public class SwarmClient {
         try {
             masterURL = new URL(options.master);
         } catch (MalformedURLException e) {
-            throw new RuntimeException(MessageFormat.format("The master URL \"{0}\" is invalid", options.master), e);
+            String msg = MessageFormat.format("The master URL \"{0}\" is invalid", options.master);
+            logger.log(Level.SEVERE, msg, e);
+            throw new RuntimeException(msg, e);
         }
 
-        System.out.println("Connecting to " + masterURL + " to configure swarm client.");
+        logger.config("Connecting to " + masterURL + " to configure swarm client.");
         HttpClient client = createHttpClient(masterURL);
 
         String url = masterURL.toExternalForm() + "plugin/swarm/slaveInfo";
@@ -177,10 +216,13 @@ public class SwarmClient {
         int responseCode = client.executeMethod(get);
         if (responseCode != 200) {
             if (responseCode == 404) {
-                throw new RetryException("Failed to fetch swarm information from Jenkins, plugin not installed?");
+                String msg = "Failed to fetch swarm information from Jenkins, plugin not installed?";
+                logger.log(Level.SEVERE, msg);
+                throw new RetryException(msg);
             } else {
-                throw new RetryException("Failed to fetch slave info from Jenkins, HTTP response code: " +
-                        responseCode);
+                String msg ="Failed to fetch slave info from Jenkins, HTTP response code: " + responseCode;
+                logger.log(Level.SEVERE, msg);
+                throw new RetryException(msg);
             }
         }
 
@@ -189,7 +231,9 @@ public class SwarmClient {
             xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(
                     get.getResponseBody()));
         } catch (SAXException e) {
-            throw new RetryException("Invalid XML received from " + url);
+            String msg = "Invalid XML received from " + url;
+            logger.log(Level.SEVERE, msg, e);
+            throw new RetryException(msg);
         }
         String swarmSecret = getChildElementString(xml.getDocumentElement(), "swarmSecret");
         return new Candidate(masterURL.toExternalForm(), swarmSecret);
@@ -202,6 +246,8 @@ public class SwarmClient {
      * @param target candidate
      */
     protected void connect(Candidate target) throws InterruptedException {
+        logger.fine("connect() invoked");
+
         try {
             Launcher launcher = new Launcher();
 
@@ -226,7 +272,7 @@ public class SwarmClient {
             if (options.tunnel != null) {
                 args.add("-tunnel");
                 args.add(options.tunnel);
-                System.out.println("Using tunnel through " + options.tunnel);
+                logger.fine("Using tunnel through " + options.tunnel);
             }
 
             if (options.username != null && options.password != null) {
@@ -239,21 +285,26 @@ public class SwarmClient {
             Main.main(args.toArray(new String[args.size()]));
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Failed to establish JNLP connection to "
-                    + target.url);
+            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + target.url, e);
             Thread.sleep(10 * 1000);
         }
     }
 
     protected HttpClient createHttpClient(URL urlForAuth) {
+        logger.fine("createHttpClient() invoked");
+        
         if (options.disableSslVerification) {
             try {
                 SSLContext ctx = SSLContext.getInstance("TLS");
                 ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
                 SSLContext.setDefault(ctx);
-            } catch (KeyManagementException e) {
+            }
+            catch (KeyManagementException e) {
+                logger.log(Level.SEVERE, "KeyManagementException occurred", e);
                 throw new RuntimeException(e);
-            } catch (NoSuchAlgorithmException e) {
+            }
+            catch (NoSuchAlgorithmException e) {
+                logger.log(Level.SEVERE, "NoSuchAlgorithmException occurred", e);
                 throw new RuntimeException(e);
             }
         }
@@ -261,6 +312,7 @@ public class SwarmClient {
         HttpClient client = new HttpClient();
 
         if (options.username != null && options.password != null) {
+            logger.fine("Setting HttpClient credentials based on options passed");
             client.getState().setCredentials(
                     new AuthScope(urlForAuth.getHost(), urlForAuth.getPort()),
                     new UsernamePasswordCredentials(options.username, options.password));
@@ -271,17 +323,20 @@ public class SwarmClient {
     }
 
     private Crumb getCsrfCrumb(HttpClient client, Candidate target) throws IOException {
+        logger.finer("getCsrfCrumb() invoked");
+        
+        
         GetMethod httpGet = new GetMethod(target.url + "crumbIssuer/api/xml?xpath=" +
                 URLEncoder.encode("concat(//crumbRequestField,\":\",//crumb)", "UTF-8"));
         httpGet.setDoAuthentication(true);
         int responseCode = client.executeMethod(httpGet);
         if (responseCode != HttpStatus.SC_OK) {
-            System.out.println("Could not obtain CSRF crumb. Response code: " + responseCode);
+            logger.log(Level.SEVERE, "Could not obtain CSRF crumb. Response code: " + responseCode);
             return null;
         }
         String[] crumbResponse = httpGet.getResponseBodyAsString().split(":");
         if (crumbResponse.length != 2) {
-            System.out.println("Unexpected CSRF crumb response: " + httpGet.getResponseBodyAsString());
+            logger.log(Level.SEVERE, "Unexpected CSRF crumb response: " + httpGet.getResponseBodyAsString());
             return null;
         }
         return new Crumb(crumbResponse[0], crumbResponse[1]);
@@ -289,6 +344,8 @@ public class SwarmClient {
 
     protected void createSwarmSlave(Candidate target) throws IOException, InterruptedException,
             RetryException {
+        
+        logger.fine("createSwarmSlave() invoked");
 
         HttpClient client = createHttpClient(new URL(target.url));
 
@@ -327,9 +384,11 @@ public class SwarmClient {
 
         int responseCode = client.executeMethod(post);
         if (responseCode != 200) {
-            throw new RetryException(String.format("Failed to create a slave on Jenkins, response code: %s%n%s",
-                    responseCode,
-                    post.getResponseBodyAsString()) );
+            String msg = String.format("Failed to create a slave on Jenkins, response code: %s%n%s",
+                                      responseCode,
+                                       post.getResponseBodyAsString());
+            logger.log(Level.SEVERE, msg);
+            throw new RetryException(msg);
         }
         Properties props = new Properties();
         InputStream stream = post.getResponseBodyAsStream();
@@ -354,11 +413,14 @@ public class SwarmClient {
     }
 
     private String encode(String value) throws UnsupportedEncodingException {
+        logger.finer("encode() invoked");
+
         return URLEncoder.encode(value, "UTF-8");
     }
 
-    private String param(String name, String value)
-            throws UnsupportedEncodingException {
+    private String param(String name, String value) throws UnsupportedEncodingException {
+        logger.finer("param() invoked");
+
         if (value == null) {
             return "";
         }
@@ -367,26 +429,36 @@ public class SwarmClient {
 
     protected void verifyThatUrlIsHudson(Candidate target) throws InterruptedException,
             RetryException {
+                
+        logger.fine("verifyThatUrlIsHudson() invoked");
+
         try {
-            System.out.println("Connecting to " + target.url);
+            logger.fine("Connecting to " + target.url);
             HttpURLConnection con = (HttpURLConnection) new URL(target.url).openConnection();
             con.connect();
 
             if (con.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN) {
-                throw new RetryException(
-                        "This jenkins server requires Authentication!.");
+                String msg = "This jenkins server requires Authentication!";
+                logger.log(Level.SEVERE, msg);
+                throw new RetryException(msg);
             }
 
             String v = con.getHeaderField("X-Hudson");
             if (v == null) {
-                throw new RetryException("This URL doesn't look like Jenkins.");
+                String msg = "This URL doesn't look like Jenkins.";
+                logger.log(Level.SEVERE, msg);
+                throw new RetryException(msg);
             }
         } catch (IOException e) {
-            throw new RetryException("Failed to connect to " + target.url, e);
+            String msg = "Failed to connect to " + target.url;
+            logger.log(Level.SEVERE, msg, e);
+            throw new RetryException(msg, e);
         }
     }
 
     private static String getChildElementString(Element parent, String tagName) {
+        logger.finer("getChildElementString() invoked");
+
         for (Node n = parent.getFirstChild(); n != null; n = n.getNextSibling()) {
             if (n instanceof Element) {
                 Element e = (Element) n;
@@ -405,6 +477,8 @@ public class SwarmClient {
     }
 
     private String printable(InetAddress ia){
+        logger.finer("printable() invoked");
+
         if (options.showHostName) {
             return ia.getHostName();
         } else {
@@ -421,10 +495,13 @@ public class SwarmClient {
      * @return our best effort at a consistent hash
      */
     public static String hash(File remoteFsRoot) {
+        logger.config("hash() invoked");
+
         StringBuilder buf = new StringBuilder();
         try {
             buf.append(remoteFsRoot.getCanonicalPath()).append('\n');
         } catch (IOException e) {
+            logger.log(Level.FINER, "hash() IOException - may be normal?", e);
             buf.append(remoteFsRoot.getAbsolutePath()).append('\n');
         }
         try {
@@ -443,6 +520,7 @@ public class SwarmClient {
             }
         } catch (SocketException e) {
             // oh well we tried
+            logger.log(Level.FINEST, "hash() SocketException - 'oh well we tried'", e);
         }
         return DigestUtils.md5Hex(buf.toString()).substring(0, 8);
     }

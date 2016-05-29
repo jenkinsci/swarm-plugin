@@ -6,6 +6,14 @@ import org.kohsuke.args4j.CmdLineParser;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.io.BufferedOutputStream;
+import java.io.PrintStream;
+import java.io.FileOutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.logging.*;
+import java.io.File;
+import java.util.Arrays;
 
 /**
  * Swarm client.
@@ -18,25 +26,40 @@ import java.net.InetAddress;
  * @changes Marcelo Brunken, Dmitry Buzdin, Peter Joensson
  */
 public class Client {
+    private static final Logger logger = Logger.getLogger(Client.class.getPackage().getName());
 
     protected final Options options;
+    private Thread labelFileWatcherThread = null;
 
-    public static void main(String... args) throws InterruptedException,
-            IOException {
+    public static void main(String... args) throws InterruptedException, IOException {
+        String s = Arrays.toString(args);
+        s = s.replaceAll("\n","");
+        s = s.replaceAll("\r","");
+        s = s.replaceAll(",", "");
+        logger.info("Client.main invoked with: " + s);
+        
         Options options = new Options();
         Client client = new Client(options);
         CmdLineParser p = new CmdLineParser(options);
         try {
             p.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.out.println(e.getMessage());
+        }
+        catch (CmdLineException e) {
+            logger.log(Level.SEVERE,"CmdLineException occurred during parseArgument", e);
             p.printUsage(System.out);
             System.exit(-1);
         }
+        
         if (options.help) {
             p.printUsage(System.out);
             System.exit(0);
         }
+        
+        if(options.logFile != null) {
+            logger.severe("-logFile has been deprecated.  Use logging properties file syntax instead: -Djava.util.logging.config.file=" + Paths.get("").toAbsolutePath().toString() + File.separator + "logging.properties");
+            System.exit(-1);
+        }
+        
         // Check to see if passwordEnvVariable is set, if so pull down the
         // password from the env and set as password.
         if (options.passwordEnvVariable != null) {
@@ -57,19 +80,21 @@ public class Client {
     // configuration."
     if (options.name == null) {
         try {
-        client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
-        } catch (IOException e) {
-        System.out.println("Failed to lookup the canonical hostname of this slave, please check system settings.");
-        System.out.println("If not possible to resolve please specify a node name using the '-name' option");
-        System.exit(-1);
+            client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
+        }
+        catch (IOException e) {
+            logger.severe("Failed to lookup the canonical hostname of this slave, please check system settings.");
+            logger.severe("If not possible to resolve please specify a node name using the '-name' option");
+            System.exit(-1);
         }
     }
 
-    client.run();
+    client.run(args); // pass the command line arguments along so that the LabelFileWatcher thread can have them
     }
 
     public Client(Options options) {
         this.options = options;
+        logger.finest("Client created with " + options);
     }
 
     /**
@@ -77,8 +102,8 @@ public class Client {
      * <p/>
      * This method never returns.
      */
-    public void run() throws InterruptedException {
-        System.out.println("Discovering Jenkins master");
+    public void run(String... args) throws InterruptedException {
+        logger.info("Discovering Jenkins master");
 
         SwarmClient swarmClient = new SwarmClient(options);
 
@@ -89,7 +114,7 @@ public class Client {
         while (true) {
             try {
                 if (options.master == null) {
-                    System.out.println("No Jenkins master supplied on command line, performing auto-discovery");
+                    logger.info("No Jenkins master supplied on command line, performing auto-discovery");
                     target = swarmClient.discoverFromBroadcast();
                 } else {
                     target = swarmClient.discoverFromMasterUrl();
@@ -99,22 +124,34 @@ public class Client {
                     swarmClient.verifyThatUrlIsHudson(target);
                 }
 
-                System.out.println("Attempting to connect to " + target.url + " " + target.secret + " with ID " +
-                        swarmClient.getHash());
 
+                // set up label file watcher thread (if the label file changes, this thread takes action to restart the client)
+                if(options.labelsFile != null && labelFileWatcherThread == null) {
+                    logger.info("Setting up LabelFileWatcher");
+                    LabelFileWatcher l = new LabelFileWatcher(options.labelsFile, args);
+                    Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
+                    labelFileWatcherThread.setDaemon(true);
+                    labelFileWatcherThread.start();
+                }
+                
+                logger.info("Attempting to connect to " + target.url + " " + target.secret + " with ID " +
+                                   swarmClient.getHash());
+                
                 // create a new swarm slave
                 swarmClient.createSwarmSlave(target);
                 swarmClient.connect(target);
                 if (options.noRetryAfterConnected) {
-                    System.out.println("Connection closed, exiting...");
+                    logger.warning("Connection closed, exiting...");
                     System.exit(0);
                 }
             } catch (IOException e) {
+                logger.log(Level.SEVERE, "IOexception occurred", e);
                 e.printStackTrace();
             } catch (ParserConfigurationException e) {
+                logger.log(Level.SEVERE, "ParserConfigurationException occurred", e);
                 e.printStackTrace();
             } catch (RetryException e) {
-                System.out.println(e.getMessage());
+                logger.log(Level.SEVERE, "RetryException occurred", e);
                 if (e.getCause() != null) {
                     e.getCause().printStackTrace();
                 }
@@ -122,16 +159,16 @@ public class Client {
 
             if (options.retry >= 0) {
                 if (options.retry == 0) {
-                    System.out.println("Retry limit reached, exiting...");
+                    logger.severe("Retry limit reached, exiting...");
                     System.exit(-1);
                 } else {
-                    System.out.println("Remaining retries: " + options.retry);
+                    logger.warning("Remaining retries: " + options.retry);
                     options.retry--;
                 }
             }
 
             // retry
-            System.out.println("Retrying in 10 seconds");
+            logger.info("Retrying in 10 seconds");
             Thread.sleep(10 * 1000);
         }
     }
