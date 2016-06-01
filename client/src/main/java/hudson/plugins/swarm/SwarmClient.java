@@ -360,13 +360,18 @@ public class SwarmClient {
                 toolLocationBuilder.append(param("toolLocation",toolLocation.getKey()+":"+toolLocation.getValue()));
             }
         }
+                
+        String sMyLabels = labelStr;
+        if(sMyLabels.length() > 1000) {
+                sMyLabels = "";
+        }
 
         PostMethod post = new PostMethod(target.url
                 + "/plugin/swarm/createSlave?name=" + options.name
                 + "&executors=" + options.executors
                 + param("remoteFsRoot", options.remoteFsRoot.getAbsolutePath())
                 + param("description", options.description)
-                + param("labels", labelStr)
+                + param("labels", sMyLabels)
                 + toolLocationBuilder.toString()
                 + "&secret=" + target.secret
                 + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
@@ -410,6 +415,46 @@ public class SwarmClient {
             return;
         }
         this.name = name;
+                
+        // special handling for very long lists of labels (avoids 413 FULL Header error)
+        if(sMyLabels.length() == 0 && labelStr.length() > 0) {
+            List<String> lLabels = Arrays.asList(labelStr.split("\\s+"));
+            StringBuilder sb = new StringBuilder();
+            for(String s: lLabels) {
+                sb.append(s);
+                sb.append(" ");
+                if(sb.length() > 1000) {
+                    postLabelAppend(name, sb.toString(), client, target);
+                    sb = new StringBuilder();
+                }
+            }
+            if(sb.length() > 0)
+                postLabelAppend(name, sb.toString(), client, target);
+        }
+    }
+                                          
+    private void postLabelAppend(String name, String labels, HttpClient client, Candidate target) throws RetryException, IOException {
+        PostMethod post = new PostMethod(target.url
+                              + "/plugin/swarm/addSlaveLabels?name=" + name
+                              + "&secret=" + target.secret
+                              + param("labels", labels));
+                              
+        post.setDoAuthentication(true);
+        post.addRequestHeader("Connection", "close");
+                              
+        Crumb csrfCrumb = getCsrfCrumb(client, target);
+        if (csrfCrumb != null) {
+            post.addRequestHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+        }
+                              
+        int responseCode = client.executeMethod(post);
+        if (responseCode != 200) {
+            String msg = String.format("Failed to update slave labels.  Slave is probably messed up.",
+                                        responseCode,
+                                        post.getResponseBodyAsString());
+            logger.log(Level.SEVERE, msg);
+            throw new RetryException(msg);
+        }
     }
 
     private String encode(String value) throws UnsupportedEncodingException {
