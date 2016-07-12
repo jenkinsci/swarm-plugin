@@ -128,7 +128,7 @@ public class Client {
                 // set up label file watcher thread (if the label file changes, this thread takes action to restart the client)
                 if(options.labelsFile != null && labelFileWatcherThread == null) {
                     logger.info("Setting up LabelFileWatcher");
-                    LabelFileWatcher l = new LabelFileWatcher(options.labelsFile, args);
+                    LabelFileWatcher l = new LabelFileWatcher(target, options, args);
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
                     labelFileWatcherThread.setDaemon(true);
                     labelFileWatcherThread.start();

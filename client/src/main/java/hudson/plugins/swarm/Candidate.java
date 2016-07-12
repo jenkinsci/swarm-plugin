@@ -18,5 +18,12 @@ public class Candidate {
     
         logger.fine("Candidate constructed with url: " + url + ", " + "secret: " + secret);
     }
-
+   
+    public String getURL() {
+    	return url;
+    }
+    
+    public String getSecret() {
+    	return secret;
+    }
 }

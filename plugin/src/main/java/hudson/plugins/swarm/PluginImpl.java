@@ -68,22 +68,17 @@ public class PluginImpl extends Plugin {
         if(nn == null)
             return;
         
-        normalResponse(rsp, nn.getLabelString());
+        normalResponse(req, rsp, nn.getLabelString());
     }
     
     
-    private void normalResponse(StaplerResponse rsp, String sLabelList) throws IOException {
-        rsp.setContentType("text/plain; charset=iso-8859-1");
-        Properties props = new Properties();
-        props.put("labels", sLabelList);
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        props.store(bos, "");
-        byte[] response = bos.toByteArray();
-        rsp.setContentLength(response.length);
-        ServletOutputStream outputStream = rsp.getOutputStream();
-        outputStream.write(response);
-        outputStream.flush();
-    }
+    private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
+        rsp.setContentType("text/xml");
+        
+        Writer w = rsp.getCompressedWriter(req);
+        w.write("<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
+        w.close();        
+    } 
     
     /**
      * Adds labels to a slave.
@@ -106,7 +101,7 @@ public class PluginImpl extends Plugin {
         nn.setLabelString(hashSetToString(hs));
         nn.getAssignedLabels();
         
-        normalResponse(rsp, nn.getLabelString());
+        normalResponse(req, rsp, nn.getLabelString());
     }
     
     private String hashSetToString(HashSet hs) {
@@ -135,12 +130,12 @@ public class PluginImpl extends Plugin {
 
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
-        HashSet hs = new HashSet(lCurrentLabels);
+        HashSet<List<String>> hs = new HashSet(lCurrentLabels);
         List<String> lBadLabels = Arrays.asList(labels.split("\\s+"));
         hs.removeAll(lBadLabels);
         nn.setLabelString(hashSetToString(hs));
         nn.getAssignedLabels();
-        normalResponse(rsp, nn.getLabelString());
+        normalResponse(req, rsp, nn.getLabelString());
     }
 
     
