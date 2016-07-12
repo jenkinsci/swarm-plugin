@@ -16,6 +16,9 @@ import org.apache.commons.lang.ArrayUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 import javax.servlet.ServletOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,6 +29,7 @@ import java.util.Properties;
 
 import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 /**
  * Exposes an entry point to add a new swarm slave.
@@ -34,6 +38,108 @@ import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
  */
 public class PluginImpl extends Plugin {
 
+    
+    private Node getNodeByName(String name, StaplerResponse rsp) throws IOException {
+        final Jenkins jenkins = Jenkins.getInstance();
+        Node n = jenkins.getNode(name);
+        if(n == null) {
+            rsp.setStatus(SC_NOT_FOUND);
+            rsp.setContentType("text/plain; UTF-8");
+            rsp.getWriter().printf("A slave called '%s' does not exist%n",name);
+            return null;
+        }
+        return n;
+    }
+    
+    /**
+     * Gets list of labels for slave
+     */
+    public void doGetSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
+                                 @QueryParameter String secret) throws IOException {
+        
+        if (!getSwarmSecret().equals(secret)) {
+            rsp.setStatus(SC_FORBIDDEN);
+            return;
+        }
+        
+        Node nn = getNodeByName(name, rsp);
+        if(nn == null)
+            return;
+        
+        normalResponse(req, rsp, nn.getLabelString());
+    }
+    
+    
+    private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
+        rsp.setContentType("text/xml");
+        
+        Writer w = rsp.getCompressedWriter(req);
+        w.write("<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
+        w.close();        
+    } 
+    
+    /**
+     * Adds labels to a slave.
+     */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void doAddSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
+                            @QueryParameter String secret, @QueryParameter String labels)  throws IOException{
+        if (!getSwarmSecret().equals(secret)) {
+            rsp.setStatus(SC_FORBIDDEN);
+            return;
+        }
+        Node nn = getNodeByName(name, rsp);
+        if(nn == null)
+            return;
+        
+        String sCurrentLabels = nn.getLabelString();
+        List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
+        HashSet hs = new HashSet(lCurrentLabels);
+        List<String> lNewLabels = Arrays.asList(labels.split("\\s+"));
+        hs.addAll(lNewLabels);
+        nn.setLabelString(hashSetToString(hs));
+        nn.getAssignedLabels();
+        
+        normalResponse(req, rsp, nn.getLabelString());
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	private String hashSetToString(HashSet hs) {
+        List<String> lNewlist = new ArrayList<String>(hs);
+        StringBuilder sb = new StringBuilder();
+        for (String s : lNewlist)
+        {
+            sb.append(s);
+            sb.append(" ");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Remove labels from a slave
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public void doRemoveSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
+                            @QueryParameter String secret, @QueryParameter String labels) throws IOException {
+        if (!getSwarmSecret().equals(secret)) {
+            rsp.setStatus(SC_FORBIDDEN);
+            return;
+        }
+        Node nn = getNodeByName(name, rsp);
+        if(nn == null)
+            return;
+
+        String sCurrentLabels = nn.getLabelString();
+        List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
+        HashSet<List<String>> hs = new HashSet(lCurrentLabels);
+        List<String> lBadLabels = Arrays.asList(labels.split("\\s+"));
+        hs.removeAll(lBadLabels);
+        nn.setLabelString(hashSetToString(hs));
+        nn.getAssignedLabels();
+        normalResponse(req, rsp, nn.getLabelString());
+    }
+
+    
     /**
      * Adds a new swarm slave.
      */

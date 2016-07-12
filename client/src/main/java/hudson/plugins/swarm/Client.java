@@ -6,10 +6,6 @@ import org.kohsuke.args4j.CmdLineParser;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.io.BufferedOutputStream;
-import java.io.PrintStream;
-import java.io.FileOutputStream;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.*;
 import java.io.File;
@@ -128,7 +124,7 @@ public class Client {
                 // set up label file watcher thread (if the label file changes, this thread takes action to restart the client)
                 if(options.labelsFile != null && labelFileWatcherThread == null) {
                     logger.info("Setting up LabelFileWatcher");
-                    LabelFileWatcher l = new LabelFileWatcher(options.labelsFile, args);
+                    LabelFileWatcher l = new LabelFileWatcher(target, options, args);
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
                     labelFileWatcherThread.setDaemon(true);
                     labelFileWatcherThread.start();
