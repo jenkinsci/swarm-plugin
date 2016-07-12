@@ -6,8 +6,6 @@ import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.lang.InterruptedException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -23,21 +21,17 @@ import java.util.logging.*;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import hudson.plugins.swarm.Candidate;
-import hudson.plugins.swarm.SwarmClient.Crumb;
 
 
 public class LabelFileWatcher implements Runnable {
@@ -50,6 +44,8 @@ public class LabelFileWatcher implements Runnable {
     private static Candidate targ = null;
     private static final Logger logger = Logger.getLogger(LabelFileWatcher.class.getPackage().getName());
     
+    
+    
     public LabelFileWatcher(Candidate target, Options options, String... args) throws IOException {
         logger.config("LabelFileWatcher() constructed with: " + options.labelsFile + ", and " + args);
         targ = target;
@@ -60,19 +56,6 @@ public class LabelFileWatcher implements Runnable {
         logger.config("Labels loaded: " + sLabels);
     }
     
-    private static class DefaultTrustManager implements X509TrustManager {
-
-        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-        }
-
-        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-        }
-
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
-    }
-
     
     protected HttpClient createHttpClient(URL urlForAuth) {
         logger.fine("createHttpClient() invoked");
@@ -80,7 +63,7 @@ public class LabelFileWatcher implements Runnable {
         if (opts.disableSslVerification) {
             try {
                 SSLContext ctx = SSLContext.getInstance("TLS");
-                ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
+                ctx.init(new KeyManager[0], new TrustManager[]{new SwarmClient.DefaultTrustManager()}, new SecureRandom());
                 SSLContext.setDefault(ctx);
             }
             catch (KeyManagementException e) {
@@ -213,7 +196,7 @@ public class LabelFileWatcher implements Runnable {
                 sCommandString = sCommandString.replaceAll("\n","").replaceAll("\r","").replaceAll(",","");
                 logger.config("Invoking: " + sCommandString);
                 final ProcessBuilder builder = new ProcessBuilder(command);
-                Process p = builder.start();
+				builder.start();
                 logger.config("New slave instance started, ignore subsequent warning.");
             }
         }
@@ -223,7 +206,8 @@ public class LabelFileWatcher implements Runnable {
     }
     
 
-    public void run() {
+    @SuppressWarnings("static-access")
+	public void run() {
         String sTempLabels;
         bRunning = true;
         

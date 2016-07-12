@@ -45,9 +45,7 @@ public class PluginImpl extends Plugin {
         if(n == null) {
             rsp.setStatus(SC_NOT_FOUND);
             rsp.setContentType("text/plain; UTF-8");
-            rsp.getWriter().printf(
-                                   "A slave called '%s' does not exist%n",
-                                   name);
+            rsp.getWriter().printf("A slave called '%s' does not exist%n",name);
             return null;
         }
         return n;
@@ -83,7 +81,8 @@ public class PluginImpl extends Plugin {
     /**
      * Adds labels to a slave.
      */
-    public void doAddSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void doAddSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                             @QueryParameter String secret, @QueryParameter String labels)  throws IOException{
         if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
@@ -104,7 +103,8 @@ public class PluginImpl extends Plugin {
         normalResponse(req, rsp, nn.getLabelString());
     }
     
-    private String hashSetToString(HashSet hs) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	private String hashSetToString(HashSet hs) {
         List<String> lNewlist = new ArrayList<String>(hs);
         StringBuilder sb = new StringBuilder();
         for (String s : lNewlist)
@@ -118,7 +118,8 @@ public class PluginImpl extends Plugin {
     /**
      * Remove labels from a slave
      */
-    public void doRemoveSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public void doRemoveSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                             @QueryParameter String secret, @QueryParameter String labels) throws IOException {
         if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
