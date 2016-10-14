@@ -404,7 +404,7 @@ public class SwarmClient {
 
         try {
 	        post = new PostMethod(target.url
-	                + "/plugin/swarm/createSlave?name=" + options.name
+	                + "plugin/swarm/createSlave?name=" + options.name
 	                + "&executors=" + options.executors
 	                + param("remoteFsRoot", options.remoteFsRoot.getAbsolutePath())
 	                + param("description", options.description)
@@ -481,7 +481,7 @@ public class SwarmClient {
         
         try {
 	        post = new PostMethod(target.url
-	                              + "/plugin/swarm/removeSlaveLabels?name=" + name
+	                              + "plugin/swarm/removeSlaveLabels?name=" + name
 	                              + "&secret=" + target.secret
 	                              + SwarmClient.param("labels", labels));
 	                              
@@ -514,7 +514,7 @@ public class SwarmClient {
         
         try {
 	        post = new PostMethod(target.url
-	                              + "/plugin/swarm/addSlaveLabels?name=" + name
+	                              + "plugin/swarm/addSlaveLabels?name=" + name
 	                              + "&secret=" + target.secret
 	                              + param("labels", labels));
 	                              
