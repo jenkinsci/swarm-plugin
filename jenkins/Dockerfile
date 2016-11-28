@@ -15,6 +15,6 @@ RUN apt-get update && apt-get install wget curl netcat -y
 RUN wget -q -O - http://pkg.jenkins-ci.org/debian-stable/jenkins-ci.org.key | sudo apt-key add -
 RUN echo "deb http://pkg.jenkins-ci.org/debian-stable binary/" >> /etc/apt/sources.list && \
     apt-get update && \
-    apt-get install jenkins=1.651.2 -y
+    apt-get install jenkins -y
 
 ENTRYPOINT ["su",  "-l",  "jenkins",  "-c",  "java -jar /usr/share/jenkins/jenkins.war"]
