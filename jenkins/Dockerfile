@@ -12,9 +12,10 @@ RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true 
 
 RUN apt-get update && apt-get install wget curl netcat -y
 
-RUN wget -q -O - http://pkg.jenkins-ci.org/debian-stable/jenkins-ci.org.key | sudo apt-key add -
+RUN wget -q -O - http://pkg.jenkins-ci.org/debian-stable/jenkins-ci.org.key | apt-key add -
 RUN echo "deb http://pkg.jenkins-ci.org/debian-stable binary/" >> /etc/apt/sources.list && \
     apt-get update && \
     apt-get install jenkins -y
+
 
 ENTRYPOINT ["su",  "-l",  "jenkins",  "-c",  "java -jar /usr/share/jenkins/jenkins.war"]
