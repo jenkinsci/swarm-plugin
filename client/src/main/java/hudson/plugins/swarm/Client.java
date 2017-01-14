@@ -62,30 +62,31 @@ public class Client {
             options.password = System.getenv(options.passwordEnvVariable);
         }
 
-    // Only look up the hostname if we have not already specified
-    // name of the slave. Also in certain cases this lookup might fail.
-    // E.g.
-    // Querying a external DNS server which might not be informed
-    // of a newly created slave from a DHCP server.
-    //
-    // From https://docs.oracle.com/javase/8/docs/api/java/net/InetAddress.html#getCanonicalHostName--
-    //
-    // "Gets the fully qualified domain name for this IP
-    // address. Best effort method, meaning we may not be able to
-    // return the FQDN depending on the underlying system
-    // configuration."
-    if (options.name == null) {
-        try {
-            client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
+        // Only look up the hostname if we have not already specified
+        // name of the slave. Also in certain cases this lookup might fail.
+        // E.g.
+        // Querying a external DNS server which might not be informed
+        // of a newly created slave from a DHCP server.
+        //
+        // From https://docs.oracle.com/javase/8/docs/api/java/net/InetAddress.html#getCanonicalHostName--
+        //
+        // "Gets the fully qualified domain name for this IP
+        // address. Best effort method, meaning we may not be able to
+        // return the FQDN depending on the underlying system
+        // configuration."
+        if (options.name == null) {
+            try {
+                client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
+            }
+            catch (IOException e) {
+                logger.severe("Failed to lookup the canonical hostname of this slave, please check system settings.");
+                logger.severe("If not possible to resolve please specify a node name using the '-name' option");
+                System.exit(-1);
+            }
         }
-        catch (IOException e) {
-            logger.severe("Failed to lookup the canonical hostname of this slave, please check system settings.");
-            logger.severe("If not possible to resolve please specify a node name using the '-name' option");
-            System.exit(-1);
-        }
-    }
 
-    client.run(args); // pass the command line arguments along so that the LabelFileWatcher thread can have them
+        SwarmClient swarmClient = new SwarmClient(options);
+        client.run(swarmClient, args); // pass the command line arguments along so that the LabelFileWatcher thread can have them
     }
 
     public Client(Options options) {
@@ -98,15 +99,14 @@ public class Client {
      * <p/>
      * This method never returns.
      */
-    public void run(String... args) throws InterruptedException {
+    public void run(SwarmClient swarmClient, String... args) throws InterruptedException {
         logger.info("Discovering Jenkins master");
-
-        SwarmClient swarmClient = new SwarmClient(options);
 
         // The Jenkins that we are trying to connect to.
         Candidate target;
 
         // wait until we get the ACK back
+        int retry = 0;
         while (true) {
             try {
                 if (options.master == null) {
@@ -138,7 +138,7 @@ public class Client {
                 swarmClient.connect(target);
                 if (options.noRetryAfterConnected) {
                     logger.warning("Connection closed, exiting...");
-                    System.exit(0);
+                    swarmClient.exitWithStatus(0);
                 }
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "IOexception occurred", e);
@@ -153,19 +153,19 @@ public class Client {
                 }
             }
 
+            int waitTime = options.retryBackOffStrategy.waitForRetry(retry++, options.retryInterval, options.maxRetryInterval);
             if (options.retry >= 0) {
-                if (options.retry == 0) {
+                if (retry >= options.retry) {
                     logger.severe("Retry limit reached, exiting...");
-                    System.exit(-1);
+                    swarmClient.exitWithStatus(-1);
                 } else {
-                    logger.warning("Remaining retries: " + options.retry);
-                    options.retry--;
+                    logger.warning("Remaining retries: " + (options.retry - retry));
                 }
             }
 
             // retry
-            logger.info("Retrying in 10 seconds");
-            Thread.sleep(10 * 1000);
+            logger.info("Retrying in " + waitTime + " seconds");
+            swarmClient.sleepSeconds(waitTime);
         }
     }
 }

@@ -658,7 +658,14 @@ public class SwarmClient {
         return DigestUtils.md5Hex(buf.toString()).substring(0, 8);
     }
 
-    
+    public void exitWithStatus(int status) {
+        System.exit(status);
+    }
+
+    public void sleepSeconds(int waitTime) throws InterruptedException {
+        Thread.sleep(waitTime * 1000);
+    }
+
     protected static class DefaultTrustManager implements X509TrustManager {
         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
         }

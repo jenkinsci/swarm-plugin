@@ -39,6 +39,23 @@ public class Options {
     @Option(name = "-retry", usage = "Number of retries before giving up. Unlimited if not specified.")
     public int retry = -1;
 
+    @Option(
+            name = "-retryBackOffStrategy",
+            usage = "The mode controlling retry wait time. Can be either " +
+                    "none (use same interval between retires)" +
+                    "or 'linear' (increase wait time before each retry up to maxRetryInterval) " +
+                    "or 'exponential' (double wait interval on each retry up to maxRetryInterval). " +
+                    "Default is none.",
+            handler = RetryBackOffStrategyOptionHandler.class
+    )
+    public RetryBackOffStrategy retryBackOffStrategy = RetryBackOffStrategy.NONE;
+
+    @Option(name = "-retryInterval", usage = "Time to wait before retry in seconds. Default is 10 seconds.")
+    public int retryInterval = 10;
+
+    @Option(name = "-maxRetryInterval", usage = "Max time to wait before retry in seconds. Default is 60 seconds.")
+    public int maxRetryInterval = 60;
+
     @Option(name = "-autoDiscoveryAddress", usage = "Use this address for udp-based auto-discovery (default 255.255.255.255)")
     public String autoDiscoveryAddress = "255.255.255.255";
 
