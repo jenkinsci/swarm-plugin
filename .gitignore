@@ -1,5 +1,7 @@
 target/
 work*/
+release.properties
+*.releaseBackup
 
 # IntelliJ project files 
 *.iml
