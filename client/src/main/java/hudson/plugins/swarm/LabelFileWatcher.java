@@ -23,6 +23,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -36,13 +37,13 @@ import org.xml.sax.SAXException;
 
 public class LabelFileWatcher implements Runnable {
 
-    private static String sFileName;
-    private static boolean bRunning = false;
-    private static Options opts = null;
-    private static String sLabels;
-    private static String[] sArgs;
-    private static Candidate targ = null;
-    private static final Logger logger = Logger.getLogger(LabelFileWatcher.class.getPackage().getName());
+    private String sFileName;
+    private boolean bRunning = false;
+    private Options opts = null;
+    private String sLabels;
+    private String[] sArgs;
+    private Candidate targ = null;
+    private final Logger logger = Logger.getLogger(LabelFileWatcher.class.getPackage().getName());
 
     public LabelFileWatcher(Candidate target, Options options, String... args) throws IOException {
         logger.config("LabelFileWatcher() constructed with: " + options.labelsFile + ", and " + StringUtils.join(args));
@@ -92,80 +93,96 @@ public class LabelFileWatcher implements Runnable {
     	// 1. get labels from master
     	// 2. issue remove command for all old labels
     	// 3. issue update commands for new labels
-        logger.log(Level.CONFIG, "NOTICE: " + sFileName + " has changed.  Attempting soft label update (no slave restart)");
+        logger.log(Level.CONFIG, "NOTICE: " + sFileName + " has changed.  Attempting soft label update (no node restart)");
         HttpClient h = createHttpClient(new URL(targ.getURL()));
 
         logger.log(Level.CONFIG, "Getting current labels from master");
 
-        GetMethod get = null;
-
-        try {
-            get = new GetMethod(targ.getURL()
+        GetMethod get = new GetMethod(targ.getURL()
                     + "/plugin/swarm/getSlaveLabels?name=" + opts.name
                     + "&secret=" + targ.getSecret());
+        try {
+            int responseCode = h.executeMethod(get);
+            if (responseCode != HttpStatus.SC_OK) {
+                logger.log(Level.CONFIG, "Failed to retrieve labels from master -- Response code: " + responseCode);
+                throw new SoftLabelUpdateException("Unable to acquire labels from master to begin removal process.");
+            }
+        } catch (IOException e) {
 
-        	int responseCode = h.executeMethod(get);
-	        if (responseCode != HttpStatus.SC_OK) {
-	            logger.log(Level.CONFIG, "Failed to retrieve labels from master -- Response code: " + responseCode);
-	            throw new SoftLabelUpdateException("Unable to acquire labels from master to begin removal process.");
-	        }
+        }
 
-	        Document xml;
-	        try {
-	            xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(
-	                    get.getResponseBody()));
-	        } catch (SAXException e) {
-	            String msg = "Invalid XML received from " + targ.getURL();
-	            logger.log(Level.SEVERE, msg, e);
-	            throw new SoftLabelUpdateException(msg);
-	        }
-	        String labelStr = SwarmClient.getChildElementString(xml.getDocumentElement(), "labels");
-	        labelStr = labelStr.replace("swarm", "");
+        Document xml;
+        try {
+            xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(
+                    get.getResponseBody()));
+        } catch (Exception e) {
+            String msg = "Invalid XML received from " + targ.getURL();
+            logger.log(Level.SEVERE, msg, e);
+            throw new SoftLabelUpdateException(msg);
+        }
 
-	        logger.log(Level.CONFIG, "Labels to be removed: " + labelStr);
+        String labelStr = SwarmClient.getChildElementString(xml.getDocumentElement(), "labels");
+        labelStr = labelStr.replace("swarm", "");
 
-	        // remove the labels in 1000 char blocks
-	        List<String> lLabels = Arrays.asList(labelStr.split("\\s+"));
-            StringBuilder sb = new StringBuilder();
-            for(String s: lLabels) {
-                sb.append(s);
-                sb.append(" ");
-                if(sb.length() > 1000) {
+        logger.log(Level.CONFIG, "Labels to be removed: " + labelStr);
+
+        // remove the labels in 1000 char blocks
+        List<String> lLabels = Arrays.asList(labelStr.split("\\s+"));
+        StringBuilder sb = new StringBuilder();
+        for(String s: lLabels) {
+            sb.append(s);
+            sb.append(" ");
+            if(sb.length() > 1000) {
+                try {
                     SwarmClient.postLabelRemove(opts.name, sb.toString(), h, targ);
                     sb = new StringBuilder();
+                } catch (Exception e) {
+
                 }
             }
-            if(sb.length() > 0)
+        }
+        if(sb.length() > 0) {
+            try {
                 SwarmClient.postLabelRemove(opts.name, sb.toString(), h, targ);
+            }
+            catch (Exception e) {
 
-            // now add the labels back on
-	        logger.log(Level.CONFIG, "Labels to be added: " + sNewLabels);
-            lLabels = Arrays.asList(sNewLabels.split("\\s+"));
-            sb = new StringBuilder();
-            for(String s: lLabels) {
-                sb.append(s);
-                sb.append(" ");
-                if(sb.length() > 1000) {
+            }
+        }
+
+        // now add the labels back on
+        logger.log(Level.CONFIG, "Labels to be added: " + sNewLabels);
+        lLabels = Arrays.asList(sNewLabels.split("\\s+"));
+        sb = new StringBuilder();
+        for(String s: lLabels) {
+            sb.append(s);
+            sb.append(" ");
+            if(sb.length() > 1000) {
+                try {
                     SwarmClient.postLabelAppend(opts.name, sb.toString(), h, targ);
                     sb = new StringBuilder();
                 }
+                catch (Exception e) {}
             }
-            if(sb.length() > 0)
-                SwarmClient.postLabelAppend(opts.name, sb.toString(), h, targ);
-
-		}
-        catch (Exception e) {
-        	throw new SoftLabelUpdateException(e.getLocalizedMessage());
-		}
-        finally {
-        	if(get != null)
-        		get.releaseConnection();
         }
-      }
+
+        if(sb.length() > 0) {
+            try {
+                SwarmClient.postLabelAppend(opts.name, sb.toString(), h, targ);
+            } catch (Exception e) {
+
+            }
+        }
+
+        if(get != null) {
+            get.releaseConnection();
+        }
+
+    }
 
 
     private void hardLabelUpdate() throws IOException {
-        logger.config("NOTICE: " + sFileName + " has changed.  Hard slave restart attempt initiated.");
+        logger.config("NOTICE: " + sFileName + " has changed.  Hard node restart attempt initiated.");
         bRunning = false;
         final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
         try
@@ -194,16 +211,16 @@ public class LabelFileWatcher implements Runnable {
                 logger.config("Invoking: " + sCommandString);
                 final ProcessBuilder builder = new ProcessBuilder(command);
 				builder.start();
-                logger.config("New slave instance started, ignore subsequent warning.");
+                logger.config("New node instance started, ignore subsequent warning.");
             }
         }
         catch(URISyntaxException e) {
-            logger.log(Level.SEVERE,"ERROR: LabelFileWatcher unable to determine current running jar.  Slave failure.  URISyntaxException.", e);
+            logger.log(Level.SEVERE,"ERROR: LabelFileWatcher unable to determine current running jar. Node failure. URISyntaxException.", e);
         }
     }
 
 
-    @SuppressWarnings("static-access")
+    @SuppressFBWarnings("DM_EXIT")
 	public void run() {
         String sTempLabels;
         bRunning = true;
@@ -237,11 +254,11 @@ public class LabelFileWatcher implements Runnable {
                 }
             }
             catch(IOException e) {
-                logger.log(Level.WARNING, "WARNING: unable to read " + sFileName + ", slave may not be reporting proper labels to master.", e);
+                logger.log(Level.WARNING, "WARNING: unable to read " + sFileName + ", node may not be reporting proper labels to master.", e);
             }
         }
 
-        logger.warning("LabelFileWatcher no longer running.  Shutting down this instance of Swarm Client.");
+        logger.warning("LabelFileWatcher no longer running. Shutting down this instance of Swarm Client.");
         System.exit(0);
     }
 

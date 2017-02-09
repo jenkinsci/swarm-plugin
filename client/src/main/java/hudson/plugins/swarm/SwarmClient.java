@@ -1,5 +1,6 @@
 package hudson.plugins.swarm;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -46,6 +47,7 @@ public class SwarmClient {
     private static HttpClient g_client = null;
 
 
+    @SuppressFBWarnings("DM_EXIT")
     public SwarmClient(Options options) {
         logger.config("SwarmClient constructed with " + options);
 

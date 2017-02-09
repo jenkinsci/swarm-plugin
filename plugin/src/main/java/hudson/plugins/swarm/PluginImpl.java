@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import javax.servlet.ServletOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -41,14 +43,21 @@ public class PluginImpl extends Plugin {
 
     private Node getNodeByName(String name, StaplerResponse rsp) throws IOException {
         final Jenkins jenkins = Jenkins.getInstance();
-        Node n = jenkins.getNode(name);
-        if(n == null) {
-            rsp.setStatus(SC_NOT_FOUND);
-            rsp.setContentType("text/plain; UTF-8");
-            rsp.getWriter().printf("A slave called '%s' does not exist%n",name);
-            return null;
-        }
-        return n;
+
+        try {
+            Node n = jenkins.getNode(name);
+
+            if (n == null) {
+                rsp.setStatus(SC_NOT_FOUND);
+                rsp.setContentType("text/plain; UTF-8");
+                rsp.getWriter().printf("A slave called '%s' does not exist.%n", name);
+                return null;
+            }
+            return n;
+
+        } catch (NullPointerException e) {}
+
+        return null;
     }
 
     /**
@@ -132,9 +141,8 @@ public class PluginImpl extends Plugin {
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
         HashSet<List<String>> hs = new HashSet(lCurrentLabels);
-        List<String> lBadLabels = Arrays.asList(labels.split("\\s+"));
-
-        hs.removeAll(lBadLabels);
+        //List<String> lBadLabels = Arrays.asList(labels.split("\\s+"));
+        //hs.removeAll();
         nn.setLabelString(hashSetToString(hs));
         nn.getAssignedLabels();
         normalResponse(req, rsp, nn.getLabelString());
@@ -144,6 +152,7 @@ public class PluginImpl extends Plugin {
     /**
      * Adds a new swarm slave.
      */
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                               @QueryParameter String description, @QueryParameter int executors,
                               @QueryParameter String remoteFsRoot, @QueryParameter String labels,
@@ -258,9 +267,15 @@ public class PluginImpl extends Plugin {
     }
 
     static String getSwarmSecret() {
-        return UDPFragmentImpl.all().get(UDPFragmentImpl.class).secret.toString();
+        String secret = "";
+        try {
+            secret = UDPFragmentImpl.all().get(UDPFragmentImpl.class).secret.toString();
+        } catch (NullPointerException e) {}
+
+        return secret;
     }
 
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public void doSlaveInfo(StaplerRequest req, StaplerResponse rsp) throws IOException {
         final Jenkins jenkins = Jenkins.getInstance();
         jenkins.checkPermission(SlaveComputer.CREATE);
