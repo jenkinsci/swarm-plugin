@@ -11,8 +11,6 @@ import java.util.logging.*;
 import java.io.File;
 import java.util.Arrays;
 
-import org.apache.commons.logging.*;
-
 /**
  * Swarm client.
  * <p/>
@@ -21,13 +19,12 @@ import org.apache.commons.logging.*;
  * joins it.
  *
  * @author Kohsuke Kawaguchi
- * @changes Marcelo Brunken, Dmitry Buzdin, Peter Joensson
  */
 public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getPackage().getName());
 
-    protected final Options options;
-    private Thread labelFileWatcherThread = null;
+    private final Options options;
+    private final Thread labelFileWatcherThread = null;
 
     public static void main(String... args) throws InterruptedException, IOException {
         String s = Arrays.toString(args);
@@ -121,7 +118,6 @@ public class Client {
                 if (options.password == null && options.username == null) {
                     swarmClient.verifyThatUrlIsHudson(target);
                 }
-
 
                 // set up label file watcher thread (if the label file changes, this thread takes action to restart the client)
                 if(options.labelsFile != null && labelFileWatcherThread == null) {

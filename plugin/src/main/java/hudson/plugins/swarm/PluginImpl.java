@@ -38,7 +38,7 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
  */
 public class PluginImpl extends Plugin {
 
-    
+
     private Node getNodeByName(String name, StaplerResponse rsp) throws IOException {
         final Jenkins jenkins = Jenkins.getInstance();
         Node n = jenkins.getNode(name);
@@ -50,34 +50,34 @@ public class PluginImpl extends Plugin {
         }
         return n;
     }
-    
+
     /**
      * Gets list of labels for slave
      */
     public void doGetSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                                  @QueryParameter String secret) throws IOException {
-        
+
         if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
             return;
         }
-        
+
         Node nn = getNodeByName(name, rsp);
         if(nn == null)
             return;
-        
+
         normalResponse(req, rsp, nn.getLabelString());
     }
-    
-    
+
+
     private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
         rsp.setContentType("text/xml");
-        
+
         Writer w = rsp.getCompressedWriter(req);
         w.write("<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
-        w.close();        
-    } 
-    
+        w.close();
+    }
+
     /**
      * Adds labels to a slave.
      */
@@ -91,7 +91,7 @@ public class PluginImpl extends Plugin {
         Node nn = getNodeByName(name, rsp);
         if(nn == null)
             return;
-        
+
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
         HashSet hs = new HashSet(lCurrentLabels);
@@ -99,10 +99,10 @@ public class PluginImpl extends Plugin {
         hs.addAll(lNewLabels);
         nn.setLabelString(hashSetToString(hs));
         nn.getAssignedLabels();
-        
+
         normalResponse(req, rsp, nn.getLabelString());
     }
-    
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
 	private String hashSetToString(HashSet hs) {
         List<String> lNewlist = new ArrayList<String>(hs);
@@ -133,13 +133,14 @@ public class PluginImpl extends Plugin {
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
         HashSet<List<String>> hs = new HashSet(lCurrentLabels);
         List<String> lBadLabels = Arrays.asList(labels.split("\\s+"));
+
         hs.removeAll(lBadLabels);
         nn.setLabelString(hashSetToString(hs));
         nn.getAssignedLabels();
         normalResponse(req, rsp, nn.getLabelString());
     }
 
-    
+
     /**
      * Adds a new swarm slave.
      */
@@ -155,6 +156,7 @@ public class PluginImpl extends Plugin {
         }
 
         try {
+            //@SuppressWarnings()
             final Jenkins jenkins = Jenkins.getInstance();
 
             jenkins.checkPermission(SlaveComputer.CREATE);

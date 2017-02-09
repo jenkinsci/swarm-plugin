@@ -16,7 +16,7 @@ public class ClientTest {
     @Test
     public void should_not_retry_more_than_specified() {
         Options options = givenBackOff(NONE);
-        // one trie
+        // one try
         options.retry = 1;
         runAndVerify(options, "Exited with status -1 after 0 seconds");
         // a few tries

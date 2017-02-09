@@ -65,7 +65,7 @@ public class SwarmClient {
         if(options.labelsFile != null) {
             logger.info("Loading labels from " + options.labelsFile + "...");
             try {
-                String labels = new String(Files.readAllBytes(Paths.get(options.labelsFile)));
+                String labels = new String(Files.readAllBytes(Paths.get(options.labelsFile)), "UTF-8");
                 options.labels.addAll(Arrays.asList(labels.split(" ")));
                 logger.info("Labels found in file: " + labels);
                 logger.info("Effective label list: " + Arrays.toString(options.labels.toArray()).replaceAll("\n","").replaceAll("\r",""));
@@ -105,7 +105,7 @@ public class SwarmClient {
         for (DatagramPacket recv : responses) {
 
             String responseXml = new String(recv.getData(), 0,
-                    recv.getLength());
+                    recv.getLength(), "UTF-8");
 
             Document xml;
 
@@ -211,7 +211,7 @@ public class SwarmClient {
         HttpClient client = createHttpClient(masterURL);
 
         GetMethod get = null;
-        String swarmSecret = null;
+        String swarmSecret;
 
         try {
 	        String url = masterURL.toExternalForm() + "plugin/swarm/slaveInfo";
@@ -261,18 +261,29 @@ public class SwarmClient {
     protected void connect(Candidate target) throws InterruptedException {
         logger.fine("connect() invoked");
 
-        try {
             Launcher launcher = new Launcher();
+            List<String> jnlpArgs = Collections.emptyList();
 
+        try {
             launcher.slaveJnlpURL = new URL(target.url + "computer/" + name
                     + "/slave-agent.jnlp");
-
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + target.url, e);
+            Thread.sleep(10 * 1000);
+        }
             if (options.username != null && options.password != null) {
                 launcher.auth = options.username + ":" + options.password;
                 launcher.slaveJnlpCredentials = options.username + ":" + options.password;
             }
 
-            List<String> jnlpArgs = launcher.parseJnlpArguments();
+            try {
+                jnlpArgs = launcher.parseJnlpArguments();
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + target.url, e);
+                Thread.sleep(10 * 1000);
+            }
 
             List<String> args = new LinkedList<String>();
             args.add(jnlpArgs.get(0));
@@ -295,6 +306,7 @@ public class SwarmClient {
             args.add("-headless");
             args.add("-noreconnect");
 
+            try {
             Main.main(args.toArray(new String[args.size()]));
         } catch (Exception e) {
             e.printStackTrace();
@@ -349,7 +361,7 @@ public class SwarmClient {
         logger.finer("getCsrfCrumb() invoked");
 
         GetMethod httpGet = null;
-        String[] crumbResponse = null;
+        String[] crumbResponse;
 
         try {
 	        httpGet = new GetMethod(target.url + "crumbIssuer/api/xml?xpath=" +
@@ -375,8 +387,7 @@ public class SwarmClient {
     }
 
 
-    protected void createSwarmSlave(Candidate target) throws IOException, InterruptedException,
-            RetryException {
+    protected void createSwarmSlave(Candidate target) throws IOException, RetryException {
 
         logger.fine("createSwarmSlave() invoked");
 
@@ -495,7 +506,7 @@ public class SwarmClient {
 
 	        int responseCode = client.executeMethod(post);
 	        if (responseCode != HttpStatus.SC_OK) {
-	            String msg = String.format("Failed to remove slave labels.",
+	            String msg = String.format("Failed to remove slave labels. %s - %s",
 	                                        responseCode,
 	                                        post.getResponseBodyAsString());
 	            logger.log(Level.SEVERE, msg);
@@ -528,7 +539,7 @@ public class SwarmClient {
 
 	        int responseCode = client.executeMethod(post);
 	        if (responseCode != HttpStatus.SC_OK) {
-	            String msg = String.format("Failed to update slave labels.  Slave is probably messed up.",
+	            String msg = String.format("Failed to update slave labels. Slave is probably messed up. %s - %s",
 	                                        responseCode,
 	                                        post.getResponseBodyAsString());
 	            logger.log(Level.SEVERE, msg);
@@ -559,8 +570,7 @@ public class SwarmClient {
     }
 
 
-    protected void verifyThatUrlIsHudson(Candidate target) throws InterruptedException,
-            RetryException {
+    protected void verifyThatUrlIsHudson(Candidate target) throws RetryException {
         logger.fine("verifyThatUrlIsHudson() invoked");
 
         try {
