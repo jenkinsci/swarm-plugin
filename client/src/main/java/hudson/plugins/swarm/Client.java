@@ -11,6 +11,8 @@ import java.util.logging.*;
 import java.io.File;
 import java.util.Arrays;
 
+import org.apache.commons.logging.*;
+
 /**
  * Swarm client.
  * <p/>
@@ -33,7 +35,7 @@ public class Client {
         s = s.replaceAll("\r","");
         s = s.replaceAll(",", "");
         logger.info("Client.main invoked with: " + s);
-        
+
         Options options = new Options();
         Client client = new Client(options);
         CmdLineParser p = new CmdLineParser(options);
@@ -45,17 +47,17 @@ public class Client {
             p.printUsage(System.out);
             System.exit(-1);
         }
-        
+
         if (options.help) {
             p.printUsage(System.out);
             System.exit(0);
         }
-        
+
         if(options.logFile != null) {
             logger.severe("-logFile has been deprecated.  Use logging properties file syntax instead: -Djava.util.logging.config.file=" + Paths.get("").toAbsolutePath().toString() + File.separator + "logging.properties");
             System.exit(-1);
         }
-        
+
         // Check to see if passwordEnvVariable is set, if so pull down the
         // password from the env and set as password.
         if (options.passwordEnvVariable != null) {
@@ -129,10 +131,10 @@ public class Client {
                     labelFileWatcherThread.setDaemon(true);
                     labelFileWatcherThread.start();
                 }
-                
+
                 logger.info("Attempting to connect to " + target.url + " " + target.secret + " with ID " +
                                    swarmClient.getHash());
-                
+
                 // create a new swarm slave
                 swarmClient.createSwarmSlave(target);
                 swarmClient.connect(target);

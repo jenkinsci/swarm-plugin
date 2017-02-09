@@ -6,6 +6,5 @@ RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true 
     apt-get install -y oracle-java8-installer && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /var/cache/oracle-jdk8-installer
-ADD client/target/swarm-client-jar-with-dependencies.jar \
-    swarm-client-jar-with-dependencies.jar
-ENTRYPOINT ["java", "-jar", "swarm-client-jar-with-dependencies.jar", "-master", "http://jenkins:8080/"]
+ADD client/target/swarm-client.jar swarm-client.jar
+ENTRYPOINT ["java", "-jar", "swarm-client.jar", "-master", "http://jenkins:8080/"]
