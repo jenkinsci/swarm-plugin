@@ -9,7 +9,7 @@
     <artifactId>swarm-plugin</artifactId>
     <packaging>pom</packaging>
     <name>Jenkins Self-Organizing Swarm Plug-in</name>
-    <version>3.2-SNAPSHOT</version>
+    <version>3.3-SNAPSHOT</version>
 
     <licenses>
         <license>
