@@ -256,7 +256,7 @@ public class SwarmClient {
 
     /**
      * This method blocks while the swarm slave is serving as a slave.
-     * <p/>
+     *
      * Interrupt the thread to abort it and return.
      * @param target candidate
      */

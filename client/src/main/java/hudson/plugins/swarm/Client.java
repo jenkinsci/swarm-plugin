@@ -13,8 +13,7 @@ import java.util.Arrays;
 
 /**
  * Swarm client.
- * <p/>
- * <p/>
+ *
  * Discovers nearby Jenkins via UDP broadcast, and pick eligible one randomly and
  * joins it.
  *
@@ -95,7 +94,7 @@ public class Client {
 
     /**
      * Finds a Jenkins master that supports swarming, and join it.
-     * <p/>
+     *
      * This method never returns.
      */
     public void run(SwarmClient swarmClient, String... args) throws InterruptedException {
