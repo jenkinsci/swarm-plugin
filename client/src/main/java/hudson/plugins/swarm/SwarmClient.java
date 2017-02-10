@@ -216,38 +216,38 @@ public class SwarmClient {
         String swarmSecret;
 
         try {
-	        String url = masterURL.toExternalForm() + "plugin/swarm/slaveInfo";
-	        get = new GetMethod(url);
-	        get.setDoAuthentication(true);
-	        get.addRequestHeader("Connection", "close");
+            String url = masterURL.toExternalForm() + "plugin/swarm/slaveInfo";
+            get = new GetMethod(url);
+            get.setDoAuthentication(true);
+            get.addRequestHeader("Connection", "close");
 
-	        int responseCode = client.executeMethod(get);
-	        if (responseCode != 200) {
-	            if (responseCode == 404) {
-	                String msg = "Failed to fetch swarm information from Jenkins, plugin not installed?";
-	                logger.log(Level.SEVERE, msg);
-	                throw new RetryException(msg);
-	            } else {
-	                String msg ="Failed to fetch slave info from Jenkins, HTTP response code: " + responseCode;
-	                logger.log(Level.SEVERE, msg);
-	                throw new RetryException(msg);
-	            }
-	        }
+            int responseCode = client.executeMethod(get);
+            if (responseCode != 200) {
+                if (responseCode == 404) {
+                    String msg = "Failed to fetch swarm information from Jenkins, plugin not installed?";
+                    logger.log(Level.SEVERE, msg);
+                    throw new RetryException(msg);
+                } else {
+                    String msg ="Failed to fetch slave info from Jenkins, HTTP response code: " + responseCode;
+                    logger.log(Level.SEVERE, msg);
+                    throw new RetryException(msg);
+                }
+            }
 
-	        Document xml;
-	        try {
-	            xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(
-	                    get.getResponseBody()));
-	        } catch (SAXException e) {
-	            String msg = "Invalid XML received from " + url;
-	            logger.log(Level.SEVERE, msg, e);
-	            throw new RetryException(msg);
-	        }
-	        swarmSecret = getChildElementString(xml.getDocumentElement(), "swarmSecret");
+            Document xml;
+            try {
+                xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(
+                        get.getResponseBody()));
+            } catch (SAXException e) {
+                String msg = "Invalid XML received from " + url;
+                logger.log(Level.SEVERE, msg, e);
+                throw new RetryException(msg);
+            }
+            swarmSecret = getChildElementString(xml.getDocumentElement(), "swarmSecret");
         }
         finally {
-        	if(get != null)
-        		get.releaseConnection();
+            if(get != null)
+                get.releaseConnection();
         }
 
         return new Candidate(masterURL.toExternalForm(), swarmSecret);
@@ -263,8 +263,8 @@ public class SwarmClient {
     protected void connect(Candidate target) throws InterruptedException {
         logger.fine("connect() invoked");
 
-            Launcher launcher = new Launcher();
-            List<String> jnlpArgs = Collections.emptyList();
+        Launcher launcher = new Launcher();
+        List<String> jnlpArgs = Collections.emptyList();
 
         try {
             launcher.slaveJnlpURL = new URL(target.url + "computer/" + name
@@ -274,41 +274,42 @@ public class SwarmClient {
             logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + target.url, e);
             Thread.sleep(10 * 1000);
         }
-            if (options.username != null && options.password != null) {
-                launcher.auth = options.username + ":" + options.password;
-                launcher.slaveJnlpCredentials = options.username + ":" + options.password;
-            }
 
-            try {
-                jnlpArgs = launcher.parseJnlpArguments();
-            } catch (Exception e) {
-                e.printStackTrace();
-                logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + target.url, e);
-                Thread.sleep(10 * 1000);
-            }
+        if (options.username != null && options.password != null) {
+            launcher.auth = options.username + ":" + options.password;
+            launcher.slaveJnlpCredentials = options.username + ":" + options.password;
+        }
 
-            List<String> args = new LinkedList<String>();
-            args.add(jnlpArgs.get(0));
-            args.add(jnlpArgs.get(1));
+        try {
+            jnlpArgs = launcher.parseJnlpArguments();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + target.url, e);
+            Thread.sleep(10 * 1000);
+        }
 
-            args.add("-url");
-            args.add(target.url);
+        List<String> args = new LinkedList<String>();
+        args.add(jnlpArgs.get(0));
+        args.add(jnlpArgs.get(1));
 
-            // if the tunnel option is set in the command line, use it
-            if (options.tunnel != null) {
-                args.add("-tunnel");
-                args.add(options.tunnel);
-                logger.fine("Using tunnel through " + options.tunnel);
-            }
+        args.add("-url");
+        args.add(target.url);
 
-            if (options.username != null && options.password != null) {
-                args.add("-credentials");
-                args.add(options.username + ":" + options.password);
-            }
-            args.add("-headless");
-            args.add("-noreconnect");
+        // if the tunnel option is set in the command line, use it
+        if (options.tunnel != null) {
+            args.add("-tunnel");
+            args.add(options.tunnel);
+            logger.fine("Using tunnel through " + options.tunnel);
+        }
 
-            try {
+        if (options.username != null && options.password != null) {
+            args.add("-credentials");
+            args.add(options.username + ":" + options.password);
+        }
+        args.add("-headless");
+        args.add("-noreconnect");
+
+        try {
             Main.main(args.toArray(new String[args.size()]));
         } catch (Exception e) {
             e.printStackTrace();
@@ -319,10 +320,10 @@ public class SwarmClient {
 
 
     public synchronized static HttpClient getGlobalHttpClient() {
-    	if(g_client == null)
-    		g_client = new HttpClient(new MultiThreadedHttpConnectionManager());
+        if(g_client == null)
+            g_client = new HttpClient(new MultiThreadedHttpConnectionManager());
 
-    	return g_client;
+        return g_client;
     }
 
 
@@ -366,23 +367,23 @@ public class SwarmClient {
         String[] crumbResponse;
 
         try {
-	        httpGet = new GetMethod(target.url + "crumbIssuer/api/xml?xpath=" +
-	                URLEncoder.encode("concat(//crumbRequestField,\":\",//crumb)", "UTF-8"));
-	        httpGet.setDoAuthentication(true);
-	        int responseCode = client.executeMethod(httpGet);
-	        if (responseCode != HttpStatus.SC_OK) {
-	            logger.log(Level.SEVERE, "Could not obtain CSRF crumb. Response code: " + responseCode);
-	            return null;
-	        }
-	        crumbResponse = httpGet.getResponseBodyAsString().split(":");
-	        if (crumbResponse.length != 2) {
-	            logger.log(Level.SEVERE, "Unexpected CSRF crumb response: " + httpGet.getResponseBodyAsString());
-	            return null;
-	        }
+            httpGet = new GetMethod(target.url + "crumbIssuer/api/xml?xpath=" +
+                    URLEncoder.encode("concat(//crumbRequestField,\":\",//crumb)", "UTF-8"));
+            httpGet.setDoAuthentication(true);
+            int responseCode = client.executeMethod(httpGet);
+            if (responseCode != HttpStatus.SC_OK) {
+                logger.log(Level.SEVERE, "Could not obtain CSRF crumb. Response code: " + responseCode);
+                return null;
+            }
+            crumbResponse = httpGet.getResponseBodyAsString().split(":");
+            if (crumbResponse.length != 2) {
+                logger.log(Level.SEVERE, "Unexpected CSRF crumb response: " + httpGet.getResponseBodyAsString());
+                return null;
+            }
         }
         finally {
-        	if(httpGet != null)
-        		httpGet.releaseConnection();
+            if(httpGet != null)
+                httpGet.releaseConnection();
         }
 
         return new Crumb(crumbResponse[0], crumbResponse[1]);
@@ -409,54 +410,54 @@ public class SwarmClient {
 
         String sMyLabels = labelStr;
         if(sMyLabels.length() > 1000) {
-                sMyLabels = "";
+            sMyLabels = "";
         }
 
         PostMethod post = null;
         Properties props = new Properties();
 
         try {
-	        post = new PostMethod(target.url
-	                + "plugin/swarm/createSlave?name=" + options.name
-	                + "&executors=" + options.executors
-	                + param("remoteFsRoot", options.remoteFsRoot.getAbsolutePath())
-	                + param("description", options.description)
-	                + param("labels", sMyLabels)
-	                + toolLocationBuilder.toString()
-	                + "&secret=" + target.secret
-	                + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
-	                + param("hash", hash)
-	                + param("deleteExistingClients", Boolean.toString(options.deleteExistingClients))
-	        );
+            post = new PostMethod(target.url
+                    + "plugin/swarm/createSlave?name=" + options.name
+                    + "&executors=" + options.executors
+                    + param("remoteFsRoot", options.remoteFsRoot.getAbsolutePath())
+                    + param("description", options.description)
+                    + param("labels", sMyLabels)
+                    + toolLocationBuilder.toString()
+                    + "&secret=" + target.secret
+                    + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
+                    + param("hash", hash)
+                    + param("deleteExistingClients", Boolean.toString(options.deleteExistingClients))
+            );
 
-	        post.setDoAuthentication(true);
-	        post.addRequestHeader("Connection", "close");
+            post.setDoAuthentication(true);
+            post.addRequestHeader("Connection", "close");
 
-	        Crumb csrfCrumb = getCsrfCrumb(client, target);
-	        if (csrfCrumb != null) {
-	            post.addRequestHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
-	        }
+            Crumb csrfCrumb = getCsrfCrumb(client, target);
+            if (csrfCrumb != null) {
+                post.addRequestHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+            }
 
-	        int responseCode = client.executeMethod(post);
-	        if (responseCode != HttpStatus.SC_OK) {
-	            String msg = String.format("Failed to create a slave on Jenkins, response code: %s%n%s",
-	                                      responseCode,
-	                                       post.getResponseBodyAsString());
-	            logger.log(Level.SEVERE, msg);
-	            throw new RetryException(msg);
-	        }
-	        InputStream stream = post.getResponseBodyAsStream();
-	        if (stream != null) {
-	            try {
-	                props.load(stream);
-	            } finally {
-	                stream.close();
-	            }
-	        }
+            int responseCode = client.executeMethod(post);
+            if (responseCode != HttpStatus.SC_OK) {
+                String msg = String.format("Failed to create a slave on Jenkins, response code: %s%n%s",
+                        responseCode,
+                        post.getResponseBodyAsString());
+                logger.log(Level.SEVERE, msg);
+                throw new RetryException(msg);
+            }
+            InputStream stream = post.getResponseBodyAsStream();
+            if (stream != null) {
+                try {
+                    props.load(stream);
+                } finally {
+                    stream.close();
+                }
+            }
         }
         finally {
-        	if(post != null)
-        		post.releaseConnection();
+            if(post != null)
+                post.releaseConnection();
         }
 
         String name = props.getProperty("name");
@@ -493,31 +494,31 @@ public class SwarmClient {
         PostMethod post = null;
 
         try {
-	        post = new PostMethod(target.url
-	                              + "plugin/swarm/removeSlaveLabels?name=" + name
-	                              + "&secret=" + target.secret
-	                              + SwarmClient.param("labels", labels));
+            post = new PostMethod(target.url
+                    + "plugin/swarm/removeSlaveLabels?name=" + name
+                    + "&secret=" + target.secret
+                    + SwarmClient.param("labels", labels));
 
-	        post.setDoAuthentication(true);
-	        post.addRequestHeader("Connection", "close");
+            post.setDoAuthentication(true);
+            post.addRequestHeader("Connection", "close");
 
-	        Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, target);
-	        if (csrfCrumb != null) {
-	            post.addRequestHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
-	        }
+            Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, target);
+            if (csrfCrumb != null) {
+                post.addRequestHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+            }
 
-	        int responseCode = client.executeMethod(post);
-	        if (responseCode != HttpStatus.SC_OK) {
-	            String msg = String.format("Failed to remove slave labels. %s - %s",
-	                                        responseCode,
-	                                        post.getResponseBodyAsString());
-	            logger.log(Level.SEVERE, msg);
-	            throw new RetryException(msg);
-	        }
+            int responseCode = client.executeMethod(post);
+            if (responseCode != HttpStatus.SC_OK) {
+                String msg = String.format("Failed to remove slave labels. %s - %s",
+                        responseCode,
+                        post.getResponseBodyAsString());
+                logger.log(Level.SEVERE, msg);
+                throw new RetryException(msg);
+            }
         }
         finally {
-        	if(post != null)
-        		post.releaseConnection();
+            if(post != null)
+                post.releaseConnection();
         }
     }
 
@@ -526,31 +527,31 @@ public class SwarmClient {
         PostMethod post = null;
 
         try {
-	        post = new PostMethod(target.url
-	                              + "plugin/swarm/addSlaveLabels?name=" + name
-	                              + "&secret=" + target.secret
-	                              + param("labels", labels));
+            post = new PostMethod(target.url
+                    + "plugin/swarm/addSlaveLabels?name=" + name
+                    + "&secret=" + target.secret
+                    + param("labels", labels));
 
-	        post.setDoAuthentication(true);
-	        post.addRequestHeader("Connection", "close");
+            post.setDoAuthentication(true);
+            post.addRequestHeader("Connection", "close");
 
-	        Crumb csrfCrumb = getCsrfCrumb(client, target);
-	        if (csrfCrumb != null) {
-	            post.addRequestHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
-	        }
+            Crumb csrfCrumb = getCsrfCrumb(client, target);
+            if (csrfCrumb != null) {
+                post.addRequestHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+            }
 
-	        int responseCode = client.executeMethod(post);
-	        if (responseCode != HttpStatus.SC_OK) {
-	            String msg = String.format("Failed to update slave labels. Slave is probably messed up. %s - %s",
-	                                        responseCode,
-	                                        post.getResponseBodyAsString());
-	            logger.log(Level.SEVERE, msg);
-	            throw new RetryException(msg);
-	        }
+            int responseCode = client.executeMethod(post);
+            if (responseCode != HttpStatus.SC_OK) {
+                String msg = String.format("Failed to update slave labels. Slave is probably messed up. %s - %s",
+                        responseCode,
+                        post.getResponseBodyAsString());
+                logger.log(Level.SEVERE, msg);
+                throw new RetryException(msg);
+            }
         }
         finally {
-        	if(post != null)
-        		post.releaseConnection();
+            if(post != null)
+                post.releaseConnection();
         }
     }
 

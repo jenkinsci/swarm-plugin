@@ -51,7 +51,7 @@ public class Client {
         }
 
         if(options.logFile != null) {
-            logger.severe("-logFile has been deprecated.  Use logging properties file syntax instead: -Djava.util.logging.config.file=" + Paths.get("").toAbsolutePath().toString() + File.separator + "logging.properties");
+            logger.severe("-logFile has been deprecated. Use logging properties file syntax instead: -Djava.util.logging.config.file=" + Paths.get("").toAbsolutePath().toString() + File.separator + "logging.properties");
             System.exit(-1);
         }
 
