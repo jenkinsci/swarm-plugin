@@ -62,6 +62,12 @@ public class Options {
     @Option(name = "-disableSslVerification", usage = "Disables SSL verification in the HttpClient.")
     public boolean disableSslVerification;
 
+    @Option(name = "-sslFingerprints", usage = "Whitespace-separated list of accepted certificate fingerprints (SHA-256/Hex), "+
+                                               "otherwise system truststore will be used. " +
+                                               "No revocation, expiration or not yet valid check will be performed " +
+                                               "for custom fingerprints! Multiple options are allowed.")
+    public String sslFingerprints;
+
     @Option(name = "-disableClientsUniqueId", usage = "Disables Clients unique ID.")
     public boolean disableClientsUniqueId;
 

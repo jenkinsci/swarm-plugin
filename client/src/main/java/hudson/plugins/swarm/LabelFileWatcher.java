@@ -59,10 +59,11 @@ public class LabelFileWatcher implements Runnable {
     private HttpClient createHttpClient(URL urlForAuth) {
         logger.fine("createHttpClient() invoked");
 
-        if (opts.disableSslVerification) {
+        if (opts.disableSslVerification || !opts.sslFingerprints.isEmpty()) {
             try {
                 SSLContext ctx = SSLContext.getInstance("TLS");
-                ctx.init(new KeyManager[0], new TrustManager[]{new SwarmClient.DefaultTrustManager()}, new SecureRandom());
+                String trusted = opts.disableSslVerification ? "" : opts.sslFingerprints;
+                ctx.init(new KeyManager[0], new TrustManager[]{new SwarmClient.DefaultTrustManager(trusted)}, new SecureRandom());
                 SSLContext.setDefault(ctx);
             }
             catch (KeyManagementException e) {

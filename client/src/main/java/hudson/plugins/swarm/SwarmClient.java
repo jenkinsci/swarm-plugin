@@ -330,10 +330,11 @@ public class SwarmClient {
     protected HttpClient createHttpClient(URL urlForAuth) {
         logger.fine("createHttpClient() invoked");
 
-        if (options.disableSslVerification) {
+        if (options.disableSslVerification || !options.sslFingerprints.isEmpty()) {
             try {
                 SSLContext ctx = SSLContext.getInstance("TLS");
-                ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
+                String trusted = options.disableSslVerification ? "" : options.sslFingerprints;
+                ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager(trusted)}, new SecureRandom());
                 SSLContext.setDefault(ctx);
             }
             catch (KeyManagementException e) {
@@ -680,14 +681,49 @@ public class SwarmClient {
     }
 
     protected static class DefaultTrustManager implements X509TrustManager {
+
+        List<String> allowedFingerprints = new ArrayList<String>();
+
+        List<X509Certificate> acceptedIssuers = new ArrayList<X509Certificate>();
+
         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
         }
 
         public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+            if (allowedFingerprints.isEmpty())
+                return;
+
+            List<X509Certificate> list = new ArrayList<X509Certificate>();
+
+            for (X509Certificate cert : x509Certificates) {
+                String fingerprint = DigestUtils.sha256Hex(cert.getEncoded());
+                logger.fine("Check fingerprint: " + fingerprint);
+                if (allowedFingerprints.contains(fingerprint)) {
+                    list.add(cert);
+                    logger.fine("Found allowed certificate: " + cert);
+                }
+            }
+
+            if (list.isEmpty()) {
+                throw new CertificateException("Fingerprint mismatch");
+            }
+
+            acceptedIssuers.addAll(list);
         }
 
         public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
+            return acceptedIssuers.toArray(new X509Certificate[acceptedIssuers.size()]);
+        }
+
+        public DefaultTrustManager(String fingerprints) {
+            if (fingerprints.isEmpty())
+                return;
+
+            for (String fingerprint : fingerprints.split("\\s+")) {
+                String unified = StringUtils.remove(fingerprint.toLowerCase(), ':');
+                logger.fine("Add allowed fingerprint: " + unified);
+                allowedFingerprints.add(unified);
+            }
         }
     }
 
