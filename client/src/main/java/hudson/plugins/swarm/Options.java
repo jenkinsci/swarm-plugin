@@ -66,7 +66,7 @@ public class Options {
                                                "otherwise system truststore will be used. " +
                                                "No revocation, expiration or not yet valid check will be performed " +
                                                "for custom fingerprints! Multiple options are allowed.")
-    public String sslFingerprints;
+    public String sslFingerprints="";
 
     @Option(name = "-disableClientsUniqueId", usage = "Disables Clients unique ID.")
     public boolean disableClientsUniqueId;
