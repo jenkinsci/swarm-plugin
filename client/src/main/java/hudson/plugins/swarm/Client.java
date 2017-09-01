@@ -4,7 +4,9 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.nio.file.Paths;
 import java.util.logging.*;
@@ -52,6 +54,25 @@ public class Client {
         if(options.logFile != null) {
             logger.severe("-logFile has been deprecated. Use logging properties file syntax instead: -Djava.util.logging.config.file=" + Paths.get("").toAbsolutePath().toString() + File.separator + "logging.properties");
             System.exit(-1);
+        }
+
+        if(options.pidFile != null) {
+            // This will return a string like 12345@hostname, so we need to do some string manipulation
+            // to get the actual process identifier.
+            // In Java 9, this can be replaced with: ProcessHandle.current().getPid();
+            String pidName = ManagementFactory.getRuntimeMXBean().getName();
+            String[] pidNameParts = pidName.split("@");
+            String pid = pidNameParts[0];
+            try {
+                File pidFile = new File(options.pidFile);
+                FileWriter pidFileWriter = new FileWriter(pidFile);
+                pidFileWriter.write(pid);
+                pidFileWriter.close();
+                pidFile.deleteOnExit();
+            } catch(IOException exception) {
+                logger.severe("Failed writing PID file: " + options.pidFile);
+                System.exit(-1);
+            }
         }
 
         // Check to see if passwordEnvVariable is set, if so pull down the

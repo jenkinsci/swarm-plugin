@@ -114,4 +114,6 @@ public class Options {
     @Option(name = "-logFile", usage="File to write STDOUT and STDERR to. (Deprecated, use -Djava.util.logging.config.file={path}logging.properties instead)")
     public String logFile;
 
+    @Option(name = "-pidFile", usage="File to write PID to")
+    public String pidFile;
 }
