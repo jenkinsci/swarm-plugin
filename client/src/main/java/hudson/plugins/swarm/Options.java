@@ -82,10 +82,10 @@ public class Options {
             handler = ModeOptionHandler.class
     )
     public String mode = ModeOptionHandler.NORMAL;
-    
+
     @Option(
             name = "-t", aliases = "--toolLocation",
-            usage = "A tool location to be defined on this slave. It is specified as 'toolName=location'", 
+            usage = "A tool location to be defined on this slave. It is specified as 'toolName=location'",
             handler = MapOptionHandler.class
     )
     public Map<String,String> toolLocations;
@@ -104,14 +104,16 @@ public class Options {
 
     @Option(name = "-showHostName", aliases = "--showHostName", usage = "Show hostnames instead of IP address")
     public boolean showHostName;
-    
+
     @Option(name = "-candidateTag", usage = "Show swarm candidate with tag only")
     public String candidateTag;
-    
+
     @Option(name = "-labelsFile", usage="File location with space delimited list of labels.  If the file changes, restarts this client.")
     public String labelsFile;
-    
+
     @Option(name = "-logFile", usage="File to write STDOUT and STDERR to. (Deprecated, use -Djava.util.logging.config.file={path}logging.properties instead)")
     public String logFile;
-    
+
+    @Option(name = "-pidFile", usage="File to write PID to")
+    public String pidFile;
 }
