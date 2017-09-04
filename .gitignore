@@ -6,3 +6,8 @@ release.properties
 # IntelliJ project files 
 *.iml
 .idea/
+
+# eclipse project file
+.project
+.settings/
+.classpath
