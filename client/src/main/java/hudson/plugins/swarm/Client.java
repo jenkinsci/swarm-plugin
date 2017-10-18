@@ -1,5 +1,6 @@
 package hudson.plugins.swarm;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -27,6 +28,8 @@ public class Client {
     private final Options options;
     private final Thread labelFileWatcherThread = null;
 
+    //TODO: Cleanup the encoding issue
+    @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Suppressed for now")
     public static void main(String... args) throws InterruptedException, IOException {
         String s = Arrays.toString(args);
         s = s.replaceAll("\n","");
@@ -65,6 +68,7 @@ public class Client {
             String pid = pidNameParts[0];
             try {
                 File pidFile = new File(options.pidFile);
+                //FIXME: Descriptor leak risk, FindBugs seems to be misconfigured
                 FileWriter pidFileWriter = new FileWriter(pidFile);
                 pidFileWriter.write(pid);
                 pidFileWriter.close();

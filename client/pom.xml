@@ -1,6 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
+        <!--FIXME: It uses Jenkins Plugin POM, but it should not. It appears to work, but it needs to be fixed ASAP.
+            The client cannot be built with 2.36, JAR packaging does not work there (and it should not)
+         -->
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>swarm-plugin</artifactId>
         <version>3.6-SNAPSHOT</version>
