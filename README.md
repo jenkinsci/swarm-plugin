@@ -3,7 +3,7 @@ swarm-plugin
 
 Jenkins Swarm plugin for self organizing slave nodes.
 
-[![Build Status](https://jenkins.ci.cloudbees.com/buildStatus/icon?job=plugins/swarm-plugin)](https://jenkins.ci.cloudbees.com/job/plugins/swarm-plugin)
+[![Build Status](https://jenkins.ci.cloudbees.com/buildStatus/icon?job=plugins/swarm-plugin)](https://jenkins.ci.cloudbees.com/job/plugins/job/swarm-plugin)
 
 This plugin enables nodes to auto-discover a nearby Jenkins master and
 join it automatically, thereby forming an ad-hoc cluster. Swarm makes it
