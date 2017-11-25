@@ -264,6 +264,9 @@ public class SwarmClient {
         logger.fine("connect() invoked");
 
         Launcher launcher = new Launcher();
+        // prevent infinite retry in hudson.remoting.Launcher.parseJnlpArguments()
+        launcher.noReconnect = true;
+
         List<String> jnlpArgs = Collections.emptyList();
 
         try {
