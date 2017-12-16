@@ -20,8 +20,8 @@
     </licenses>
 
     <modules>
-        <module>plugin</module>
         <module>client</module>
+        <module>plugin</module>
     </modules>
 
     <scm>
