@@ -1,10 +1,17 @@
 version: '2'
 services:
-  jenkins:
-    image: jenkins:2.60.3
-    ports:
-      - "8080:8080"
-      - "50000:50000"
-    volumes:
-      - "./jenkins_home:/var/jenkins_home"
+    swarm:
+        build: .
+        environment:
+            JENKINS_MASTER: 'jenkins'
+        depends_on:
+            - jenkins
 
+    jenkins:
+        image: jenkins/jenkins:lts
+        ports:
+            - "8080:8080"
+            - "50000:50000"
+            - "36088:36088"
+        volumes:
+            - "./jenkins_home:/var/jenkins_home"
