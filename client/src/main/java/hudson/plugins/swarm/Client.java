@@ -5,6 +5,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -84,6 +86,11 @@ public class Client {
         if (options.passwordEnvVariable != null) {
             options.password = System.getenv(options.passwordEnvVariable);
         }
+        // read pass from file if no other password was specified
+        if (options.password == null && options.passwordFile != null) {
+            options.password = new String(Files.readAllBytes(Paths.get(options.passwordFile)), "UTF-8");
+        }
+
 
         // Only look up the hostname if we have not already specified
         // name of the slave. Also in certain cases this lookup might fail.
