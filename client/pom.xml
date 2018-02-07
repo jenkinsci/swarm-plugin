@@ -6,7 +6,7 @@
          -->
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>swarm-plugin</artifactId>
-        <version>3.9-SNAPSHOT</version>
+        <version>3.9</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
