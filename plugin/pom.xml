@@ -19,6 +19,37 @@
         </developer>
     </developers>
 
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.0.2</version>
+          <executions>
+            <execution>
+              <id>copy</id>
+              <phase>prepare-package</phase>
+              <goals>
+                <goal>copy</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <artifactItems>
+              <artifactItem>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>swarm-client</artifactId>
+                <version>${project.version}</version>
+                <type>jar</type>
+                <overWrite>true</overWrite>
+                <outputDirectory>${project.build.directory}/${project.artifactId}</outputDirectory>
+                <destFileName>swarm-client.jar</destFileName>
+              </artifactItem>
+            </artifactItems>
+          </configuration>
+        </plugin>
+      </plugins>
+    </build>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
