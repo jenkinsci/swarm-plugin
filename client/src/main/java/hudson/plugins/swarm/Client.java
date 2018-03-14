@@ -88,7 +88,7 @@ public class Client {
         }
         // read pass from file if no other password was specified
         if (options.password == null && options.passwordFile != null) {
-            options.password = new String(Files.readAllBytes(Paths.get(options.passwordFile)), "UTF-8");
+            options.password = new String(Files.readAllBytes(Paths.get(options.passwordFile)), "UTF-8").trim();
         }
 
 
