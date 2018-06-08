@@ -1,38 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <!--FIXME: It uses Jenkins Plugin POM, but it should not. It appears to work, but it needs to be fixed ASAP.
-            The client cannot be built with 2.36, JAR packaging does not work there (and it should not)
-         -->
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>swarm-plugin</artifactId>
-        <version>3.13-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <groupId>org.jenkins-ci</groupId>
+        <artifactId>jenkins</artifactId>
+        <version>1.46</version>
+        <relativePath />
     </parent>
 
     <artifactId>swarm-client</artifactId>
+    <groupId>org.jenkins-ci.plugins</groupId>
     <packaging>jar</packaging>
     <name>Jenkins Swarm Plugin Client</name>
+    <version>3.13-SNAPSHOT</version>
 
     <properties>
       <java.level>8</java.level>
     </properties>
 
     <build>
+      <finalName>${project.artifactId}</finalName>
       <plugins>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>findbugs-maven-plugin</artifactId>
-          <executions>
-            <execution>
-              <phase>none</phase>
-            </execution>
-          </executions>
-        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.0.0</version>
+          <version>3.1.1</version>
           <executions>
             <execution>
               <phase>package</phase>
@@ -84,7 +76,7 @@
       <dependency>
         <groupId>args4j</groupId>
         <artifactId>args4j</artifactId>
-        <version>2.0.29</version>
+        <version>2.0.31</version>
       </dependency>
       <dependency>
         <groupId>commons-logging</groupId>
@@ -105,7 +97,7 @@
       <dependency>
         <groupId>commons-httpclient</groupId>
         <artifactId>commons-httpclient</artifactId>
-        <version>3.1-jenkins-1</version>
+        <version>3.1</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
@@ -115,7 +107,7 @@
       <dependency>
         <groupId>commons-lang</groupId>
         <artifactId>commons-lang</artifactId>
-        <version>2.4</version>
+        <version>2.6</version>
       </dependency>
       <dependency>
           <groupId>com.google.code.findbugs</groupId>
@@ -128,6 +120,12 @@
           <artifactId>jsr305</artifactId>
           <version>3.0.1</version>
           <scope>provided</scope>
+      </dependency>
+      <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>4.12</version>
+          <scope>test</scope>
       </dependency>
     </dependencies>
 </project>
