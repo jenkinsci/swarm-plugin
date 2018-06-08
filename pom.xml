@@ -1,10 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <!--TODO: Update once the client code is cleaned UP -->
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.11</version>
+        <version>3.14</version>
+        <relativePath />
     </parent>
 
     <artifactId>swarm-plugin</artifactId>
@@ -12,10 +13,15 @@
     <name>Jenkins Self-Organizing Swarm Plug-in</name>
     <version>3.13-SNAPSHOT</version>
 
+    <properties>
+        <jenkins.version>2.60.1</jenkins.version>
+        <java.level>8</java.level>
+    </properties>
+
     <licenses>
         <license>
-            <name>MIT license</name>
-            <comments>All source code is under the MIT license.</comments>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
         </license>
     </licenses>
 
@@ -25,10 +31,9 @@
     </modules>
 
     <scm>
-        <connection>scm:git:git://github.com/jenkinsci/swarm-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:jenkinsci/swarm-plugin.git</developerConnection>
-        <url>http://github.com/jenkinsci/swarm-plugin</url>
-        <tag>swarm-plugin-3.2</tag>
+        <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}.git</developerConnection>
+        <url>https://github.com/jenkinsci/${project.artifactId}</url>
     </scm>
 
     <repositories>
@@ -37,42 +42,6 @@
             <url>https://repo.jenkins-ci.org/public/</url>
         </repository>
     </repositories>
-
-    <!-- hopefully these entries aren't needed when we bump up to more recent Jenkins -->
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.cloudbees</groupId>
-                <artifactId>maven-license-plugin</artifactId>
-                <version>1.4</version>
-            </plugin>
-            <plugin>
-                <groupId>org.kohsuke</groupId>
-                <artifactId>access-modifier-checker</artifactId>
-                <version>1.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-            </plugin>
-        </plugins>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.apache.maven.scm</groupId>
-                            <artifactId>maven-scm-provider-gitexe</artifactId>
-                            <version>1.9</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
     <pluginRepositories>
         <pluginRepository>
             <id>repo.jenkins-ci.org</id>

@@ -1,6 +1,7 @@
 package hudson.plugins.swarm;
 
 import hudson.Extension;
+import hudson.Plugin;
 import hudson.model.UnprotectedRootAction;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.StaplerRequest;
@@ -28,6 +29,9 @@ public class DownloadClientAction implements UnprotectedRootAction {
     // serve static resources
     @Restricted(NoExternalUse.class)
     public void doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
-        Jenkins.getActiveInstance().getPlugin("swarm").doDynamic(req, rsp);
+        Plugin plugin = Jenkins.getActiveInstance().getPlugin("swarm");
+        if (plugin != null) {
+            plugin.doDynamic(req, rsp);
+        }
     }
 }
