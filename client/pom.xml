@@ -92,7 +92,7 @@
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>remoting</artifactId>
-        <version>3.21</version>
+        <version>3.26</version>
       </dependency>
       <dependency>
         <groupId>commons-httpclient</groupId>
