@@ -1,13 +1,11 @@
 package hudson.plugins.swarm;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -15,6 +13,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.File;
 import java.util.Arrays;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Swarm client.
@@ -32,7 +32,6 @@ public class Client {
     private final Thread labelFileWatcherThread = null;
 
     //TODO: Cleanup the encoding issue
-    @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Suppressed for now")
     public static void main(String... args) throws InterruptedException, IOException {
         String s = Arrays.toString(args);
         s = s.replaceAll("\n", "");
@@ -68,13 +67,10 @@ public class Client {
             String pidName = ManagementFactory.getRuntimeMXBean().getName();
             String[] pidNameParts = pidName.split("@");
             String pid = pidNameParts[0];
+            File pidFile = new File(options.pidFile);
+            pidFile.deleteOnExit();
             try {
-                File pidFile = new File(options.pidFile);
-                //FIXME: Descriptor leak risk, FindBugs seems to be misconfigured
-                FileWriter pidFileWriter = new FileWriter(pidFile);
-                pidFileWriter.write(pid);
-                pidFileWriter.close();
-                pidFile.deleteOnExit();
+                Files.write(pidFile.toPath(), pid.getBytes(UTF_8));
             } catch (IOException exception) {
                 logger.severe("Failed writing PID file: " + options.pidFile);
                 System.exit(-1);
@@ -88,7 +84,7 @@ public class Client {
         }
         // read pass from file if no other password was specified
         if (options.password == null && options.passwordFile != null) {
-            options.password = new String(Files.readAllBytes(Paths.get(options.passwordFile)), "UTF-8").trim();
+            options.password = new String(Files.readAllBytes(Paths.get(options.passwordFile)), UTF_8).trim();
         }
 
 
