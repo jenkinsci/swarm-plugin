@@ -4,6 +4,6 @@
 vmopts="$(svcprop -p jenkins/jvm_options $SMF_FMRI)"
 opts="$(svcprop -p jenkins/options $SMF_FMRI)"
 
-# generate unique name. 
+# generate unique name.
 name=$(hostname)-$(python -c 'import random,string; print "".join([random.choice(string.letters) for i in range(10)])')
 exec java $vmopts -jar /var/lib/jenkins/jenkins-swarm-client.jar -name $name

@@ -3,7 +3,7 @@ work*/
 release.properties
 *.releaseBackup
 
-# IntelliJ project files 
+# IntelliJ project files
 *.iml
 .idea/
 

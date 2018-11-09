@@ -7,9 +7,6 @@ import org.apache.commons.httpclient.HttpClient;
 import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 
-
-
-
 public class SwarmClientTest {
 
     @Test
@@ -31,7 +28,6 @@ public class SwarmClientTest {
         }
         HttpClient hc = swc.createHttpClient(url);
         assertNotNull(hc);
-
     }
 
 }

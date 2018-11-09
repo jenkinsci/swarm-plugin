@@ -17,7 +17,7 @@ public class Options {
     public String description;
 
     @Option(name = "-labels", usage = "Whitespace-separated list of labels to be assigned for this slave. Multiple options are allowed.")
-    public List<String> labels = new ArrayList<String>();
+    public List<String> labels = new ArrayList<>();
 
     @Option(name = "-fsroot", usage = "Directory where Jenkins places files")
     public File remoteFsRoot = new File(".");
@@ -66,7 +66,7 @@ public class Options {
                                                "otherwise system truststore will be used. " +
                                                "No revocation, expiration or not yet valid check will be performed " +
                                                "for custom fingerprints! Multiple options are allowed.")
-    public String sslFingerprints="";
+    public String sslFingerprints = "";
 
     @Option(name = "-disableClientsUniqueId", usage = "Disables Clients unique ID.")
     public boolean disableClientsUniqueId;
@@ -88,7 +88,7 @@ public class Options {
             usage = "A tool location to be defined on this slave. It is specified as 'toolName=location'",
             handler = MapOptionHandler.class
     )
-    public Map<String,String> toolLocations;
+    public Map<String, String> toolLocations;
 
     @Option(name = "-username", usage = "The Jenkins username for authentication")
     public String username;
@@ -111,12 +111,12 @@ public class Options {
     @Option(name = "-candidateTag", usage = "Show swarm candidate with tag only")
     public String candidateTag;
 
-    @Option(name = "-labelsFile", usage="File location with space delimited list of labels.  If the file changes, restarts this client.")
+    @Option(name = "-labelsFile", usage = "File location with space delimited list of labels.  If the file changes, restarts this client.")
     public String labelsFile;
 
-    @Option(name = "-logFile", usage="File to write STDOUT and STDERR to. (Deprecated, use -Djava.util.logging.config.file={path}logging.properties instead)")
+    @Option(name = "-logFile", usage = "File to write STDOUT and STDERR to. (Deprecated, use -Djava.util.logging.config.file={path}logging.properties instead)")
     public String logFile;
 
-    @Option(name = "-pidFile", usage="File to write PID to")
+    @Option(name = "-pidFile", usage = "File to write PID to")
     public String pidFile;
 }
