@@ -103,7 +103,7 @@ public class PluginImpl extends Plugin {
 
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
-        HashSet hs = new HashSet(lCurrentLabels);
+        HashSet<String> hs = new HashSet<>(lCurrentLabels);
         List<String> lNewLabels = Arrays.asList(labels.split("\\s+"));
         hs.addAll(lNewLabels);
         nn.setLabelString(hashSetToString(hs));
@@ -140,9 +140,9 @@ public class PluginImpl extends Plugin {
 
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
-        HashSet<List<String>> hs = new HashSet(lCurrentLabels);
-        //List<String> lBadLabels = Arrays.asList(labels.split("\\s+"));
-        //hs.removeAll();
+        HashSet<String> hs = new HashSet<>(lCurrentLabels);
+        List<String> lBadLabels = Arrays.asList(labels.split("\\s+"));
+        hs.removeAll(lBadLabels);
         nn.setLabelString(hashSetToString(hs));
         nn.getAssignedLabels();
         normalResponse(req, rsp, nn.getLabelString());
