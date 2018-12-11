@@ -1,6 +1,5 @@
 package hudson.plugins.swarm;
 
-import com.google.common.collect.Lists;
 import hudson.Plugin;
 import hudson.Util;
 import hudson.model.Computer;
@@ -40,7 +39,6 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
  */
 public class PluginImpl extends Plugin {
 
-
     private Node getNodeByName(String name, StaplerResponse rsp) throws IOException {
         final Jenkins jenkins = Jenkins.getInstance();
 
@@ -54,8 +52,7 @@ public class PluginImpl extends Plugin {
                 return null;
             }
             return n;
-
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException ignored) {}
 
         return null;
     }
@@ -72,8 +69,9 @@ public class PluginImpl extends Plugin {
         }
 
         Node nn = getNodeByName(name, rsp);
-        if(nn == null)
+        if (nn == null) {
             return;
+        }
 
         normalResponse(req, rsp, nn.getLabelString());
     }
@@ -90,16 +88,17 @@ public class PluginImpl extends Plugin {
     /**
      * Adds labels to a slave.
      */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void doAddSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void doAddSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                             @QueryParameter String secret, @QueryParameter String labels)  throws IOException{
         if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
             return;
         }
         Node nn = getNodeByName(name, rsp);
-        if(nn == null)
+        if (nn == null) {
             return;
+        }
 
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
@@ -113,11 +112,10 @@ public class PluginImpl extends Plugin {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	private String hashSetToString(HashSet hs) {
+    private String hashSetToString(HashSet hs) {
         List<String> lNewlist = new ArrayList<String>(hs);
         StringBuilder sb = new StringBuilder();
-        for (String s : lNewlist)
-        {
+        for (String s : lNewlist) {
             sb.append(s);
             sb.append(" ");
         }
@@ -128,15 +126,16 @@ public class PluginImpl extends Plugin {
      * Remove labels from a slave
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	public void doRemoveSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
+    public void doRemoveSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                             @QueryParameter String secret, @QueryParameter String labels) throws IOException {
         if (!getSwarmSecret().equals(secret)) {
             rsp.setStatus(SC_FORBIDDEN);
             return;
         }
         Node nn = getNodeByName(name, rsp);
-        if(nn == null)
+        if (nn == null) {
             return;
+        }
 
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
@@ -147,7 +146,6 @@ public class PluginImpl extends Plugin {
         nn.getAssignedLabels();
         normalResponse(req, rsp, nn.getLabelString());
     }
-
 
     /**
      * Adds a new swarm slave.
@@ -171,10 +169,10 @@ public class PluginImpl extends Plugin {
             jenkins.checkPermission(SlaveComputer.CREATE);
 
             String[] toolLocations = req.getParameterValues("toolLocation");
-            List<ToolLocationNodeProperty> nodeProperties = Lists.newArrayList();
+            List<ToolLocationNodeProperty> nodeProperties = new ArrayList<>();
             if (!ArrayUtils.isEmpty(toolLocations)) {
                 List<ToolLocation> parsedToolLocations = parseToolLocations(toolLocations);
-                nodeProperties = Lists.newArrayList(new ToolLocationNodeProperty(parsedToolLocations));
+                nodeProperties.add(new ToolLocationNodeProperty(parsedToolLocations));
             }
 
             if (hash == null && jenkins.getNode(name) != null && !deleteExistingClients) {
@@ -234,7 +232,7 @@ public class PluginImpl extends Plugin {
     }
 
     private List<ToolLocation> parseToolLocations(String[] toolLocations) {
-        List<ToolLocationNodeProperty.ToolLocation> result = Lists.newArrayList();
+        List<ToolLocationNodeProperty.ToolLocation> result = new ArrayList<>();
 
         for (String toolLocKeyValue : toolLocations) {
             boolean found = false;
@@ -267,10 +265,12 @@ public class PluginImpl extends Plugin {
     }
 
     static String getSwarmSecret() {
-        String secret = "";
+        String secret;
         try {
             secret = UDPFragmentImpl.all().get(UDPFragmentImpl.class).secret.toString();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException e) {
+            secret = "";
+        }
 
         return secret;
     }

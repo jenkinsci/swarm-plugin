@@ -11,7 +11,7 @@
     <artifactId>swarm</artifactId>
     <packaging>hpi</packaging>
     <name>Jenkins Self-Organizing Swarm Plug-in Modules</name>
-    <url>http://wiki.jenkins-ci.org/display/JENKINS/Swarm+Plugin</url>
+    <url>https://wiki.jenkins.io/display/JENKINS/Swarm+Plugin</url>
 
     <developers>
         <developer>

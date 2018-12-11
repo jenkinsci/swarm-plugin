@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci</groupId>
         <artifactId>jenkins</artifactId>
-        <version>1.46</version>
+        <version>1.49</version>
         <relativePath />
     </parent>
 
@@ -17,6 +17,13 @@
     <properties>
       <java.level>8</java.level>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </repository>
+    </repositories>
 
     <build>
       <finalName>${project.artifactId}</finalName>

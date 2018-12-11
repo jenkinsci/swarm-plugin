@@ -1,41 +1,41 @@
 package hudson.plugins.swarm;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
-import java.nio.file.Paths;
-import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.io.File;
 import java.util.Arrays;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * Swarm client.
- *
- * Discovers nearby Jenkins via UDP broadcast, and pick eligible one randomly and
+ * <p>
+ * Discovers nearby Jenkins via UDP broadcast, and picks eligible one randomly and
  * joins it.
  *
  * @author Kohsuke Kawaguchi
  */
 public class Client {
+
     private static final Logger logger = Logger.getLogger(Client.class.getPackage().getName());
 
     private final Options options;
     private final Thread labelFileWatcherThread = null;
 
     //TODO: Cleanup the encoding issue
-    @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Suppressed for now")
     public static void main(String... args) throws InterruptedException, IOException {
         String s = Arrays.toString(args);
-        s = s.replaceAll("\n","");
-        s = s.replaceAll("\r","");
+        s = s.replaceAll("\n", "");
+        s = s.replaceAll("\r", "");
         s = s.replaceAll(",", "");
         logger.info("Client.main invoked with: " + s);
 
@@ -44,9 +44,8 @@ public class Client {
         CmdLineParser p = new CmdLineParser(options);
         try {
             p.parseArgument(args);
-        }
-        catch (CmdLineException e) {
-            logger.log(Level.SEVERE,"CmdLineException occurred during parseArgument", e);
+        } catch (CmdLineException e) {
+            logger.log(Level.SEVERE, "CmdLineException occurred during parseArgument", e);
             p.printUsage(System.out);
             System.exit(-1);
         }
@@ -56,26 +55,23 @@ public class Client {
             System.exit(0);
         }
 
-        if(options.logFile != null) {
+        if (options.logFile != null) {
             logger.severe("-logFile has been deprecated. Use logging properties file syntax instead: -Djava.util.logging.config.file=" + Paths.get("").toAbsolutePath().toString() + File.separator + "logging.properties");
             System.exit(-1);
         }
 
-        if(options.pidFile != null) {
+        if (options.pidFile != null) {
             // This will return a string like 12345@hostname, so we need to do some string manipulation
             // to get the actual process identifier.
             // In Java 9, this can be replaced with: ProcessHandle.current().getPid();
             String pidName = ManagementFactory.getRuntimeMXBean().getName();
             String[] pidNameParts = pidName.split("@");
             String pid = pidNameParts[0];
+            File pidFile = new File(options.pidFile);
+            pidFile.deleteOnExit();
             try {
-                File pidFile = new File(options.pidFile);
-                //FIXME: Descriptor leak risk, FindBugs seems to be misconfigured
-                FileWriter pidFileWriter = new FileWriter(pidFile);
-                pidFileWriter.write(pid);
-                pidFileWriter.close();
-                pidFile.deleteOnExit();
-            } catch(IOException exception) {
+                Files.write(pidFile.toPath(), pid.getBytes(UTF_8));
+            } catch (IOException exception) {
                 logger.severe("Failed writing PID file: " + options.pidFile);
                 System.exit(-1);
             }
@@ -88,7 +84,7 @@ public class Client {
         }
         // read pass from file if no other password was specified
         if (options.password == null && options.passwordFile != null) {
-            options.password = new String(Files.readAllBytes(Paths.get(options.passwordFile)), "UTF-8").trim();
+            options.password = new String(Files.readAllBytes(Paths.get(options.passwordFile)), UTF_8).trim();
         }
 
 
@@ -107,8 +103,7 @@ public class Client {
         if (options.name == null) {
             try {
                 client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 logger.severe("Failed to lookup the canonical hostname of this slave, please check system settings.");
                 logger.severe("If not possible to resolve please specify a node name using the '-name' option");
                 System.exit(-1);
@@ -126,7 +121,7 @@ public class Client {
 
     /**
      * Finds a Jenkins master that supports swarming, and join it.
-     *
+     * <p>
      * This method never returns.
      */
     public void run(SwarmClient swarmClient, String... args) throws InterruptedException {
@@ -151,7 +146,7 @@ public class Client {
                 }
 
                 // set up label file watcher thread (if the label file changes, this thread takes action to restart the client)
-                if(options.labelsFile != null && labelFileWatcherThread == null) {
+                if (options.labelsFile != null && labelFileWatcherThread == null) {
                     logger.info("Setting up LabelFileWatcher");
                     LabelFileWatcher l = new LabelFileWatcher(target, options, args);
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");

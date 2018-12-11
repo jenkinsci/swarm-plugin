@@ -1,7 +1,7 @@
 package hudson.plugins.swarm;
 
 /**
- * Indicates a graful error reporting that doesn't need the stack dump.
+ * Indicates a graceful error reporting that doesn't need the stack dump.
  *
  * @author Kohsuke Kawaguchi
  */

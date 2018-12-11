@@ -59,7 +59,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
         }
 
         /**
-         * We only create this kind of nodes programatically.
+         * We only create this kind of nodes programmatically.
          */
         @Override
         public boolean isInstantiable() {
@@ -72,9 +72,11 @@ public class SwarmSlave extends Slave implements EphemeralNode {
      */
     private static final JNLPLauncher SELF_CLEANUP_LAUNCHER = new JNLPLauncher() {
 
-        @Override public Descriptor<ComputerLauncher> getDescriptor() {
+        @Override
+        public Descriptor<ComputerLauncher> getDescriptor() {
             return new Descriptor<ComputerLauncher>() {
-                @Override public String getDisplayName() {
+                @Override
+                public String getDisplayName() {
                     return "Launch swarm slaves";
                 }
             };

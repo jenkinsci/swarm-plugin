@@ -1,6 +1,5 @@
 package hudson.plugins.swarm;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Test;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -73,12 +72,11 @@ public class ClientTest {
         }
     }
 
-    class DummySwarmClient extends SwarmClient {
+    private static class DummySwarmClient extends SwarmClient {
 
-        int totalWaitTime;
+        private int totalWaitTime;
 
-        @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC")
-        public DummySwarmClient(Options options) {
+        DummySwarmClient(Options options) {
             super(options);
         }
 
