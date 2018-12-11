@@ -11,7 +11,7 @@
     <artifactId>swarm-plugin</artifactId>
     <packaging>pom</packaging>
     <name>Jenkins Self-Organizing Swarm Plug-in</name>
-    <version>3.15-SNAPSHOT</version>
+    <version>3.15</version>
 
     <properties>
         <jenkins.version>2.60.1</jenkins.version>
@@ -34,7 +34,7 @@
         <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}.git</developerConnection>
         <url>https://github.com/jenkinsci/${project.artifactId}</url>
-        <tag>HEAD</tag>
+        <tag>swarm-plugin-3.15</tag>
     </scm>
 
     <repositories>

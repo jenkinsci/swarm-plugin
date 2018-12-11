@@ -12,7 +12,7 @@
     <groupId>org.jenkins-ci.plugins</groupId>
     <packaging>jar</packaging>
     <name>Jenkins Swarm Plugin Client</name>
-    <version>3.15-SNAPSHOT</version>
+    <version>3.15</version>
 
     <properties>
       <java.level>8</java.level>
@@ -135,4 +135,8 @@
           <scope>test</scope>
       </dependency>
     </dependencies>
+
+  <scm>
+    <tag>swarm-plugin-3.15</tag>
+  </scm>
 </project>
