@@ -395,6 +395,12 @@ public class SwarmClient {
             }
         }
 
+        if (options.environmentVariables != null) {
+            for (Entry<String, String> envVar : options.environmentVariables.entrySet()) {
+                toolLocationBuilder.append(param("environmentVariables", envVar.getKey() + ":" + envVar.getValue()));
+            }
+        }
+
         String sMyLabels = labelStr;
         if (sMyLabels.length() > 1000) {
             sMyLabels = "";

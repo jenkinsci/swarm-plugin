@@ -5,6 +5,8 @@ import hudson.Util;
 import hudson.model.Computer;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.slaves.NodeProperty;
 import hudson.slaves.SlaveComputer;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
@@ -169,12 +171,17 @@ public class PluginImpl extends Plugin {
             jenkins.checkPermission(SlaveComputer.CREATE);
 
             String[] toolLocations = req.getParameterValues("toolLocation");
-            List<ToolLocationNodeProperty> nodeProperties = new ArrayList<>();
+            List<NodeProperty<Node>> nodeProperties = new ArrayList<>();
             if (!ArrayUtils.isEmpty(toolLocations)) {
                 List<ToolLocation> parsedToolLocations = parseToolLocations(toolLocations);
                 nodeProperties.add(new ToolLocationNodeProperty(parsedToolLocations));
             }
 
+            String[] envVars = req.getParameterValues("environmentVariables");
+            if(!ArrayUtils.isEmpty(envVars)) {
+                List<EnvironmentVariablesNodeProperty.Entry> parsedEnvVars = parseEnvVars(envVars);
+                nodeProperties.add(new EnvironmentVariablesNodeProperty(parsedEnvVars));
+            }
             if (hash == null && jenkins.getNode(name) != null && !deleteExistingClients) {
                 // this is a legacy client, they won't be able to pick up the new name, so throw them away
                 // perhaps they can find another master to connect to
@@ -259,6 +266,22 @@ public class PluginImpl extends Plugin {
             if (!found) {
                 throw new RuntimeException("No tool '" + toolLoc[0] + "' is defined on Jenkins.");
             }
+        }
+
+        return result;
+    }
+
+    private List<EnvironmentVariablesNodeProperty.Entry> parseEnvVars(String[] envVars) {
+        List<EnvironmentVariablesNodeProperty.Entry> result = new ArrayList<>();
+
+        for (String envVarKeyValue : envVars) {
+            boolean found = false;
+            // Limit the split on only the first occurrence
+            // of ':', so that the path can contain ':' characters.
+            String[] keyValue = envVarKeyValue.split(":", 2);
+            EnvironmentVariablesNodeProperty.Entry var = new EnvironmentVariablesNodeProperty
+                    .Entry(keyValue[0], keyValue[1]);
+            result.add(var);
         }
 
         return result;
