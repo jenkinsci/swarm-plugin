@@ -29,7 +29,6 @@ public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getPackage().getName());
 
     private final Options options;
-    //private static final Thread labelFileWatcherThread = null;
 
     //TODO: Cleanup the encoding issue
     public static void main(String... args) throws InterruptedException, IOException {
