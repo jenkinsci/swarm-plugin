@@ -29,7 +29,7 @@ public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getPackage().getName());
 
     private final Options options;
-    private static final Thread labelFileWatcherThread = null;
+    //private static final Thread labelFileWatcherThread = null;
 
     //TODO: Cleanup the encoding issue
     public static void main(String... args) throws InterruptedException, IOException {
@@ -146,7 +146,7 @@ public class Client {
                 }
 
                 // set up label file watcher thread (if the label file changes, this thread takes action to restart the client)
-                if (options.labelsFile != null && labelFileWatcherThread == null) {
+                if (options.labelsFile != null) {
                     logger.info("Setting up LabelFileWatcher");
                     LabelFileWatcher l = new LabelFileWatcher(target, options, args);
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
