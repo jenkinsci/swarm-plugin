@@ -15,6 +15,10 @@
 
     <developers>
         <developer>
+            <id>basil</id>
+            <name>Basil Crow</name>
+        </developer>
+        <developer>
             <id>kohsuke</id>
             <name>Kohsuke Kawaguchi</name>
         </developer>
