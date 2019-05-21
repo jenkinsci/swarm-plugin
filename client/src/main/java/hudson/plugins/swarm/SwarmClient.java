@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
@@ -315,6 +316,16 @@ public class SwarmClient {
     public synchronized static HttpClient getGlobalHttpClient() {
         if (g_client == null) {
             g_client = new HttpClient(new MultiThreadedHttpConnectionManager());
+            if (System.getProperty("http.proxyHost") != null) {
+                try {
+                  HostConfiguration hostConfiguration = g_client.getHostConfiguration();
+                  hostConfiguration.setProxy(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
+                  g_client.setHostConfiguration(hostConfiguration);
+                  logger.log(Level.INFO, "USING PROXY: " + g_client.getHostConfiguration().getProxyHost());
+                } catch (Exception e) {
+                  throw new RuntimeException("Cannot set proxy!", e);
+                }
+              }
         }
 
         return g_client;
