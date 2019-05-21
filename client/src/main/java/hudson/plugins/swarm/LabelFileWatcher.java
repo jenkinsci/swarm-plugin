@@ -111,7 +111,9 @@ public class LabelFileWatcher implements Runnable {
 
         Document xml;
         try {
-            xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            xml = dbf.newDocumentBuilder().parse(new ByteArrayInputStream(
                     get.getResponseBody()));
         } catch (Exception e) {
             String msg = "Invalid XML received from " + targ.getURL();

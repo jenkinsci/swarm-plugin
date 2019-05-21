@@ -110,7 +110,9 @@ public class SwarmClient {
             String address = printable(recv.getAddress());
 
             try {
-                xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                xml = dbf.newDocumentBuilder().parse(
                         new ByteArrayInputStream(recv.getData(), 0, recv.getLength()));
             } catch (SAXException e) {
                 logger.severe("Invalid response XML from " + address + ": " + responseXml);
