@@ -310,7 +310,7 @@ public class SwarmClient {
         }
     }
 
-    public synchronized static HttpClient getGlobalHttpClient() {
+    public static synchronized HttpClient getGlobalHttpClient() {
         if (g_client == null) {
             g_client = new HttpClient(new MultiThreadedHttpConnectionManager());
         }
@@ -349,7 +349,7 @@ public class SwarmClient {
         return client;
     }
 
-    protected synchronized static Crumb getCsrfCrumb(HttpClient client, Candidate target) throws IOException {
+    protected static synchronized Crumb getCsrfCrumb(HttpClient client, Candidate target) throws IOException {
         logger.finer("getCsrfCrumb() invoked");
 
         GetMethod httpGet = null;
@@ -477,7 +477,7 @@ public class SwarmClient {
         }
     }
 
-    protected synchronized static void postLabelRemove(String name, String labels, HttpClient client, Candidate target) throws IOException, RetryException {
+    protected static synchronized void postLabelRemove(String name, String labels, HttpClient client, Candidate target) throws IOException, RetryException {
         PostMethod post = null;
 
         try {
@@ -509,7 +509,7 @@ public class SwarmClient {
         }
     }
 
-    protected synchronized static void postLabelAppend(String name, String labels, HttpClient client, Candidate target) throws RetryException, IOException {
+    protected static synchronized void postLabelAppend(String name, String labels, HttpClient client, Candidate target) throws RetryException, IOException {
         PostMethod post = null;
 
         try {
@@ -541,13 +541,13 @@ public class SwarmClient {
         }
     }
 
-    private synchronized static String encode(String value) throws UnsupportedEncodingException {
+    private static synchronized String encode(String value) throws UnsupportedEncodingException {
         logger.finer("encode() invoked");
 
         return URLEncoder.encode(value, "UTF-8");
     }
 
-    protected synchronized static String param(String name, String value) throws UnsupportedEncodingException {
+    protected static synchronized String param(String name, String value) throws UnsupportedEncodingException {
         logger.finer("param() invoked");
 
         if (value == null) {
