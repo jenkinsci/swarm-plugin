@@ -37,7 +37,7 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 public class PluginImpl extends Plugin {
 
     private Node getNodeByName(String name, StaplerResponse rsp) throws IOException {
-        final Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstance();
 
         try {
             Node n = jenkins.getNode(name);
@@ -158,7 +158,7 @@ public class PluginImpl extends Plugin {
         }
 
         try {
-            final Jenkins jenkins = Jenkins.getInstance();
+            Jenkins jenkins = Jenkins.getInstance();
 
             jenkins.checkPermission(SlaveComputer.CREATE);
 
@@ -264,7 +264,7 @@ public class PluginImpl extends Plugin {
     }
 
     public void doSlaveInfo(StaplerRequest req, StaplerResponse rsp) throws IOException {
-        final Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstance();
         jenkins.checkPermission(SlaveComputer.CREATE);
 
         rsp.setContentType("text/xml");
