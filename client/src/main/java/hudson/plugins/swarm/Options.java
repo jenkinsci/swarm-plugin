@@ -29,7 +29,7 @@ public class Options {
     public String master;
 
     @Option(name = "-tunnel", usage = "Connect to the specified host and port, instead of connecting directly to Jenkins. " +
-                    "Useful when connection to Hudson needs to be tunneled. Can be also HOST: or :PORT, " +
+                    "Useful when connection to Jenkins needs to be tunneled. Can be also HOST: or :PORT, " +
                     "in which case the missing portion will be auto-configured like the default behavior")
     public String tunnel;
 
