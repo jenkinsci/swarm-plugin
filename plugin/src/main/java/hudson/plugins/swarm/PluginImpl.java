@@ -264,15 +264,9 @@ public class PluginImpl extends Plugin {
         return result;
     }
 
-    static String getSwarmSecret() {
-        String secret;
-        try {
-            secret = UDPFragmentImpl.all().get(UDPFragmentImpl.class).secret.toString();
-        } catch (NullPointerException e) {
-            secret = "";
-        }
-
-        return secret;
+    private static String getSwarmSecret() {
+        UDPFragmentImpl fragment = UDPFragmentImpl.all().get(UDPFragmentImpl.class);
+        return fragment == null ? "" : fragment.secret.toString();
     }
 
     @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
