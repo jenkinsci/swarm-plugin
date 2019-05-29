@@ -161,9 +161,7 @@ public class LabelFileWatcher implements Runnable {
             } catch (Exception ignored) {}
         }
 
-        if (get != null) {
-            get.releaseConnection();
-        }
+        get.releaseConnection();
     }
 
     private void hardLabelUpdate() throws IOException {
