@@ -18,9 +18,6 @@ import org.kohsuke.stapler.StaplerResponse;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import javax.servlet.ServletOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -75,7 +72,6 @@ public class PluginImpl extends Plugin {
 
         normalResponse(req, rsp, nn.getLabelString());
     }
-
 
     private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
         rsp.setContentType("text/xml");
@@ -150,7 +146,6 @@ public class PluginImpl extends Plugin {
     /**
      * Adds a new swarm slave.
      */
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                               @QueryParameter String description, @QueryParameter int executors,
                               @QueryParameter String remoteFsRoot, @QueryParameter String labels,
@@ -163,7 +158,6 @@ public class PluginImpl extends Plugin {
         }
 
         try {
-            //@SuppressWarnings()
             final Jenkins jenkins = Jenkins.getInstance();
 
             jenkins.checkPermission(SlaveComputer.CREATE);
@@ -269,7 +263,6 @@ public class PluginImpl extends Plugin {
         return fragment == null ? "" : fragment.secret.toString();
     }
 
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public void doSlaveInfo(StaplerRequest req, StaplerResponse rsp) throws IOException {
         final Jenkins jenkins = Jenkins.getInstance();
         jenkins.checkPermission(SlaveComputer.CREATE);

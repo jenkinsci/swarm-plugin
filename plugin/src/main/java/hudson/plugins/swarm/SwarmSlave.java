@@ -1,6 +1,5 @@
 package hudson.plugins.swarm;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Descriptor.FormException;
@@ -37,7 +36,6 @@ public class SwarmSlave extends Slave implements EphemeralNode {
     }
 
     @DataBoundConstructor
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode,
                       String labelString, ComputerLauncher launcher, RetentionStrategy<?> retentionStrategy,
                       List<? extends NodeProperty<?>> nodeProperties) throws FormException, IOException {
@@ -80,7 +78,6 @@ public class SwarmSlave extends Slave implements EphemeralNode {
         }
 
         @Override
-        @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
         public void afterDisconnect(SlaveComputer computer, TaskListener listener) {
             final Slave node = computer.getNode();
             if (node != null) {
