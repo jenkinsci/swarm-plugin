@@ -95,19 +95,16 @@ public class PipelineJobTest {
                     new FileOutputStream(f1).close();
                     project.setConcurrentBuild(false);
 
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("node('" + node.getNodeName() + "') {\n");
-                    sb.append(
-                            "  sh 'touch \""
-                                    + f2
-                                    + "\"; while [ -f \""
-                                    + f1
-                                    + "\" ]; do sleep 1; done; echo finished waiting; rm \""
-                                    + f2
-                                    + "\"'\n");
-                    sb.append("  echo 'OK, done'\n");
-                    sb.append("}\n");
-                    project.setDefinition(new CpsFlowDefinition(sb.toString(), true));
+                    String script = "node('" + node.getNodeName() + "') {\n"
+                            + "  sh '"
+                            + "touch \"" + f2 + "\";"
+                            + "while [ -f \"" + f1 + "\" ]; do sleep 1; done;"
+                            + "echo finished waiting;"
+                            + "rm \"" + f2 + "\""
+                            + "'\n"
+                            + "echo 'OK, done'\n"
+                            + "}";
+                    project.setDefinition(new CpsFlowDefinition(script, true));
 
                     WorkflowRun build = project.scheduleBuild2(0).waitForStart();
                     while (!f2.isFile()) {
