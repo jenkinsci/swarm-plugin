@@ -14,6 +14,7 @@ import java.io.IOException;
 
 @Extension
 public class DownloadClientAction implements UnprotectedRootAction {
+
     public String getIconFileName() {
         return null;
     }
@@ -29,7 +30,7 @@ public class DownloadClientAction implements UnprotectedRootAction {
     // serve static resources
     @Restricted(NoExternalUse.class)
     public void doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
-        Plugin plugin = Jenkins.getActiveInstance().getPlugin("swarm");
+        Plugin plugin = Jenkins.getInstance().getPlugin("swarm");
         if (plugin != null) {
             plugin.doDynamic(req, rsp);
         }

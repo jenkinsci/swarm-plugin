@@ -2,7 +2,6 @@ package hudson.plugins.swarm;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
-import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
@@ -22,7 +21,6 @@ import java.util.List;
 
 /**
  * {@link Slave} created by ad-hoc local systems.
- *
  * <p>
  * This acts like a JNLP slave, except when the client disconnects, the slave will be deleted.
  *
@@ -43,8 +41,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
     public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode,
                       String labelString, ComputerLauncher launcher, RetentionStrategy<?> retentionStrategy,
                       List<? extends NodeProperty<?>> nodeProperties) throws FormException, IOException {
-        super(name, nodeDescription, remoteFS, Util.tryParseNumber(numExecutors, 1).intValue(), mode, labelString,
-                launcher, retentionStrategy, nodeProperties);
+        super(name, nodeDescription, remoteFS, numExecutors, mode, labelString, launcher, retentionStrategy, nodeProperties);
     }
 
     public Node asNode() {
