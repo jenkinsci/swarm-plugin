@@ -42,7 +42,7 @@ public class Options {
     @Option(
             name = "-retryBackOffStrategy",
             usage = "The mode controlling retry wait time. Can be either " +
-                    "none (use same interval between retires)" +
+                    "none (use same interval between retries)" +
                     "or 'linear' (increase wait time before each retry up to maxRetryInterval) " +
                     "or 'exponential' (double wait interval on each retry up to maxRetryInterval). " +
                     "Default is none.",
