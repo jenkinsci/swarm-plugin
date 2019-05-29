@@ -70,7 +70,7 @@ public class SwarmClient {
         if (options.labelsFile != null) {
             logger.info("Loading labels from " + options.labelsFile + "...");
             try {
-                String labels = new String(Files.readAllBytes(Paths.get(options.labelsFile)), "UTF-8");
+                String labels = new String(Files.readAllBytes(Paths.get(options.labelsFile)), UTF_8);
                 options.labels.addAll(Arrays.asList(labels.split(" ")));
                 logger.info("Labels found in file: " + labels);
                 logger.info("Effective label list: " + Arrays.toString(options.labels.toArray()).replaceAll("\n", "").replaceAll("\r", ""));

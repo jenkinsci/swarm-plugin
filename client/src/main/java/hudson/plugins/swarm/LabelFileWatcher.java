@@ -215,14 +215,14 @@ public class LabelFileWatcher implements Runnable {
                 logger.log(Level.WARNING, "LabelFileWatcher InterruptedException occurred.", e);
             }
             try {
-                sTempLabels = new String(Files.readAllBytes(Paths.get(sFileName)), "UTF-8");
+                sTempLabels = new String(Files.readAllBytes(Paths.get(sFileName)), UTF_8);
                 if (sTempLabels.equalsIgnoreCase(sLabels)) {
                     logger.log(Level.FINEST, "Nothing to do. " + sFileName + " has not changed.");
                 } else {
                     try {
                         // try to do the "soft" form of label updating (manipulating the labels through the plugin APIs
                         softLabelUpdate(sTempLabels);
-                        sLabels = new String(Files.readAllBytes(Paths.get(sFileName)), "UTF-8");
+                        sLabels = new String(Files.readAllBytes(Paths.get(sFileName)), UTF_8);
                     } catch (SoftLabelUpdateException e) {
                         // if we're unable to
                         logger.log(Level.WARNING, "WARNING: Normal process, soft label update failed. " + e.getLocalizedMessage() + ", forcing swarm client reboot.  This can be disruptive to Jenkins jobs.  Check your swarm client log files to see why this is happening.");
