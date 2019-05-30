@@ -9,7 +9,6 @@ import hudson.plugins.swarm.test.TestUtils;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
-import java.io.IOException;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,7 +45,7 @@ public class SwarmClientIntegrationTest {
         tearDown();
     }
 
-    private void tearDown() throws IOException {
+    private void tearDown() {
         try {
             processDestroyer.clean();
         } catch (InterruptedException e) {

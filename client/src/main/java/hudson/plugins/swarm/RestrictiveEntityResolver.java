@@ -1,6 +1,5 @@
 package hudson.plugins.swarm;
 
-import java.io.IOException;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.xml.sax.EntityResolver;
@@ -23,8 +22,7 @@ public final class RestrictiveEntityResolver implements EntityResolver {
 
     /** Throws a SAXException if this tried to resolve any entity. */
     @Override
-    public InputSource resolveEntity(String publicId, String systemId)
-            throws SAXException, IOException {
+    public InputSource resolveEntity(String publicId, String systemId) throws SAXException {
         throw new SAXException(
                 "Refusing to resolve entity with publicId("
                         + publicId

@@ -86,7 +86,7 @@ public class SwarmClient {
         return hash;
     }
 
-    public Candidate discoverFromBroadcast() throws IOException, RetryException, ParserConfigurationException {
+    public Candidate discoverFromBroadcast() throws IOException, RetryException {
         logger.config("discoverFromBroadcast() invoked");
 
         DatagramSocket socket = new DatagramSocket();
@@ -98,7 +98,7 @@ public class SwarmClient {
     }
 
     private Candidate getCandidateFromDatagramResponses(List<DatagramPacket> responses)
-            throws ParserConfigurationException, IOException, RetryException {
+            throws IOException, RetryException {
         logger.finer("getCandidateFromDatagramResponses() invoked");
 
         List<Candidate> candidates = new ArrayList<>();
@@ -665,7 +665,7 @@ public class SwarmClient {
 
         List<X509Certificate> acceptedIssuers = new ArrayList<>();
 
-        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {}
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {}
 
         public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
             if (allowedFingerprints.isEmpty()) {
