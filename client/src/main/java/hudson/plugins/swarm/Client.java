@@ -164,7 +164,7 @@ public class Client {
                     swarmClient.exitWithStatus(0);
                 }
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "IOexception occurred", e);
+                logger.log(Level.SEVERE, "IOException occurred", e);
                 e.printStackTrace();
             } catch (ParserConfigurationException e) {
                 logger.log(Level.SEVERE, "ParserConfigurationException occurred", e);

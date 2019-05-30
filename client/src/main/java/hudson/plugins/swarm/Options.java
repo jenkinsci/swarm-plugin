@@ -29,7 +29,7 @@ public class Options {
     public String master;
 
     @Option(name = "-tunnel", usage = "Connect to the specified host and port, instead of connecting directly to Jenkins. " +
-                    "Useful when connection to Hudson needs to be tunneled. Can be also HOST: or :PORT, " +
+                    "Useful when connection to Jenkins needs to be tunneled. Can be also HOST: or :PORT, " +
                     "in which case the missing portion will be auto-configured like the default behavior")
     public String tunnel;
 
@@ -42,7 +42,7 @@ public class Options {
     @Option(
             name = "-retryBackOffStrategy",
             usage = "The mode controlling retry wait time. Can be either " +
-                    "none (use same interval between retires)" +
+                    "none (use same interval between retries)" +
                     "or 'linear' (increase wait time before each retry up to maxRetryInterval) " +
                     "or 'exponential' (double wait interval on each retry up to maxRetryInterval). " +
                     "Default is none.",

@@ -18,9 +18,6 @@ import org.kohsuke.stapler.StaplerResponse;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import javax.servlet.ServletOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,7 +37,7 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 public class PluginImpl extends Plugin {
 
     private Node getNodeByName(String name, StaplerResponse rsp) throws IOException {
-        final Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstance();
 
         try {
             Node n = jenkins.getNode(name);
@@ -75,7 +72,6 @@ public class PluginImpl extends Plugin {
 
         normalResponse(req, rsp, nn.getLabelString());
     }
-
 
     private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
         rsp.setContentType("text/xml");
@@ -150,7 +146,6 @@ public class PluginImpl extends Plugin {
     /**
      * Adds a new swarm slave.
      */
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                               @QueryParameter String description, @QueryParameter int executors,
                               @QueryParameter String remoteFsRoot, @QueryParameter String labels,
@@ -163,8 +158,7 @@ public class PluginImpl extends Plugin {
         }
 
         try {
-            //@SuppressWarnings()
-            final Jenkins jenkins = Jenkins.getInstance();
+            Jenkins jenkins = Jenkins.getInstance();
 
             jenkins.checkPermission(SlaveComputer.CREATE);
 
@@ -264,20 +258,13 @@ public class PluginImpl extends Plugin {
         return result;
     }
 
-    static String getSwarmSecret() {
-        String secret;
-        try {
-            secret = UDPFragmentImpl.all().get(UDPFragmentImpl.class).secret.toString();
-        } catch (NullPointerException e) {
-            secret = "";
-        }
-
-        return secret;
+    private static String getSwarmSecret() {
+        UDPFragmentImpl fragment = UDPFragmentImpl.all().get(UDPFragmentImpl.class);
+        return fragment == null ? "" : fragment.secret.toString();
     }
 
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public void doSlaveInfo(StaplerRequest req, StaplerResponse rsp) throws IOException {
-        final Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstance();
         jenkins.checkPermission(SlaveComputer.CREATE);
 
         rsp.setContentType("text/xml");
