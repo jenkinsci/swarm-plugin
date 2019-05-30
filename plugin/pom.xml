@@ -33,7 +33,7 @@
           <executions>
             <execution>
               <id>copy</id>
-              <phase>prepare-package</phase>
+              <phase>process-resources</phase>
               <goals>
                 <goal>copy</goal>
               </goals>
@@ -58,7 +58,7 @@
           <artifactId>maven-hpi-plugin</artifactId>
           <version>3.5</version>
           <configuration>
-            <warSourceDirectory>../client/target</warSourceDirectory>
+            <warSourceDirectory>${project.build.directory}/${project.artifactId}</warSourceDirectory>
           </configuration>
         </plugin>
       </plugins>
