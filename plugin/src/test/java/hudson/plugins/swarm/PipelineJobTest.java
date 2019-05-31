@@ -10,7 +10,6 @@ import hudson.plugins.swarm.test.ProcessDestroyer;
 import hudson.plugins.swarm.test.TestUtils;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -35,7 +34,7 @@ public class PipelineJobTest {
 
     /** Executes a shell script build on a Swarm Client agent. */
     @Test
-    public void buildShellScript() throws Exception {
+    public void buildShellScript() {
         story.then(
                 s -> {
                     Node node =
@@ -56,7 +55,7 @@ public class PipelineJobTest {
      * master is still running.
      */
     @Test
-    public void buildShellScriptAfterDisconnect() throws Exception {
+    public void buildShellScriptAfterDisconnect() {
         story.then(
                 s -> {
                     Node node =
@@ -81,7 +80,7 @@ public class PipelineJobTest {
 
     /** Same as the preceding test, but waits in "sh" rather than "node." */
     @Test
-    public void buildShellScriptAcrossDisconnect() throws Exception {
+    public void buildShellScriptAcrossDisconnect() {
         Assume.assumeFalse(
                 "TODO not sure how to write a corresponding batch script", Functions.isWindows());
         story.then(
@@ -141,7 +140,7 @@ public class PipelineJobTest {
      * verifies that the job continues running on the same agent after Jenkins has been restarted.
      */
     @Test
-    public void buildShellScriptAfterRestart() throws Exception {
+    public void buildShellScriptAfterRestart() {
         Assume.assumeNotNull(
                 System.getProperty("port"), "This test requires a fixed port to be available.");
 
@@ -192,7 +191,7 @@ public class PipelineJobTest {
         return sb.toString();
     }
 
-    private void tearDown() throws IOException {
+    private void tearDown() {
         try {
             processDestroyer.clean();
         } catch (InterruptedException e) {

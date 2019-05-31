@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 import hudson.model.Computer;
 import hudson.model.Node;
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -34,7 +33,7 @@ public class TestUtils {
 
     /** Wait for the agent with the given name to come online against the given Jenkins instance. */
     private static Computer waitOnline(String agentName, Jenkins jenkins)
-            throws InterruptedException, IOException {
+            throws InterruptedException {
         Computer computer = jenkins.getComputer(agentName);
         while (computer == null) {
             Thread.sleep(100);

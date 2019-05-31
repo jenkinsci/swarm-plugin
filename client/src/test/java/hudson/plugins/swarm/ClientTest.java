@@ -2,7 +2,6 @@ package hudson.plugins.swarm;
 
 import org.junit.Test;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 
 import static hudson.plugins.swarm.RetryBackOffStrategy.EXPONENTIAL;
@@ -81,7 +80,7 @@ public class ClientTest {
         }
 
         @Override
-        public Candidate discoverFromMasterUrl() throws IOException, ParserConfigurationException, RetryException {
+        public Candidate discoverFromMasterUrl() throws IOException {
             throw new IOException("Unable to connect at the moment");
         }
 
@@ -91,7 +90,7 @@ public class ClientTest {
         }
 
         @Override
-        public void sleepSeconds(int waitTime) throws InterruptedException {
+        public void sleepSeconds(int waitTime) {
             totalWaitTime += waitTime;
             if (totalWaitTime > 1000) {
                 throw new IllegalStateException("Running long enough");
