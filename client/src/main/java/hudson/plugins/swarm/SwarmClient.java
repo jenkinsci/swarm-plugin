@@ -22,7 +22,6 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.*;
@@ -225,8 +224,7 @@ public class SwarmClient {
 
             Document xml;
             try {
-                xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(
-                        get.getResponseBody()));
+                xml = XmlUtils.parse(get.getResponseBody());
             } catch (SAXException e) {
                 String msg = "Invalid XML received from " + url;
                 logger.log(Level.SEVERE, msg, e);
