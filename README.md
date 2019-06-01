@@ -1,4 +1,4 @@
-# Swarm Plugin
+# Swarm
 
 [![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/swarm-plugin/master)](https://ci.jenkins.io/job/Plugins/job/swarm-plugin/job/master/)
 [![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/swarm.svg)](https://plugins.jenkins.io/swarm)
@@ -12,3 +12,7 @@ leave the cluster.
 
 See [the Swarm Plugin page](https://wiki.jenkins.io/display/JENKINS/Swarm+Plugin)
 on the Jenkins wiki for more information.
+
+### Documentation
+
+* [Logging](docs/logging.md)
