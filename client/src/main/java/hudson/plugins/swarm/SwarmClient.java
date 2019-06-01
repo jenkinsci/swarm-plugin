@@ -76,7 +76,7 @@ public class SwarmClient {
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Problem reading labels from file " + options.labelsFile, e);
                 e.printStackTrace();
-                System.exit(-1);
+                System.exit(1);
             }
         }
     }
