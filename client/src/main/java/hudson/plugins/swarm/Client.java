@@ -45,7 +45,7 @@ public class Client {
         } catch (CmdLineException e) {
             logger.log(Level.SEVERE, "CmdLineException occurred during parseArgument", e);
             p.printUsage(System.out);
-            System.exit(-1);
+            System.exit(1);
         }
 
         if (options.help) {
@@ -55,7 +55,7 @@ public class Client {
 
         if (options.logFile != null) {
             logger.severe("-logFile has been deprecated. Use logging properties file syntax instead: -Djava.util.logging.config.file=" + Paths.get("").toAbsolutePath().toString() + File.separator + "logging.properties");
-            System.exit(-1);
+            System.exit(1);
         }
 
         if (options.pidFile != null) {
@@ -71,7 +71,7 @@ public class Client {
                 Files.write(pidFile.toPath(), pid.getBytes(UTF_8));
             } catch (IOException exception) {
                 logger.severe("Failed writing PID file: " + options.pidFile);
-                System.exit(-1);
+                System.exit(1);
             }
         }
 
@@ -104,7 +104,7 @@ public class Client {
             } catch (IOException e) {
                 logger.severe("Failed to lookup the canonical hostname of this slave, please check system settings.");
                 logger.severe("If not possible to resolve please specify a node name using the '-name' option");
-                System.exit(-1);
+                System.exit(1);
             }
         }
 
@@ -179,7 +179,7 @@ public class Client {
             if (options.retry >= 0) {
                 if (retry >= options.retry) {
                     logger.severe("Retry limit reached, exiting...");
-                    swarmClient.exitWithStatus(-1);
+                    swarmClient.exitWithStatus(1);
                 } else {
                     logger.warning("Remaining retries: " + (options.retry - retry));
                 }
