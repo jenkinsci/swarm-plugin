@@ -27,13 +27,10 @@ sends `INFO`-level log records to `System.err`, using
 To get more detailed logs from the Swarm client, create a custom
 `logging.properties` file and pass it in via the
 `java.util.logging.config.file` property. This repository contains [a sample
-verbose `logging.properties` file](../client/logging.properties). You can also
-customize the format of the logs by passing in the
-`java.util.logging.SimpleFormatter.format` property. For example:
+verbose `logging.properties` file](../client/logging.properties). For example:
 
 ```
 java \
-	-Djava.util.logging.SimpleFormatter.format='%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %2$s %5$s%6$s%n' \
 	-Djava.util.logging.config.file='logging.properties' \
 	-jar swarm-client.jar
 ```
