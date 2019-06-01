@@ -1,8 +1,7 @@
 package hudson.plugins.swarm;
 
-import hudson.UDPBroadcastFragment;
 import hudson.Extension;
-
+import hudson.UDPBroadcastFragment;
 import java.net.SocketAddress;
 import java.util.UUID;
 

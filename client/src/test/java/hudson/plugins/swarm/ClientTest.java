@@ -1,14 +1,13 @@
 package hudson.plugins.swarm;
 
-import org.junit.Test;
-
-import java.io.IOException;
-
 import static hudson.plugins.swarm.RetryBackOffStrategy.EXPONENTIAL;
 import static hudson.plugins.swarm.RetryBackOffStrategy.LINEAR;
 import static hudson.plugins.swarm.RetryBackOffStrategy.NONE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+import java.io.IOException;
+import org.junit.Test;
 
 public class ClientTest {
 
