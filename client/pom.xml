@@ -14,6 +14,13 @@
     <name>Jenkins Swarm Plugin Client</name>
     <version>3.17-SNAPSHOT</version>
 
+    <scm>
+        <connection>scm:git:git://github.com/jenkinsci/swarm-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/swarm-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/swarm-plugin</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <properties>
       <java.level>8</java.level>
       <project.build.outputEncoding>UTF-8</project.build.outputEncoding>

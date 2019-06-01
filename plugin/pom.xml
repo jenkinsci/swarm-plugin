@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <!--
+        TODO: Set the parent of org.jenkins-ci.plugins:swarm (whose POM is
+        swarm-plugin/plugin/pom.xml) to org.jenkins-ci.plugins:plugin directly
+        rather than going through org.jenkins-ci.plugins:swarm-client (whose POM
+        is swarm-plugin/pom.xml).
+    -->
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>swarm-plugin</artifactId>
@@ -23,6 +29,13 @@
             <name>Kohsuke Kawaguchi</name>
         </developer>
     </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <build>
       <plugins>
