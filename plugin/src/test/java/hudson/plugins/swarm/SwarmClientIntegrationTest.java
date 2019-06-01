@@ -1,5 +1,7 @@
 package hudson.plugins.swarm;
 
+import static org.junit.Assert.assertTrue;
+
 import hudson.Functions;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -9,11 +11,13 @@ import hudson.plugins.swarm.test.TestUtils;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
+import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.BuildWatcher;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 public class SwarmClientIntegrationTest {
@@ -42,10 +46,20 @@ public class SwarmClientIntegrationTest {
 
         FreeStyleBuild build = j.buildAndAssertSuccess(project);
         j.assertLogContains("ON_SWARM_CLIENT=true", build);
-        tearDown();
     }
 
-    private void tearDown() {
+    /** Ensures that a node can be created with a colon in the description. */
+    @Test
+    @Issue("JENKINS-39443")
+    public void sanitizeDescription() throws Exception {
+        Node node =
+                TestUtils.createSwarmClient(
+                        j, processDestroyer, temporaryFolder, "-description", "swarm_ip:127.0.0.1");
+        assertTrue(node.getNodeDescription().endsWith("swarm_ip:127.0.0.1"));
+    }
+
+    @After
+    public void tearDown() {
         try {
             processDestroyer.clean();
         } catch (InterruptedException e) {
