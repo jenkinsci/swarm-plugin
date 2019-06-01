@@ -1,20 +1,19 @@
 package hudson.plugins.swarm;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.io.File;
-import java.util.Arrays;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import javax.xml.parsers.ParserConfigurationException;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 /**
  * Swarm client.

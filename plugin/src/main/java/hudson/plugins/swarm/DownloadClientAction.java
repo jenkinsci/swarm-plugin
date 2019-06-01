@@ -3,14 +3,13 @@ package hudson.plugins.swarm;
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.UnprotectedRootAction;
+import java.io.IOException;
+import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 @Extension
 public class DownloadClientAction implements UnprotectedRootAction {

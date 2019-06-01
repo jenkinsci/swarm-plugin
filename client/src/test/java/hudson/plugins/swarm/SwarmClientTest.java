@@ -1,11 +1,11 @@
 package hudson.plugins.swarm;
 
-import java.net.URL;
-import java.net.MalformedURLException;
+import static org.junit.Assert.assertNotNull;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import org.apache.commons.httpclient.HttpClient;
 import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
 
 public class SwarmClientTest {
 
