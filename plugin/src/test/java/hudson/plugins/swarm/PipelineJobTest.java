@@ -59,7 +59,11 @@ public class PipelineJobTest {
         story.then(
                 s -> {
                     Node node =
-                            TestUtils.createSwarmClient(story.j, processDestroyer, temporaryFolder);
+                            TestUtils.createSwarmClient(
+                                    story.j,
+                                    processDestroyer,
+                                    temporaryFolder,
+                                    "-disableClientsUniqueId");
 
                     WorkflowJob project = story.j.createProject(WorkflowJob.class);
                     project.setConcurrentBuild(false);
@@ -70,7 +74,11 @@ public class PipelineJobTest {
                     tearDown();
 
                     TestUtils.createSwarmClient(
-                            node.getNodeName(), story.j, processDestroyer, temporaryFolder);
+                            node.getNodeName(),
+                            story.j,
+                            processDestroyer,
+                            temporaryFolder,
+                            "-disableClientsUniqueId");
                     SemaphoreStep.success("wait-0/1", null);
                     story.j.assertBuildStatusSuccess(story.j.waitForCompletion(build));
                     story.j.assertLogContains("ON_SWARM_CLIENT=true", build);
@@ -86,7 +94,11 @@ public class PipelineJobTest {
         story.then(
                 s -> {
                     Node node =
-                            TestUtils.createSwarmClient(story.j, processDestroyer, temporaryFolder);
+                            TestUtils.createSwarmClient(
+                                    story.j,
+                                    processDestroyer,
+                                    temporaryFolder,
+                                    "-disableClientsUniqueId");
 
                     WorkflowJob project = story.j.createProject(WorkflowJob.class);
                     File f1 = new File(story.j.jenkins.getRootDir(), "f1");
@@ -118,7 +130,11 @@ public class PipelineJobTest {
                     }
 
                     TestUtils.createSwarmClient(
-                            node.getNodeName(), story.j, processDestroyer, temporaryFolder);
+                            node.getNodeName(),
+                            story.j,
+                            processDestroyer,
+                            temporaryFolder,
+                            "-disableClientsUniqueId");
                     while (computer.isOffline()) {
                         Thread.sleep(100);
                     }

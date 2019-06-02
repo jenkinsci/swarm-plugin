@@ -1,6 +1,7 @@
 package hudson.plugins.swarm.test;
 
 import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -31,13 +32,29 @@ public class TestUtils {
         assertThat(output.length(), greaterThan(1000L));
     }
 
+    private static Computer getComputer(String agentName, Jenkins jenkins) {
+        List<Computer> candidates = new ArrayList<>();
+        for (Computer computer : jenkins.getComputers()) {
+            if (computer.getName().equals(agentName)) {
+                return computer;
+            } else if (computer.getName().startsWith(agentName + '-')) {
+                candidates.add(computer);
+            }
+        }
+        if (candidates.isEmpty()) {
+            return null;
+        }
+        assertEquals(candidates.size(), 1);
+        return candidates.get(0);
+    }
+
     /** Wait for the agent with the given name to come online against the given Jenkins instance. */
     private static Computer waitOnline(String agentName, Jenkins jenkins)
             throws InterruptedException {
-        Computer computer = jenkins.getComputer(agentName);
+        Computer computer = getComputer(agentName, jenkins);
         while (computer == null) {
             Thread.sleep(100);
-            computer = jenkins.getComputer(agentName);
+            computer = computer = getComputer(agentName, jenkins);
         }
 
         while (!computer.isOnline()) {
@@ -86,9 +103,6 @@ public class TestUtils {
         command.add(agentName);
         command.add("-master");
         command.add(j.getURL().toString());
-        // "-disableClientsUniqueId" is needed so that we can call getComputer() in the waitOnline()
-        // method.
-        command.add("-disableClientsUniqueId");
         Collections.addAll(command, args);
 
         ProcessBuilder pb = new ProcessBuilder(command);

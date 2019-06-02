@@ -137,20 +137,36 @@ public class Client {
                     swarmClient.verifyThatUrlIsHudson(target);
                 }
 
-                // set up label file watcher thread (if the label file changes, this thread takes action to restart the client)
+                logger.info(
+                        "Attempting to connect to "
+                                + target.url
+                                + " "
+                                + target.secret
+                                + " with ID "
+                                + swarmClient.getHash());
+
+                /*
+                 * Create a new swarm slave. After this method returns, the value of the name field
+                 * has been set to the name returned by the server, which may or may not be the name
+                 * we originally requested.
+                 */
+                swarmClient.createSwarmSlave(target);
+
+                /*
+                 * Set up the label file watcher thread. If the label file changes, this thread
+                 * takes action to restart the client. Note that this must be done after we create
+                 * the swarm slave, since only then has the server returned the name we must use
+                 * when doing label operations.
+                 */
                 if (options.labelsFile != null) {
                     logger.info("Setting up LabelFileWatcher");
-                    LabelFileWatcher l = new LabelFileWatcher(target, options, args);
+                    LabelFileWatcher l =
+                            new LabelFileWatcher(target, options, swarmClient.getName(), args);
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
                     labelFileWatcherThread.setDaemon(true);
                     labelFileWatcherThread.start();
                 }
 
-                logger.info("Attempting to connect to " + target.url + " " + target.secret + " with ID " +
-                                   swarmClient.getHash());
-
-                // create a new swarm slave
-                swarmClient.createSwarmSlave(target);
                 swarmClient.connect(target);
                 if (options.noRetryAfterConnected) {
                     logger.warning("Connection closed, exiting...");
