@@ -191,6 +191,7 @@ public class LabelFileWatcher implements Runnable {
         }
     }
 
+    @Override
     @SuppressFBWarnings("DM_EXIT")
     public void run() {
         String sTempLabels;
