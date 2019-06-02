@@ -53,11 +53,6 @@ public class Client {
             System.exit(0);
         }
 
-        if (options.logFile != null) {
-            logger.severe("-logFile has been deprecated. Use logging properties file syntax instead: -Djava.util.logging.config.file=" + Paths.get("").toAbsolutePath().toString() + File.separator + "logging.properties");
-            System.exit(1);
-        }
-
         if (options.pidFile != null) {
             // This will return a string like 12345@hostname, so we need to do some string manipulation
             // to get the actual process identifier.
