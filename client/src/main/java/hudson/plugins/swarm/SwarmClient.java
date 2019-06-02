@@ -684,8 +684,10 @@ public class SwarmClient {
 
         List<X509Certificate> acceptedIssuers = new ArrayList<>();
 
+        @Override
         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {}
 
+        @Override
         public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
             if (allowedFingerprints.isEmpty()) {
                 return;
@@ -709,6 +711,7 @@ public class SwarmClient {
             acceptedIssuers.addAll(list);
         }
 
+        @Override
         public X509Certificate[] getAcceptedIssuers() {
             return acceptedIssuers.toArray(new X509Certificate[0]);
         }
