@@ -1,5 +1,6 @@
 package hudson.plugins.swarm;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import hudson.Functions;
@@ -11,6 +12,13 @@ import hudson.plugins.swarm.test.TestUtils;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -56,6 +64,110 @@ public class SwarmClientIntegrationTest {
                 TestUtils.createSwarmClient(
                         j, processDestroyer, temporaryFolder, "-description", "swarm_ip:127.0.0.1");
         assertTrue(node.getNodeDescription().endsWith("swarm_ip:127.0.0.1"));
+    }
+
+    @Test
+    public void addLabelsShort() throws Exception {
+        Set<String> expected = new HashSet<>();
+        expected.add("foo");
+        expected.add("bar");
+        Node node =
+                TestUtils.createSwarmClient(
+                        j, processDestroyer, temporaryFolder, "-labels", encode(expected));
+        expected.add("swarm");
+        assertEquals(expected, decode(node.getLabelString()));
+    }
+
+    @Test
+    public void addLabelsLong() throws Exception {
+        Set<String> expected = new HashSet<>();
+        expected.add(RandomStringUtils.randomAlphanumeric(500));
+        expected.add(RandomStringUtils.randomAlphanumeric(500));
+        Node node =
+                TestUtils.createSwarmClient(
+                        j, processDestroyer, temporaryFolder, "-labels", encode(expected));
+        expected.add("swarm");
+        assertEquals(expected, decode(node.getLabelString()));
+    }
+
+    @Test
+    public void addRemoveLabelsViaFileShort() throws Exception {
+        File labelsFile = File.createTempFile("labelsFile", ".txt", temporaryFolder.getRoot());
+
+        Set<String> toBeRemoved = new HashSet<>();
+        toBeRemoved.add("toBeRemoved1");
+        toBeRemoved.add("toBeRemoved2");
+        // TODO: Due to JENKINS-45295, this is busted unless we use "-disableClientsUniqueId".
+        Node node =
+                TestUtils.createSwarmClient(
+                        j,
+                        processDestroyer,
+                        temporaryFolder,
+                        "-disableClientsUniqueId",
+                        "-labelsFile",
+                        labelsFile.getAbsolutePath(),
+                        "-labels",
+                        encode(toBeRemoved));
+
+        String origLabels = node.getLabelString();
+
+        Set<String> expected = new HashSet<>();
+        expected.add("foo");
+        expected.add("bar");
+        try (Writer writer = new FileWriter(labelsFile)) {
+            writer.write(encode(expected));
+        }
+
+        while (node.getLabelString().equals(origLabels)) {
+            Thread.sleep(100);
+        }
+
+        expected.add("swarm");
+        assertEquals(expected, decode(node.getLabelString()));
+    }
+
+    @Test
+    public void addRemoveLabelsViaFileLong() throws Exception {
+        File labelsFile = File.createTempFile("labelsFile", ".txt", temporaryFolder.getRoot());
+
+        Set<String> toBeRemoved = new HashSet<>();
+        toBeRemoved.add(RandomStringUtils.randomAlphanumeric(500));
+        toBeRemoved.add(RandomStringUtils.randomAlphanumeric(500));
+        // TODO: Due to JENKINS-45295, this is busted unless we use "-disableClientsUniqueId".
+        Node node =
+                TestUtils.createSwarmClient(
+                        j,
+                        processDestroyer,
+                        temporaryFolder,
+                        "-disableClientsUniqueId",
+                        "-labelsFile",
+                        labelsFile.getAbsolutePath(),
+                        "-labels",
+                        encode(toBeRemoved));
+
+        String origLabels = node.getLabelString();
+
+        Set<String> expected = new HashSet<>();
+        expected.add(RandomStringUtils.randomAlphanumeric(500));
+        expected.add(RandomStringUtils.randomAlphanumeric(500));
+        try (Writer writer = new FileWriter(labelsFile)) {
+            writer.write(encode(expected));
+        }
+
+        while (node.getLabelString().equals(origLabels)) {
+            Thread.sleep(100);
+        }
+
+        expected.add("swarm");
+        assertEquals(expected, decode(node.getLabelString()));
+    }
+
+    private static String encode(Set<String> labels) {
+        return String.join(" ", labels);
+    }
+
+    private static Set<String> decode(String labels) {
+        return new HashSet<>(Arrays.asList(labels.split("\\s+")));
     }
 
     @After
