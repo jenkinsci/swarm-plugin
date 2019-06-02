@@ -202,14 +202,7 @@ public class PluginImpl extends Plugin {
             SwarmSlave slave = new SwarmSlave(name, "Swarm slave from " + req.getRemoteHost() + " : " + description,
                     remoteFsRoot, String.valueOf(executors), mode, "swarm " + Util.fixNull(labels), nodeProperties);
 
-            // if this still results in a duplicate, so be it
-            synchronized (jenkins) {
-                Node n = jenkins.getNode(name);
-                if (n != null) {
-                    jenkins.removeNode(n);
-                }
-                jenkins.addNode(slave);
-            }
+            jenkins.addNode(slave);
             rsp.setContentType("text/plain; charset=iso-8859-1");
             Properties props = new Properties();
             props.put("name", name);
