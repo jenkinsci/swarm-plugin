@@ -11,7 +11,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.xml.parsers.ParserConfigurationException;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -159,9 +158,6 @@ public class Client {
                 }
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "IOException occurred", e);
-                e.printStackTrace();
-            } catch (ParserConfigurationException e) {
-                logger.log(Level.SEVERE, "ParserConfigurationException occurred", e);
                 e.printStackTrace();
             } catch (RetryException e) {
                 logger.log(Level.SEVERE, "RetryException occurred", e);

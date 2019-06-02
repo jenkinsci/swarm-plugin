@@ -15,4 +15,5 @@ on the Jenkins wiki for more information.
 
 ### Documentation
 
+* [Proxy Configuration](docs/proxy.md)
 * [Logging](docs/logging.md)
