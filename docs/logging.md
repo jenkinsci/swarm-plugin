@@ -11,8 +11,8 @@ logging](https://wiki.jenkins.io/display/JENKINS/Logging), including in
 following:
 
 ```
-handlers= java.util.logging.ConsoleHandler
-.level= INFO
+handlers = java.util.logging.ConsoleHandler
+.level = INFO
 java.util.logging.ConsoleHandler.level = INFO
 java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
 ```
@@ -30,9 +30,7 @@ To get more detailed logs from the Swarm client, create a custom
 verbose `logging.properties` file](../client/logging.properties). For example:
 
 ```
-java \
-	-Djava.util.logging.config.file='logging.properties' \
-	-jar swarm-client.jar
+java -Djava.util.logging.config.file='logging.properties' -jar swarm-client.jar
 ```
 
 For more information about the property file format, see the [Oracle
