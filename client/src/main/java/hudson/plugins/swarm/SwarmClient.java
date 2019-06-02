@@ -80,8 +80,6 @@ public class SwarmClient {
 
     @SuppressFBWarnings("DM_EXIT")
     public SwarmClient(Options options) {
-        logger.config("SwarmClient constructed with " + options);
-
         this.options = options;
         Map<String, String> env = System.getenv();
         if (env.containsKey("MESOS_TASK_ID") && StringUtils.isNotEmpty(env.get("MESOS_TASK_ID"))) {
