@@ -8,11 +8,13 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.NamedOptionDef;
+import org.kohsuke.args4j.spi.FieldSetter;
+import org.kohsuke.args4j.spi.OptionHandler;
 
 /**
  * Swarm client.
@@ -30,12 +32,6 @@ public class Client {
 
     //TODO: Cleanup the encoding issue
     public static void main(String... args) throws InterruptedException, IOException {
-        String s = Arrays.toString(args);
-        s = s.replaceAll("\n", "");
-        s = s.replaceAll("\r", "");
-        s = s.replaceAll(",", "");
-        logger.info("Client.main invoked with: " + s);
-
         Options options = new Options();
         Client client = new Client(options);
         CmdLineParser p = new CmdLineParser(options);
@@ -46,6 +42,8 @@ public class Client {
             p.printUsage(System.out);
             System.exit(1);
         }
+
+        logArguments(p);
 
         if (options.help) {
             p.printUsage(System.out);
@@ -108,7 +106,6 @@ public class Client {
 
     public Client(Options options) {
         this.options = options;
-        logger.finest("Client created with " + options);
     }
 
     /**
@@ -196,5 +193,70 @@ public class Client {
             logger.info("Retrying in " + waitTime + " seconds");
             swarmClient.sleepSeconds(waitTime);
         }
+    }
+
+    private static void logArguments(CmdLineParser parser) {
+        Options defaultOptions = new Options();
+        CmdLineParser defaultParser = new CmdLineParser(defaultOptions);
+
+        StringBuilder sb = new StringBuilder("Client invoked with: ");
+        for (OptionHandler argument : parser.getArguments()) {
+            logValue(sb, argument, null);
+        }
+        for (OptionHandler option : parser.getOptions()) {
+            logValue(sb, option, defaultParser);
+        }
+        logger.info(sb.toString());
+    }
+
+    private static void logValue(
+            StringBuilder sb, OptionHandler handler, CmdLineParser defaultParser) {
+        String key = getKey(handler);
+        Object value = getValue(handler);
+
+        if (key.equals("-help")) {
+            return;
+        }
+
+        if (defaultParser != null && isDefaultOption(key, value, defaultParser)) {
+            return;
+        }
+
+        sb.append(key);
+        sb.append(' ');
+        if (key.equals("-username") || key.equals("-password")) {
+            sb.append("*****");
+        } else {
+            sb.append(value);
+        }
+        sb.append(' ');
+    }
+
+    private static String getKey(OptionHandler optionHandler) {
+        if (optionHandler.option instanceof NamedOptionDef) {
+            NamedOptionDef namedOptionDef = (NamedOptionDef) optionHandler.option;
+            return namedOptionDef.name();
+        } else {
+            return optionHandler.option.toString();
+        }
+    }
+
+    private static Object getValue(OptionHandler optionHandler) {
+        FieldSetter setter = optionHandler.setter.asFieldSetter();
+        return setter == null ? null : setter.getValue();
+    }
+
+    private static boolean isDefaultOption(String key, Object value, CmdLineParser defaultParser) {
+        for (OptionHandler defaultOption : defaultParser.getOptions()) {
+            String defaultKey = getKey(defaultOption);
+            if (defaultKey.equals(key)) {
+                Object defaultValue = getValue(defaultOption);
+                if (defaultValue == null && value == null) {
+                    return true;
+                }
+                return defaultValue != null && defaultValue.equals(value);
+            }
+        }
+        return false;
     }
 }
