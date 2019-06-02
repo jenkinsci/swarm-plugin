@@ -1,6 +1,5 @@
 package hudson.plugins.swarm;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
@@ -32,7 +31,7 @@ public final class XmlUtils {
      * @throws SAXException Error parsing the XML stream data e.g. badly formed XML.
      * @throws IOException Error reading from the steam.
      */
-    private static @Nonnull Document parse(@Nonnull InputStream stream)
+    public static @Nonnull Document parse(@Nonnull InputStream stream)
             throws IOException, SAXException {
         DocumentBuilder docBuilder;
 
@@ -44,20 +43,6 @@ public final class XmlUtils {
         }
 
         return docBuilder.parse(stream);
-    }
-
-    /**
-     * Parse the supplied XML file data to a {@link Document}.
-     *
-     * @param buf The input buffer.
-     * @return The parsed document.
-     * @throws SAXException Error parsing the XML file data e.g. badly formed XML.
-     * @throws IOException Error reading from the file.
-     */
-    public static @Nonnull Document parse(@Nonnull byte[] buf) throws SAXException, IOException {
-        try (InputStream inputStream = new ByteArrayInputStream(buf)) {
-            return parse(inputStream);
-        }
     }
 
     private static DocumentBuilderFactory newDocumentBuilderFactory() {

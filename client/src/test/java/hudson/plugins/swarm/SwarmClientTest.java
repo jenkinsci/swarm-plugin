@@ -4,7 +4,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import org.apache.commons.httpclient.HttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Test;
 
 public class SwarmClientTest {
@@ -26,7 +26,7 @@ public class SwarmClientTest {
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
-        HttpClient hc = swc.createHttpClient(url);
+        CloseableHttpClient hc = swc.createHttpClient(url);
         assertNotNull(hc);
     }
 
