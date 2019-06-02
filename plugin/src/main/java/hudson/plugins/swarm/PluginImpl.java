@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import javax.servlet.ServletOutputStream;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.ArrayUtils;
@@ -84,7 +85,6 @@ public class PluginImpl extends Plugin {
     /**
      * Adds labels to a slave.
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void doAddSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                             @QueryParameter String secret, @QueryParameter String labels)  throws IOException{
         if (!getSwarmSecret().equals(secret)) {
@@ -98,30 +98,22 @@ public class PluginImpl extends Plugin {
 
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
-        HashSet<String> hs = new HashSet<>(lCurrentLabels);
+        Set<String> hs = new HashSet<>(lCurrentLabels);
         List<String> lNewLabels = Arrays.asList(labels.split("\\s+"));
         hs.addAll(lNewLabels);
-        nn.setLabelString(hashSetToString(hs));
+        nn.setLabelString(setToString(hs));
         nn.getAssignedLabels();
 
         normalResponse(req, rsp, nn.getLabelString());
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private String hashSetToString(HashSet hs) {
-        List<String> lNewlist = new ArrayList<String>(hs);
-        StringBuilder sb = new StringBuilder();
-        for (String s : lNewlist) {
-            sb.append(s);
-            sb.append(" ");
-        }
-        return sb.toString();
+    private static String setToString(Set<String> labels) {
+        return String.join(" ", labels);
     }
 
     /**
      * Remove labels from a slave
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void doRemoveSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                             @QueryParameter String secret, @QueryParameter String labels) throws IOException {
         if (!getSwarmSecret().equals(secret)) {
@@ -135,10 +127,10 @@ public class PluginImpl extends Plugin {
 
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
-        HashSet<String> hs = new HashSet<>(lCurrentLabels);
+        Set<String> hs = new HashSet<>(lCurrentLabels);
         List<String> lBadLabels = Arrays.asList(labels.split("\\s+"));
         hs.removeAll(lBadLabels);
-        nn.setLabelString(hashSetToString(hs));
+        nn.setLabelString(setToString(hs));
         nn.getAssignedLabels();
         normalResponse(req, rsp, nn.getLabelString());
     }
