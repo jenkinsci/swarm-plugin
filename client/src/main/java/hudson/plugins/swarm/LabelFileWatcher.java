@@ -47,14 +47,17 @@ public class LabelFileWatcher implements Runnable {
     private String sFileName;
     private boolean bRunning = false;
     private Options opts;
+    private final String name;
     private String sLabels;
     private String[] sArgs;
     private Candidate targ;
 
-    public LabelFileWatcher(Candidate target, Options options, String... args) throws IOException {
+    public LabelFileWatcher(Candidate target, Options options, String name, String... args)
+            throws IOException {
         logger.config("LabelFileWatcher() constructed with: " + options.labelsFile + ", and " + StringUtils.join(args));
         targ = target;
         opts = options;
+        this.name = name;
         sFileName = options.labelsFile;
         sLabels = new String(Files.readAllBytes(Paths.get(sFileName)), UTF_8);
         sArgs = args;
@@ -124,7 +127,7 @@ public class LabelFileWatcher implements Runnable {
                 new HttpGet(
                         targ.getURL()
                                 + "/plugin/swarm/getSlaveLabels?name="
-                                + opts.name
+                                + name
                                 + "&secret="
                                 + targ.getSecret());
         try (CloseableHttpResponse response = h.execute(get, context)) {
@@ -162,7 +165,7 @@ public class LabelFileWatcher implements Runnable {
             sb.append(" ");
             if (sb.length() > 1000) {
                 try {
-                    SwarmClient.postLabelRemove(opts.name, sb.toString(), h, context, targ);
+                    SwarmClient.postLabelRemove(name, sb.toString(), h, context, targ);
                 } catch (IOException | RetryException e) {
                     String msg = "Exception when removing label from " + targ.getURL();
                     logger.log(Level.SEVERE, msg, e);
@@ -173,7 +176,7 @@ public class LabelFileWatcher implements Runnable {
         }
         if (sb.length() > 0) {
             try {
-                SwarmClient.postLabelRemove(opts.name, sb.toString(), h, context, targ);
+                SwarmClient.postLabelRemove(name, sb.toString(), h, context, targ);
             } catch (IOException | RetryException e) {
                 String msg = "Exception when removing label from " + targ.getURL();
                 logger.log(Level.SEVERE, msg, e);
@@ -190,7 +193,7 @@ public class LabelFileWatcher implements Runnable {
             sb.append(" ");
             if (sb.length() > 1000) {
                 try {
-                    SwarmClient.postLabelAppend(opts.name, sb.toString(), h, context, targ);
+                    SwarmClient.postLabelAppend(name, sb.toString(), h, context, targ);
                 } catch (IOException | RetryException e) {
                     String msg = "Exception when appending label to " + targ.getURL();
                     logger.log(Level.SEVERE, msg, e);
@@ -202,7 +205,7 @@ public class LabelFileWatcher implements Runnable {
 
         if (sb.length() > 0) {
             try {
-                SwarmClient.postLabelAppend(opts.name, sb.toString(), h, context, targ);
+                SwarmClient.postLabelAppend(name, sb.toString(), h, context, targ);
             } catch (IOException | RetryException e) {
                 String msg = "Exception when appending label to " + targ.getURL();
                 logger.log(Level.SEVERE, msg, e);

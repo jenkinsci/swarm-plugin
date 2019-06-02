@@ -113,6 +113,10 @@ public class SwarmClient {
         return hash;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public Candidate discoverFromBroadcast() throws IOException, RetryException {
         logger.config("discoverFromBroadcast() invoked");
 

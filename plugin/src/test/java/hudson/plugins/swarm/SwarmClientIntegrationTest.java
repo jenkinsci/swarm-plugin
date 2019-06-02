@@ -97,13 +97,11 @@ public class SwarmClientIntegrationTest {
         Set<String> toBeRemoved = new HashSet<>();
         toBeRemoved.add("toBeRemoved1");
         toBeRemoved.add("toBeRemoved2");
-        // TODO: Due to JENKINS-45295, this is busted unless we use "-disableClientsUniqueId".
         Node node =
                 TestUtils.createSwarmClient(
                         j,
                         processDestroyer,
                         temporaryFolder,
-                        "-disableClientsUniqueId",
                         "-labelsFile",
                         labelsFile.getAbsolutePath(),
                         "-labels",
@@ -118,8 +116,10 @@ public class SwarmClientIntegrationTest {
             writer.write(encode(expected));
         }
 
-        while (node.getLabelString().equals(origLabels)) {
-            Thread.sleep(100);
+        // TODO: This is a bit racy, since updates are not atomic.
+        while (node.getLabelString().equals(origLabels)
+                || decode(node.getLabelString()).equals(decode("swarm"))) {
+            Thread.sleep(1000);
         }
 
         expected.add("swarm");
@@ -133,13 +133,11 @@ public class SwarmClientIntegrationTest {
         Set<String> toBeRemoved = new HashSet<>();
         toBeRemoved.add(RandomStringUtils.randomAlphanumeric(500));
         toBeRemoved.add(RandomStringUtils.randomAlphanumeric(500));
-        // TODO: Due to JENKINS-45295, this is busted unless we use "-disableClientsUniqueId".
         Node node =
                 TestUtils.createSwarmClient(
                         j,
                         processDestroyer,
                         temporaryFolder,
-                        "-disableClientsUniqueId",
                         "-labelsFile",
                         labelsFile.getAbsolutePath(),
                         "-labels",
@@ -154,8 +152,10 @@ public class SwarmClientIntegrationTest {
             writer.write(encode(expected));
         }
 
-        while (node.getLabelString().equals(origLabels)) {
-            Thread.sleep(100);
+        // TODO: This is a bit racy, since updates are not atomic.
+        while (node.getLabelString().equals(origLabels)
+                || decode(node.getLabelString()).equals(decode("swarm"))) {
+            Thread.sleep(1000);
         }
 
         expected.add("swarm");
