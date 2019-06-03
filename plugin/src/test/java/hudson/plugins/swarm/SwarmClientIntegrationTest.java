@@ -68,21 +68,19 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void addLabelsShort() throws Exception {
-        Set<String> expected = new HashSet<>();
-        expected.add("foo");
-        expected.add("bar");
-        Node node =
-                TestUtils.createSwarmClient(
-                        j, processDestroyer, temporaryFolder, "-labels", encode(expected));
-        expected.add("swarm");
-        assertEquals(expected, decode(node.getLabelString()));
+        addLabels("foo", "bar", "baz");
     }
 
     @Test
     public void addLabelsLong() throws Exception {
-        Set<String> expected = new HashSet<>();
-        expected.add(RandomStringUtils.randomAlphanumeric(500));
-        expected.add(RandomStringUtils.randomAlphanumeric(500));
+        addLabels(
+                RandomStringUtils.randomAlphanumeric(350),
+                RandomStringUtils.randomAlphanumeric(350),
+                RandomStringUtils.randomAlphanumeric(350));
+    }
+
+    private void addLabels(String... labels) throws Exception {
+        Set<String> expected = new HashSet<>(Arrays.asList(labels));
         Node node =
                 TestUtils.createSwarmClient(
                         j, processDestroyer, temporaryFolder, "-labels", encode(expected));
@@ -91,65 +89,98 @@ public class SwarmClientIntegrationTest {
     }
 
     @Test
-    public void addRemoveLabelsViaFileShort() throws Exception {
-        File labelsFile = File.createTempFile("labelsFile", ".txt", temporaryFolder.getRoot());
+    public void addRemoveLabelsViaFileWithUniqueIdShort() throws Exception {
+        Set<String> labelsToRemove = new HashSet<>();
+        labelsToRemove.add("removeFoo");
+        labelsToRemove.add("removeBar");
+        labelsToRemove.add("removeBaz");
 
-        Set<String> toBeRemoved = new HashSet<>();
-        toBeRemoved.add("toBeRemoved1");
-        toBeRemoved.add("toBeRemoved2");
-        Node node =
-                TestUtils.createSwarmClient(
-                        j,
-                        processDestroyer,
-                        temporaryFolder,
-                        "-labelsFile",
-                        labelsFile.getAbsolutePath(),
-                        "-labels",
-                        encode(toBeRemoved));
+        Set<String> labelsToAdd = new HashSet<>();
+        labelsToAdd.add("foo");
+        labelsToAdd.add("bar");
+        labelsToAdd.add("baz");
 
-        String origLabels = node.getLabelString();
-
-        Set<String> expected = new HashSet<>();
-        expected.add("foo");
-        expected.add("bar");
-        try (Writer writer = new FileWriter(labelsFile)) {
-            writer.write(encode(expected));
-        }
-
-        // TODO: This is a bit racy, since updates are not atomic.
-        while (node.getLabelString().equals(origLabels)
-                || decode(node.getLabelString()).equals(decode("swarm"))) {
-            Thread.sleep(1000);
-        }
-
-        expected.add("swarm");
-        assertEquals(expected, decode(node.getLabelString()));
+        addRemoveLabelsViaFile(labelsToRemove, labelsToAdd, true);
     }
 
     @Test
-    public void addRemoveLabelsViaFileLong() throws Exception {
+    public void addRemoveLabelsViaFileWithUniqueIdLong() throws Exception {
+        Set<String> labelsToRemove = new HashSet<>();
+        labelsToRemove.add(RandomStringUtils.randomAlphanumeric(350));
+        labelsToRemove.add(RandomStringUtils.randomAlphanumeric(350));
+        labelsToRemove.add(RandomStringUtils.randomAlphanumeric(350));
+
+        Set<String> labelsToAdd = new HashSet<>();
+        labelsToAdd.add(RandomStringUtils.randomAlphanumeric(350));
+        labelsToAdd.add(RandomStringUtils.randomAlphanumeric(350));
+        labelsToAdd.add(RandomStringUtils.randomAlphanumeric(350));
+
+        addRemoveLabelsViaFile(labelsToRemove, labelsToAdd, true);
+    }
+
+    @Test
+    public void addRemoveLabelsViaFileWithoutUniqueIdShort() throws Exception {
+        Set<String> labelsToRemove = new HashSet<>();
+        labelsToRemove.add("removeFoo");
+        labelsToRemove.add("removeBar");
+        labelsToRemove.add("removeBaz");
+
+        Set<String> labelsToAdd = new HashSet<>();
+        labelsToAdd.add("foo");
+        labelsToAdd.add("bar");
+        labelsToAdd.add("baz");
+
+        addRemoveLabelsViaFile(labelsToRemove, labelsToAdd, false);
+    }
+
+    @Test
+    public void addRemoveLabelsViaFileWithoutUniqueIdLong() throws Exception {
+        Set<String> labelsToRemove = new HashSet<>();
+        labelsToRemove.add(RandomStringUtils.randomAlphanumeric(350));
+        labelsToRemove.add(RandomStringUtils.randomAlphanumeric(350));
+        labelsToRemove.add(RandomStringUtils.randomAlphanumeric(350));
+
+        Set<String> labelsToAdd = new HashSet<>();
+        labelsToAdd.add(RandomStringUtils.randomAlphanumeric(350));
+        labelsToAdd.add(RandomStringUtils.randomAlphanumeric(350));
+        labelsToAdd.add(RandomStringUtils.randomAlphanumeric(350));
+
+        addRemoveLabelsViaFile(labelsToRemove, labelsToAdd, false);
+    }
+
+    private void addRemoveLabelsViaFile(
+            Set<String> labelsToRemove, Set<String> labelsToAdd, boolean withUniqueId)
+            throws Exception {
         File labelsFile = File.createTempFile("labelsFile", ".txt", temporaryFolder.getRoot());
 
-        Set<String> toBeRemoved = new HashSet<>();
-        toBeRemoved.add(RandomStringUtils.randomAlphanumeric(500));
-        toBeRemoved.add(RandomStringUtils.randomAlphanumeric(500));
-        Node node =
-                TestUtils.createSwarmClient(
-                        j,
-                        processDestroyer,
-                        temporaryFolder,
-                        "-labelsFile",
-                        labelsFile.getAbsolutePath(),
-                        "-labels",
-                        encode(toBeRemoved));
+        Node node;
+        if (withUniqueId) {
+            node =
+                    TestUtils.createSwarmClient(
+                            j,
+                            processDestroyer,
+                            temporaryFolder,
+                            "-labelsFile",
+                            labelsFile.getAbsolutePath(),
+                            "-labels",
+                            encode(labelsToRemove));
+        } else {
+            node =
+                    TestUtils.createSwarmClient(
+                            j,
+                            processDestroyer,
+                            temporaryFolder,
+                            "-disableClientsUniqueId",
+                            "-labelsFile",
+                            labelsFile.getAbsolutePath(),
+                            "-labels",
+                            encode(labelsToRemove));
+        }
 
         String origLabels = node.getLabelString();
 
-        Set<String> expected = new HashSet<>();
-        expected.add(RandomStringUtils.randomAlphanumeric(500));
-        expected.add(RandomStringUtils.randomAlphanumeric(500));
         try (Writer writer = new FileWriter(labelsFile)) {
-            writer.write(encode(expected));
+            writer.write(encode(labelsToAdd));
         }
 
         // TODO: This is a bit racy, since updates are not atomic.
@@ -158,6 +189,7 @@ public class SwarmClientIntegrationTest {
             Thread.sleep(1000);
         }
 
+        Set<String> expected = new HashSet<>(labelsToAdd);
         expected.add("swarm");
         assertEquals(expected, decode(node.getLabelString()));
     }
