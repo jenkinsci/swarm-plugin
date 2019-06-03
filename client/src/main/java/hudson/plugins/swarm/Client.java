@@ -30,6 +30,8 @@ public class Client {
 
     private final Options options;
 
+    public static final int EXIT_CODE_PID_EXISTS = 29;
+
     //TODO: Cleanup the encoding issue
     public static void main(String... args) throws InterruptedException, IOException {
         Options options = new Options();
@@ -58,6 +60,14 @@ public class Client {
             String[] pidNameParts = pidName.split("@");
             String pid = pidNameParts[0];
             File pidFile = new File(options.pidFile);
+            if (pidFile.exists()) {
+                logger.severe(
+                        String.format("PID file '%s' already exists, refusing to start.  Previous PID %s may be running",
+                                pidFile.getAbsolutePath(),
+                                Files.readAllLines(pidFile.toPath()))
+                );
+                System.exit(EXIT_CODE_PID_EXISTS);
+            }
             pidFile.deleteOnExit();
             try {
                 Files.write(pidFile.toPath(), pid.getBytes(UTF_8));
