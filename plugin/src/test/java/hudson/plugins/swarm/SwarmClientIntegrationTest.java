@@ -2,6 +2,7 @@ package hudson.plugins.swarm;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -166,13 +167,17 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void pidFilePreventsStart() throws Exception {
+        File pidFile = getPidFile();
         // Start the first client with a pid file and ensure it's up.
         Node node1 = TestUtils.createSwarmClient(
                 j,
                 processDestroyer,
                 temporaryFolder,
                 "-pidFile",
-                getPidFile().getAbsolutePath());
+                pidFile.getAbsolutePath());
+
+
+        int firstClientPid = readPidFromFile(pidFile);
 
         // Try to start a second and ensure it fails to run.
         // Do not wait for it to come up on the server side.
@@ -182,34 +187,33 @@ public class SwarmClientIntegrationTest {
                 processDestroyer,
                 temporaryFolder,
                 "-pidFile",
-                getPidFile().getAbsolutePath());
+                pidFile.getAbsolutePath());
 
-        node2.process.waitFor(5, TimeUnit.SECONDS);
+        node2.process.waitFor();
         assertFalse("Second client should fail to start", node2.process.isAlive());
         assertEquals("Exit code", 1, node2.process.exitValue());
         assertTrue("Log message mentions 'already exists'",
                 Files.readAllLines(node2.stderr.toPath()).stream().anyMatch(line -> line.contains("already exists")));
+
+        //now let's ensure that the original process is still OK and so is its pid file
+        assertNotNull("Original client should still be running", os.getProcess(firstClientPid));
+        assertEquals("Pid in PID file should not change", firstClientPid, readPidFromFile(pidFile));
     }
 
     @Test
     public void pidFileForStaleProcessIsIgnored() throws Exception {
-
-        Files.write(getPidFile().toPath(), "66000".getBytes());
+        File pidFile = getPidFile();
+        Files.write(pidFile.toPath(), "66000".getBytes());
 
         // Pid file should be ignored since the process isn't running.
-        TestUtils.SwarmClientProcessWrapper node = TestUtils.runSwarmClient(
-                "agent0",
+        TestUtils.createSwarmClient(
                 j,
                 processDestroyer,
                 temporaryFolder,
                 "-pidFile",
-                getPidFile().getAbsolutePath());
+                pidFile.getAbsolutePath());
 
-        // ensure that the client starts.
-        TestUtils.waitForNode("agent0", j);
-
-        int newPid = NumberUtils.toInt(
-                new String(Files.readAllBytes(getPidFile().toPath()), UTF_8));
+        int newPid = readPidFromFile(pidFile);
 
         // Java Process doesn't provide the pid, so we have to work around it.
         // Find all of our child processes, one of them must be the client we just started,
@@ -221,23 +225,38 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void pidFileDeletedOnExit() throws Exception {
+        File pidFile = getPidFile();
         TestUtils.SwarmClientProcessWrapper node = TestUtils.runSwarmClient(
                 "agentDeletePid",
                 j,
                 processDestroyer,
                 temporaryFolder,
                 "-pidFile",
-                getPidFile().getAbsolutePath());
-        Thread.sleep(1000); //ensure the process writes the pid
-        assertTrue("Pid file created", getPidFile().exists());
+                pidFile.getAbsolutePath());
+
+        while(!pidFile.exists()) {
+            Thread.sleep(1000); //ensure the process writes the pid
+        }
+        assertTrue("Pid file created", pidFile.exists());
         node.process.destroy();
-        node.process.waitFor(5, TimeUnit.SECONDS);
+        node.process.waitFor();
         assertFalse("Client should exit on kill", node.process.isAlive());
-        assertFalse("Pid file removed", getPidFile().exists());
+        assertFalse("Pid file removed", pidFile.exists());
     }
 
-    public File getPidFile() {
-        return new File(temporaryFolder.getRoot(), "__tmp.pid.file.swarm__");
+    /**
+     * @return a dedicated unique pid file object for an as yet non-existent file.
+     * @throws IOException
+     */
+    public File getPidFile() throws IOException {
+        File pidFile = File.createTempFile("swarm-client", ".pid", temporaryFolder.getRoot());
+        pidFile.delete(); //we want the process to create it, here we just want a unique name.
+        return pidFile;
+    }
+
+    public int readPidFromFile(File pidFile) throws IOException {
+        return NumberUtils.toInt(
+                new String(Files.readAllBytes(pidFile.toPath()), UTF_8));
     }
 
     private void addRemoveLabelsViaFile(

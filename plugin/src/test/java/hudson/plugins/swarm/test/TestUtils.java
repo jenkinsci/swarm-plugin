@@ -149,9 +149,9 @@ public class TestUtils {
     }
 
     public static class SwarmClientProcessWrapper {
-        public File stdout;
-        public File stderr;
-        public Process process;
+        public final File stdout;
+        public final File stderr;
+        public final Process process;
 
         public SwarmClientProcessWrapper(File stdout, File stderr, Process process) {
             this.stdout = stdout;
