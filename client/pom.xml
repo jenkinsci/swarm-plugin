@@ -12,10 +12,21 @@
     <groupId>org.jenkins-ci.plugins</groupId>
     <packaging>jar</packaging>
     <name>Jenkins Swarm Plugin Client</name>
-    <version>3.16-SNAPSHOT</version>
+    <version>3.18-SNAPSHOT</version>
+
+    <scm>
+        <connection>scm:git:git://github.com/jenkinsci/swarm-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/swarm-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/swarm-plugin</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <properties>
       <java.level>8</java.level>
+      <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+      <slf4j.version>1.7.26</slf4j.version>
     </properties>
 
     <repositories>
@@ -24,6 +35,12 @@
             <url>https://repo.jenkins-ci.org/public/</url>
         </repository>
     </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <build>
       <finalName>${project.artifactId}</finalName>
@@ -31,7 +48,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.1.1</version>
+          <version>3.2.1</version>
           <executions>
             <execution>
               <phase>package</phase>
@@ -88,28 +105,33 @@
       <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
-        <version>1.1.1</version>
-        <scope>provided</scope>
+        <version>1.2</version>
+        <scope>provided</scope><!-- by jcl-over-slf4j -->
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>jcl-over-slf4j</artifactId>
-        <version>1.7.22</version>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-jdk14</artifactId>
+        <version>${slf4j.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>remoting</artifactId>
-        <version>3.28</version>
+        <version>3.30</version>
       </dependency>
       <dependency>
-        <groupId>commons-httpclient</groupId>
-        <artifactId>commons-httpclient</artifactId>
-        <version>3.1</version>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.5.8</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.9</version>
+        <version>1.11</version>
       </dependency>
       <dependency>
         <groupId>commons-lang</groupId>
@@ -127,6 +149,11 @@
           <artifactId>jsr305</artifactId>
           <version>3.0.1</version>
           <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kohsuke</groupId>
+        <artifactId>access-modifier-annotation</artifactId>
+        <version>1.16</version>
       </dependency>
       <dependency>
           <groupId>junit</groupId>

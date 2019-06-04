@@ -1,20 +1,20 @@
 package hudson.plugins.swarm;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.io.File;
-import java.util.Arrays;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.NamedOptionDef;
+import org.kohsuke.args4j.spi.FieldSetter;
+import org.kohsuke.args4j.spi.OptionHandler;
 
 /**
  * Swarm client.
@@ -29,16 +29,9 @@ public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getPackage().getName());
 
     private final Options options;
-    private final Thread labelFileWatcherThread = null;
 
     //TODO: Cleanup the encoding issue
     public static void main(String... args) throws InterruptedException, IOException {
-        String s = Arrays.toString(args);
-        s = s.replaceAll("\n", "");
-        s = s.replaceAll("\r", "");
-        s = s.replaceAll(",", "");
-        logger.info("Client.main invoked with: " + s);
-
         Options options = new Options();
         Client client = new Client(options);
         CmdLineParser p = new CmdLineParser(options);
@@ -47,17 +40,14 @@ public class Client {
         } catch (CmdLineException e) {
             logger.log(Level.SEVERE, "CmdLineException occurred during parseArgument", e);
             p.printUsage(System.out);
-            System.exit(-1);
+            System.exit(1);
         }
+
+        logArguments(p);
 
         if (options.help) {
             p.printUsage(System.out);
             System.exit(0);
-        }
-
-        if (options.logFile != null) {
-            logger.severe("-logFile has been deprecated. Use logging properties file syntax instead: -Djava.util.logging.config.file=" + Paths.get("").toAbsolutePath().toString() + File.separator + "logging.properties");
-            System.exit(-1);
         }
 
         if (options.pidFile != null) {
@@ -73,7 +63,7 @@ public class Client {
                 Files.write(pidFile.toPath(), pid.getBytes(UTF_8));
             } catch (IOException exception) {
                 logger.severe("Failed writing PID file: " + options.pidFile);
-                System.exit(-1);
+                System.exit(1);
             }
         }
 
@@ -106,7 +96,7 @@ public class Client {
             } catch (IOException e) {
                 logger.severe("Failed to lookup the canonical hostname of this slave, please check system settings.");
                 logger.severe("If not possible to resolve please specify a node name using the '-name' option");
-                System.exit(-1);
+                System.exit(1);
             }
         }
 
@@ -116,7 +106,6 @@ public class Client {
 
     public Client(Options options) {
         this.options = options;
-        logger.finest("Client created with " + options);
     }
 
     /**
@@ -145,30 +134,43 @@ public class Client {
                     swarmClient.verifyThatUrlIsHudson(target);
                 }
 
-                // set up label file watcher thread (if the label file changes, this thread takes action to restart the client)
-                if (options.labelsFile != null && labelFileWatcherThread == null) {
+                logger.info(
+                        "Attempting to connect to "
+                                + target.url
+                                + " "
+                                + target.secret
+                                + " with ID "
+                                + swarmClient.getHash());
+
+                /*
+                 * Create a new swarm slave. After this method returns, the value of the name field
+                 * has been set to the name returned by the server, which may or may not be the name
+                 * we originally requested.
+                 */
+                swarmClient.createSwarmSlave(target);
+
+                /*
+                 * Set up the label file watcher thread. If the label file changes, this thread
+                 * takes action to restart the client. Note that this must be done after we create
+                 * the swarm slave, since only then has the server returned the name we must use
+                 * when doing label operations.
+                 */
+                if (options.labelsFile != null) {
                     logger.info("Setting up LabelFileWatcher");
-                    LabelFileWatcher l = new LabelFileWatcher(target, options, args);
+                    LabelFileWatcher l =
+                            new LabelFileWatcher(target, options, swarmClient.getName(), args);
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
                     labelFileWatcherThread.setDaemon(true);
                     labelFileWatcherThread.start();
                 }
 
-                logger.info("Attempting to connect to " + target.url + " " + target.secret + " with ID " +
-                                   swarmClient.getHash());
-
-                // create a new swarm slave
-                swarmClient.createSwarmSlave(target);
                 swarmClient.connect(target);
                 if (options.noRetryAfterConnected) {
                     logger.warning("Connection closed, exiting...");
                     swarmClient.exitWithStatus(0);
                 }
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "IOexception occurred", e);
-                e.printStackTrace();
-            } catch (ParserConfigurationException e) {
-                logger.log(Level.SEVERE, "ParserConfigurationException occurred", e);
+                logger.log(Level.SEVERE, "IOException occurred", e);
                 e.printStackTrace();
             } catch (RetryException e) {
                 logger.log(Level.SEVERE, "RetryException occurred", e);
@@ -181,7 +183,7 @@ public class Client {
             if (options.retry >= 0) {
                 if (retry >= options.retry) {
                     logger.severe("Retry limit reached, exiting...");
-                    swarmClient.exitWithStatus(-1);
+                    swarmClient.exitWithStatus(1);
                 } else {
                     logger.warning("Remaining retries: " + (options.retry - retry));
                 }
@@ -191,5 +193,70 @@ public class Client {
             logger.info("Retrying in " + waitTime + " seconds");
             swarmClient.sleepSeconds(waitTime);
         }
+    }
+
+    private static void logArguments(CmdLineParser parser) {
+        Options defaultOptions = new Options();
+        CmdLineParser defaultParser = new CmdLineParser(defaultOptions);
+
+        StringBuilder sb = new StringBuilder("Client invoked with: ");
+        for (OptionHandler argument : parser.getArguments()) {
+            logValue(sb, argument, null);
+        }
+        for (OptionHandler option : parser.getOptions()) {
+            logValue(sb, option, defaultParser);
+        }
+        logger.info(sb.toString());
+    }
+
+    private static void logValue(
+            StringBuilder sb, OptionHandler handler, CmdLineParser defaultParser) {
+        String key = getKey(handler);
+        Object value = getValue(handler);
+
+        if (key.equals("-help")) {
+            return;
+        }
+
+        if (defaultParser != null && isDefaultOption(key, value, defaultParser)) {
+            return;
+        }
+
+        sb.append(key);
+        sb.append(' ');
+        if (key.equals("-username") || key.equals("-password")) {
+            sb.append("*****");
+        } else {
+            sb.append(value);
+        }
+        sb.append(' ');
+    }
+
+    private static String getKey(OptionHandler optionHandler) {
+        if (optionHandler.option instanceof NamedOptionDef) {
+            NamedOptionDef namedOptionDef = (NamedOptionDef) optionHandler.option;
+            return namedOptionDef.name();
+        } else {
+            return optionHandler.option.toString();
+        }
+    }
+
+    private static Object getValue(OptionHandler optionHandler) {
+        FieldSetter setter = optionHandler.setter.asFieldSetter();
+        return setter == null ? null : setter.getValue();
+    }
+
+    private static boolean isDefaultOption(String key, Object value, CmdLineParser defaultParser) {
+        for (OptionHandler defaultOption : defaultParser.getOptions()) {
+            String defaultKey = getKey(defaultOption);
+            if (defaultKey.equals(key)) {
+                Object defaultValue = getValue(defaultOption);
+                if (defaultValue == null && value == null) {
+                    return true;
+                }
+                return defaultValue != null && defaultValue.equals(value);
+            }
+        }
+        return false;
     }
 }

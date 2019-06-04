@@ -1,15 +1,13 @@
 package hudson.plugins.swarm;
 
-import org.junit.Test;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-
 import static hudson.plugins.swarm.RetryBackOffStrategy.EXPONENTIAL;
 import static hudson.plugins.swarm.RetryBackOffStrategy.LINEAR;
 import static hudson.plugins.swarm.RetryBackOffStrategy.NONE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+import java.io.IOException;
+import org.junit.Test;
 
 public class ClientTest {
 
@@ -18,10 +16,10 @@ public class ClientTest {
         Options options = givenBackOff(NONE);
         // one try
         options.retry = 1;
-        runAndVerify(options, "Exited with status -1 after 0 seconds");
+        runAndVerify(options, "Exited with status 1 after 0 seconds");
         // a few tries
         options.retry = 5;
-        runAndVerify(options, "Exited with status -1 after 40 seconds");
+        runAndVerify(options, "Exited with status 1 after 40 seconds");
     }
 
     @Test
@@ -34,19 +32,19 @@ public class ClientTest {
     @Test
     public void should_run_with_no_backoff() {
         Options options = givenBackOff(NONE);
-        runAndVerify(options, "Exited with status -1 after 90 seconds");
+        runAndVerify(options, "Exited with status 1 after 90 seconds");
     }
 
     @Test
     public void should_run_with_linear_backoff() {
         Options options = givenBackOff(LINEAR);
-        runAndVerify(options, "Exited with status -1 after 450 seconds");
+        runAndVerify(options, "Exited with status 1 after 450 seconds");
     }
 
     @Test
     public void should_run_with_exponential_backoff() {
         Options options = givenBackOff(EXPONENTIAL);
-        runAndVerify(options, "Exited with status -1 after 750 seconds");
+        runAndVerify(options, "Exited with status 1 after 750 seconds");
     }
 
     private Options givenBackOff(RetryBackOffStrategy retryBackOffStrategy) {
@@ -81,7 +79,7 @@ public class ClientTest {
         }
 
         @Override
-        public Candidate discoverFromMasterUrl() throws IOException, ParserConfigurationException, RetryException {
+        public Candidate discoverFromMasterUrl() throws IOException {
             throw new IOException("Unable to connect at the moment");
         }
 
@@ -91,7 +89,7 @@ public class ClientTest {
         }
 
         @Override
-        public void sleepSeconds(int waitTime) throws InterruptedException {
+        public void sleepSeconds(int waitTime) {
             totalWaitTime += waitTime;
             if (totalWaitTime > 1000) {
                 throw new IllegalStateException("Running long enough");

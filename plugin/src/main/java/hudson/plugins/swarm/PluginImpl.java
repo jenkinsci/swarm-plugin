@@ -1,5 +1,9 @@
 package hudson.plugins.swarm;
 
+import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+
 import hudson.Plugin;
 import hudson.Util;
 import hudson.model.Computer;
@@ -12,27 +16,21 @@ import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolLocationNodeProperty.ToolLocation;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import javax.servlet.ServletOutputStream;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.ArrayUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.HashSet;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import javax.servlet.ServletOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.List;
-import java.util.Properties;
-
-import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 /**
  * Exposes an entry point to add a new swarm slave.
@@ -42,7 +40,7 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 public class PluginImpl extends Plugin {
 
     private Node getNodeByName(String name, StaplerResponse rsp) throws IOException {
-        final Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstance();
 
         try {
             Node n = jenkins.getNode(name);
@@ -78,7 +76,6 @@ public class PluginImpl extends Plugin {
         normalResponse(req, rsp, nn.getLabelString());
     }
 
-
     private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
         rsp.setContentType("text/xml");
 
@@ -90,7 +87,6 @@ public class PluginImpl extends Plugin {
     /**
      * Adds labels to a slave.
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void doAddSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                             @QueryParameter String secret, @QueryParameter String labels)  throws IOException{
         if (!getSwarmSecret().equals(secret)) {
@@ -104,30 +100,22 @@ public class PluginImpl extends Plugin {
 
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
-        HashSet<String> hs = new HashSet<>(lCurrentLabels);
+        Set<String> hs = new HashSet<>(lCurrentLabels);
         List<String> lNewLabels = Arrays.asList(labels.split("\\s+"));
         hs.addAll(lNewLabels);
-        nn.setLabelString(hashSetToString(hs));
+        nn.setLabelString(setToString(hs));
         nn.getAssignedLabels();
 
         normalResponse(req, rsp, nn.getLabelString());
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private String hashSetToString(HashSet hs) {
-        List<String> lNewlist = new ArrayList<String>(hs);
-        StringBuilder sb = new StringBuilder();
-        for (String s : lNewlist) {
-            sb.append(s);
-            sb.append(" ");
-        }
-        return sb.toString();
+    private static String setToString(Set<String> labels) {
+        return String.join(" ", labels);
     }
 
     /**
      * Remove labels from a slave
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void doRemoveSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                             @QueryParameter String secret, @QueryParameter String labels) throws IOException {
         if (!getSwarmSecret().equals(secret)) {
@@ -141,10 +129,10 @@ public class PluginImpl extends Plugin {
 
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
-        HashSet<String> hs = new HashSet<>(lCurrentLabels);
+        Set<String> hs = new HashSet<>(lCurrentLabels);
         List<String> lBadLabels = Arrays.asList(labels.split("\\s+"));
         hs.removeAll(lBadLabels);
-        nn.setLabelString(hashSetToString(hs));
+        nn.setLabelString(setToString(hs));
         nn.getAssignedLabels();
         normalResponse(req, rsp, nn.getLabelString());
     }
@@ -152,7 +140,6 @@ public class PluginImpl extends Plugin {
     /**
      * Adds a new swarm slave.
      */
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                               @QueryParameter String description, @QueryParameter int executors,
                               @QueryParameter String remoteFsRoot, @QueryParameter String labels,
@@ -165,8 +152,7 @@ public class PluginImpl extends Plugin {
         }
 
         try {
-            //@SuppressWarnings()
-            final Jenkins jenkins = Jenkins.getInstance();
+            Jenkins jenkins = Jenkins.getInstance();
 
             jenkins.checkPermission(SlaveComputer.CREATE);
 
@@ -215,14 +201,7 @@ public class PluginImpl extends Plugin {
             SwarmSlave slave = new SwarmSlave(name, "Swarm slave from " + req.getRemoteHost() + " : " + description,
                     remoteFsRoot, String.valueOf(executors), mode, "swarm " + Util.fixNull(labels), nodeProperties);
 
-            // if this still results in a duplicate, so be it
-            synchronized (jenkins) {
-                Node n = jenkins.getNode(name);
-                if (n != null) {
-                    jenkins.removeNode(n);
-                }
-                jenkins.addNode(slave);
-            }
+            jenkins.addNode(slave);
             rsp.setContentType("text/plain; charset=iso-8859-1");
             Properties props = new Properties();
             props.put("name", name);
@@ -287,20 +266,13 @@ public class PluginImpl extends Plugin {
         return result;
     }
 
-    static String getSwarmSecret() {
-        String secret;
-        try {
-            secret = UDPFragmentImpl.all().get(UDPFragmentImpl.class).secret.toString();
-        } catch (NullPointerException e) {
-            secret = "";
-        }
-
-        return secret;
+    private static String getSwarmSecret() {
+        UDPFragmentImpl fragment = UDPFragmentImpl.all().get(UDPFragmentImpl.class);
+        return fragment == null ? "" : fragment.secret.toString();
     }
 
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public void doSlaveInfo(StaplerRequest req, StaplerResponse rsp) throws IOException {
-        final Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstance();
         jenkins.checkPermission(SlaveComputer.CREATE);
 
         rsp.setContentType("text/xml");

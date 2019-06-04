@@ -1,20 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <!--
+        TODO: org.jenkins-ci.plugins:swarm-client (whose POM is
+        swarm-plugin/pom.xml) should not have any parent POM and should ideally
+        be as empty a shell as possible in order to support its two
+        sub-projects: org.jenkins-ci.plugins:swarm-client (whose POM is
+        swarm-plugin/client/pom.xml and whose parent is org.jenkins-ci:jenkins)
+        and org.jenkins-ci.plugins:swarm (whose POM is
+        swarm-plugin/plugin/pom.xml and whose parent should ideally be
+        org.jenkins-ci.plugins:plugin).
+    -->
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.37</version>
+        <version>3.43</version>
         <relativePath />
     </parent>
 
     <artifactId>swarm-plugin</artifactId>
     <packaging>pom</packaging>
     <name>Jenkins Self-Organizing Swarm Plug-in</name>
-    <version>3.16-SNAPSHOT</version>
+    <version>3.18-SNAPSHOT</version>
 
     <properties>
-        <jenkins.version>2.60.1</jenkins.version>
+        <jenkins.version>2.60.3</jenkins.version>
         <java.level>8</java.level>
     </properties>
 

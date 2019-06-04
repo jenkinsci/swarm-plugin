@@ -1,12 +1,11 @@
 package hudson.plugins.swarm;
 
-import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.spi.MapOptionHandler;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.MapOptionHandler;
 
 public class Options {
 
@@ -29,7 +28,7 @@ public class Options {
     public String master;
 
     @Option(name = "-tunnel", usage = "Connect to the specified host and port, instead of connecting directly to Jenkins. " +
-                    "Useful when connection to Hudson needs to be tunneled. Can be also HOST: or :PORT, " +
+                    "Useful when connection to Jenkins needs to be tunneled. Can be also HOST: or :PORT, " +
                     "in which case the missing portion will be auto-configured like the default behavior")
     public String tunnel;
 
@@ -42,10 +41,10 @@ public class Options {
     @Option(
             name = "-retryBackOffStrategy",
             usage = "The mode controlling retry wait time. Can be either " +
-                    "none (use same interval between retires)" +
+                    "'none' (use same interval between retries) " +
                     "or 'linear' (increase wait time before each retry up to maxRetryInterval) " +
                     "or 'exponential' (double wait interval on each retry up to maxRetryInterval). " +
-                    "Default is none.",
+                    "Default is 'none'.",
             handler = RetryBackOffStrategyOptionHandler.class
     )
     public RetryBackOffStrategy retryBackOffStrategy = RetryBackOffStrategy.NONE;
@@ -56,7 +55,7 @@ public class Options {
     @Option(name = "-maxRetryInterval", usage = "Max time to wait before retry in seconds. Default is 60 seconds.")
     public int maxRetryInterval = 60;
 
-    @Option(name = "-autoDiscoveryAddress", usage = "Use this address for udp-based auto-discovery (default 255.255.255.255)")
+    @Option(name = "-autoDiscoveryAddress", usage = "Use this address for UDP-based auto-discovery (default 255.255.255.255)")
     public String autoDiscoveryAddress = "255.255.255.255";
 
     @Option(name = "-disableSslVerification", usage = "Disables SSL verification in the HttpClient.")
@@ -68,7 +67,7 @@ public class Options {
                                                "for custom fingerprints! Multiple options are allowed.")
     public String sslFingerprints = "";
 
-    @Option(name = "-disableClientsUniqueId", usage = "Disables Clients unique ID.")
+    @Option(name = "-disableClientsUniqueId", usage = "Disables client's unique ID.")
     public boolean disableClientsUniqueId;
 
     @Option(name = "-deleteExistingClients", usage = "Deletes any existing slave with the same name.")
@@ -78,7 +77,7 @@ public class Options {
             name = "-mode",
             usage = "The mode controlling how Jenkins allocates jobs to slaves. Can be either '" + ModeOptionHandler.NORMAL + "' " +
                     "(utilize this slave as much as possible) or '" + ModeOptionHandler.EXCLUSIVE + "' (leave this machine for tied " +
-                    "jobs only). Default is " + ModeOptionHandler.NORMAL + ".",
+                    "jobs only). Default is '" + ModeOptionHandler.NORMAL + "'.",
             handler = ModeOptionHandler.class
     )
     public String mode = ModeOptionHandler.NORMAL;
@@ -112,17 +111,14 @@ public class Options {
     @Option(name = "-passwordFile", usage = "File containing the Jenkins user password")
     public String passwordFile;
 
-    @Option(name = "-showHostName", aliases = "--showHostName", usage = "Show hostnames instead of IP address")
+    @Option(name = "-showHostName", aliases = "--showHostName", usage = "Show hostname instead of IP address")
     public boolean showHostName;
 
     @Option(name = "-candidateTag", usage = "Show swarm candidate with tag only")
     public String candidateTag;
 
-    @Option(name = "-labelsFile", usage = "File location with space delimited list of labels.  If the file changes, restarts this client.")
+    @Option(name = "-labelsFile", usage = "File location with space delimited list of labels.  If the file changes, the client is restarted.")
     public String labelsFile;
-
-    @Option(name = "-logFile", usage = "File to write STDOUT and STDERR to. (Deprecated, use -Djava.util.logging.config.file={path}logging.properties instead)")
-    public String logFile;
 
     @Option(name = "-pidFile", usage = "File to write PID to")
     public String pidFile;
