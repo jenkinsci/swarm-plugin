@@ -46,14 +46,39 @@ public class SwarmClientIntegrationTest {
         FreeStyleProject project = j.createFreeStyleProject();
         project.setConcurrentBuild(false);
         project.setAssignedNode(node);
-        CommandInterpreter command =
-                Functions.isWindows()
-                        ? new BatchFile("echo ON_SWARM_CLIENT=%ON_SWARM_CLIENT%")
-                        : new Shell("echo ON_SWARM_CLIENT=$ON_SWARM_CLIENT");
-        project.getBuildersList().add(command);
+        project.getBuildersList().add(echoCommand("ON_SWARM_CLIENT"));
 
         FreeStyleBuild build = j.buildAndAssertSuccess(project);
         j.assertLogContains("ON_SWARM_CLIENT=true", build);
+    }
+
+    @Test
+    public void environmentVariables() throws Exception {
+        Node node =
+                TestUtils.createSwarmClient(
+                        j,
+                        processDestroyer,
+                        temporaryFolder,
+                        "-e",
+                        "SWARM_VAR_1=foo",
+                        "-e",
+                        "SWARM_VAR_2=bar");
+
+        FreeStyleProject project = j.createFreeStyleProject();
+        project.setConcurrentBuild(false);
+        project.setAssignedNode(node);
+        project.getBuildersList().add(echoCommand("SWARM_VAR_1"));
+        project.getBuildersList().add(echoCommand("SWARM_VAR_2"));
+
+        FreeStyleBuild build = j.buildAndAssertSuccess(project);
+        j.assertLogContains("SWARM_VAR_1=foo", build);
+        j.assertLogContains("SWARM_VAR_2=bar", build);
+    }
+
+    private static CommandInterpreter echoCommand(String key) {
+        return Functions.isWindows()
+                ? new BatchFile("echo " + key + "=%" + key + "%")
+                : new Shell("echo " + key + "=$" + key);
     }
 
     /** Ensures that a node can be created with a colon in the description. */
