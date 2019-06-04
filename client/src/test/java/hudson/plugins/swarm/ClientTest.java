@@ -1,26 +1,15 @@
 package hudson.plugins.swarm;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
 import static hudson.plugins.swarm.RetryBackOffStrategy.EXPONENTIAL;
 import static hudson.plugins.swarm.RetryBackOffStrategy.LINEAR;
 import static hudson.plugins.swarm.RetryBackOffStrategy.NONE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
+import org.junit.Test;
+
 public class ClientTest {
-
-
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Test
     public void should_not_retry_more_than_specified() {
