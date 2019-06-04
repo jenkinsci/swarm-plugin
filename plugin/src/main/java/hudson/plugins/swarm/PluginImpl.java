@@ -156,18 +156,22 @@ public class PluginImpl extends Plugin {
 
             jenkins.checkPermission(SlaveComputer.CREATE);
 
-            String[] toolLocations = req.getParameterValues("toolLocation");
             List<NodeProperty<Node>> nodeProperties = new ArrayList<>();
+
+            String[] toolLocations = req.getParameterValues("toolLocation");
             if (!ArrayUtils.isEmpty(toolLocations)) {
                 List<ToolLocation> parsedToolLocations = parseToolLocations(toolLocations);
                 nodeProperties.add(new ToolLocationNodeProperty(parsedToolLocations));
             }
 
-            String[] envVars = req.getParameterValues("environmentVariables");
-            if(!ArrayUtils.isEmpty(envVars)) {
-                List<EnvironmentVariablesNodeProperty.Entry> parsedEnvVars = parseEnvVars(envVars);
-                nodeProperties.add(new EnvironmentVariablesNodeProperty(parsedEnvVars));
+            String[] environmentVariables = req.getParameterValues("environmentVariable");
+            if (!ArrayUtils.isEmpty(environmentVariables)) {
+                List<EnvironmentVariablesNodeProperty.Entry> parsedEnvironmentVariables =
+                        parseEnvironmentVariables(environmentVariables);
+                nodeProperties.add(
+                        new EnvironmentVariablesNodeProperty(parsedEnvironmentVariables));
             }
+
             if (hash == null && jenkins.getNode(name) != null && !deleteExistingClients) {
                 // this is a legacy client, they won't be able to pick up the new name, so throw them away
                 // perhaps they can find another master to connect to
@@ -217,7 +221,7 @@ public class PluginImpl extends Plugin {
         }
     }
 
-    private List<ToolLocation> parseToolLocations(String[] toolLocations) {
+    private static List<ToolLocation> parseToolLocations(String[] toolLocations) {
         List<ToolLocationNodeProperty.ToolLocation> result = new ArrayList<>();
 
         for (String toolLocKeyValue : toolLocations) {
@@ -250,16 +254,16 @@ public class PluginImpl extends Plugin {
         return result;
     }
 
-    private List<EnvironmentVariablesNodeProperty.Entry> parseEnvVars(String[] envVars) {
+    private static List<EnvironmentVariablesNodeProperty.Entry> parseEnvironmentVariables(
+            String[] environmentVariables) {
         List<EnvironmentVariablesNodeProperty.Entry> result = new ArrayList<>();
 
-        for (String envVarKeyValue : envVars) {
-            boolean found = false;
-            // Limit the split on only the first occurrence
-            // of ':', so that the path can contain ':' characters.
-            String[] keyValue = envVarKeyValue.split(":", 2);
-            EnvironmentVariablesNodeProperty.Entry var = new EnvironmentVariablesNodeProperty
-                    .Entry(keyValue[0], keyValue[1]);
+        for (String environmentVariable : environmentVariables) {
+            // Limit the split on only the first occurrence of ':' so that the value can contain ':'
+            // characters.
+            String[] keyValue = environmentVariable.split(":", 2);
+            EnvironmentVariablesNodeProperty.Entry var =
+                    new EnvironmentVariablesNodeProperty.Entry(keyValue[0], keyValue[1]);
             result.add(var);
         }
 

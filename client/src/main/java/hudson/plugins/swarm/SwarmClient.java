@@ -428,9 +428,16 @@ public class SwarmClient {
             }
         }
 
+        StringBuilder environmentVariablesBuilder = new StringBuilder();
         if (options.environmentVariables != null) {
-            for (Entry<String, String> envVar : options.environmentVariables.entrySet()) {
-                toolLocationBuilder.append(param("environmentVariables", envVar.getKey() + ":" + envVar.getValue()));
+            for (Entry<String, String> environmentVariable :
+                    options.environmentVariables.entrySet()) {
+                environmentVariablesBuilder.append(
+                        param(
+                                "environmentVariable",
+                                environmentVariable.getKey()
+                                        + ":"
+                                        + environmentVariable.getValue()));
             }
         }
 
@@ -452,6 +459,7 @@ public class SwarmClient {
                                 + param("description", options.description)
                                 + param("labels", sMyLabels)
                                 + toolLocationBuilder.toString()
+                                + environmentVariablesBuilder.toString()
                                 + "&secret="
                                 + target.secret
                                 + param("mode", options.mode.toUpperCase(Locale.ENGLISH))

@@ -90,10 +90,12 @@ public class Options {
     public Map<String, String> toolLocations;
 
     @Option(
-            name = "-e", aliases = "--envVar",
-            usage = "An environment variable to be defined on this slave. It is specified as 'envName=value'",
-            handler = MapOptionHandler.class
-    )
+            name = "-e",
+            aliases = "--env",
+            usage =
+                    "An environment variable to be defined on this slave. "
+                            + "It is specified as 'key=value'. Multiple variables are allowed.",
+            handler = MapOptionHandler.class)
     public Map<String, String> environmentVariables;
 
     @Option(name = "-username", usage = "The Jenkins username for authentication")
