@@ -241,6 +241,10 @@ public class SwarmClientIntegrationTest {
         node.process.destroy();
         node.process.waitFor();
         assertFalse("Client should exit on kill", node.process.isAlive());
+        //wait for pid file to disappear
+        while(pidFile.exists()) {
+            Thread.sleep(1000); //ensure the process deletes the pid on exit
+        }
         assertFalse("Pid file removed", pidFile.exists());
     }
 
