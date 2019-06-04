@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -33,7 +32,6 @@ public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getPackage().getName());
 
     private final Options options;
-
 
     //TODO: Cleanup the encoding issue
     public static void main(String... args) throws InterruptedException, IOException {
