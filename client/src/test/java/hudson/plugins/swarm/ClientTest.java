@@ -18,15 +18,9 @@ import static org.junit.Assert.fail;
 
 public class ClientTest {
 
-    public static final String PID_FILE_NAME = "__tmp.pid.file.swarm__";
+
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-
-    @Before
-    @After
-    public void clean_pidfile() throws IOException {
-        Files.deleteIfExists(Paths.get(PID_FILE_NAME));
-    }
 
     @Test
     public void should_not_retry_more_than_specified() {
@@ -62,15 +56,6 @@ public class ClientTest {
     public void should_run_with_exponential_backoff() {
         Options options = givenBackOff(EXPONENTIAL);
         runAndVerify(options, "Exited with status 1 after 750 seconds");
-    }
-
-    @Test
-    public void should_fail_when_pidfile_exists() throws IOException, InterruptedException {
-        String[] options = {"-pidFile", PID_FILE_NAME};
-        Files.write(Paths.get(PID_FILE_NAME), "12345".getBytes());
-
-        exit.expectSystemExitWithStatus(Client.EXIT_CODE_PID_EXISTS);
-        Client.main(options);
     }
 
     private Options givenBackOff(RetryBackOffStrategy retryBackOffStrategy) {

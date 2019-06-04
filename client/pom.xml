@@ -167,5 +167,10 @@
         <version>1.19.0</version>
         <scope>test</scope>
       </dependency>
+      <dependency>
+        <groupId>com.github.oshi</groupId>
+        <artifactId>oshi-core</artifactId>
+        <version>3.13.2</version>
+      </dependency>
     </dependencies>
 </project>

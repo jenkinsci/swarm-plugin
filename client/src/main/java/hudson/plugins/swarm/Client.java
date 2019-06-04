@@ -10,11 +10,15 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.NamedOptionDef;
 import org.kohsuke.args4j.spi.FieldSetter;
 import org.kohsuke.args4j.spi.OptionHandler;
+import oshi.SystemInfo;
+import oshi.software.os.OSProcess;
 
 /**
  * Swarm client.
@@ -30,7 +34,6 @@ public class Client {
 
     private final Options options;
 
-    public static final int EXIT_CODE_PID_EXISTS = 29;
 
     //TODO: Cleanup the encoding issue
     public static void main(String... args) throws InterruptedException, IOException {
@@ -61,12 +64,24 @@ public class Client {
             String pid = pidNameParts[0];
             File pidFile = new File(options.pidFile);
             if (pidFile.exists()) {
-                logger.severe(
-                        String.format("PID file '%s' already exists, refusing to start.  Previous PID %s may be running",
-                                pidFile.getAbsolutePath(),
-                                Files.readAllLines(pidFile.toPath()))
-                );
-                System.exit(EXIT_CODE_PID_EXISTS);
+                int oldPid = NumberUtils.toInt(
+                        new String(Files.readAllBytes(pidFile.toPath()), UTF_8), 0);
+                // check if this process is running
+                if (oldPid > 0) {
+                    OSProcess oldProcess = new SystemInfo().getOperatingSystem().getProcess(oldPid);
+                    if (oldProcess != null) {
+                        logger.severe(
+                                String.format("PID file '%s' already exists, refusing to start.  Previous process %d (%s) is running",
+                                        pidFile.getAbsolutePath(),
+                                        oldPid,
+                                        oldProcess.getCommandLine())
+                        );
+                        System.exit(1);
+                    } else {
+                        logger.fine(String.format(
+                                "Found an old pidFile with pid %d, but that process isn't running, ignoring", oldPid));
+                    }
+                }
             }
             pidFile.deleteOnExit();
             try {
