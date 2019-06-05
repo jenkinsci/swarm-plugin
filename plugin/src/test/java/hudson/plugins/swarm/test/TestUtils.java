@@ -89,6 +89,38 @@ public class TestUtils {
             TemporaryFolder temporaryFolder,
             String... args)
             throws Exception {
+
+        runSwarmClient(agentName, j, processDestroyer, temporaryFolder, args);
+        return waitForNode(agentName, j);
+    }
+
+    /**
+     * This is a subset of {@link #createSwarmClient(String, JenkinsRule, ProcessDestroyer,
+     * TemporaryFolder, String...)}
+     */
+    public static Node waitForNode(String agentName, JenkinsRule j) throws Exception {
+        Computer computer = waitOnline(agentName, j.jenkins);
+        assertNotNull(computer);
+        assertTrue(computer.isOnline());
+        Node node = computer.getNode();
+        assertNotNull(node);
+        return node;
+    }
+
+    /**
+     * This is a subset of {@link #createSwarmClient(String, JenkinsRule, ProcessDestroyer,
+     * TemporaryFolder, String...)} it does not wait for computer to be added on the server.
+     *
+     * @return a wrapper with useful handles to inspect the result, on success or failure.
+     * @throws Exception
+     */
+    public static SwarmClientProcessWrapper runSwarmClient(
+            String agentName,
+            JenkinsRule j,
+            ProcessDestroyer processDestroyer,
+            TemporaryFolder temporaryFolder,
+            String... args)
+            throws Exception {
         File swarmClientJar =
                 File.createTempFile("swarm-client", ".jar", temporaryFolder.getRoot());
         download(j.getURL(), swarmClientJar);
@@ -114,11 +146,18 @@ public class TestUtils {
         Process process = pb.start();
         processDestroyer.record(process);
 
-        Computer computer = waitOnline(agentName, j.jenkins);
-        assertNotNull(computer);
-        assertTrue(computer.isOnline());
-        Node node = computer.getNode();
-        assertNotNull(node);
-        return node;
+        return new SwarmClientProcessWrapper(stdout, stderr, process);
+    }
+
+    public static class SwarmClientProcessWrapper {
+        public final File stdout;
+        public final File stderr;
+        public final Process process;
+
+        public SwarmClientProcessWrapper(File stdout, File stderr, Process process) {
+            this.stdout = stdout;
+            this.stderr = stderr;
+            this.process = process;
+        }
     }
 }

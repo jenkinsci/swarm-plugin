@@ -10,11 +10,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.NamedOptionDef;
 import org.kohsuke.args4j.spi.FieldSetter;
 import org.kohsuke.args4j.spi.OptionHandler;
+import oshi.SystemInfo;
+import oshi.software.os.OSProcess;
 
 /**
  * Swarm client.
@@ -58,6 +61,29 @@ public class Client {
             String[] pidNameParts = pidName.split("@");
             String pid = pidNameParts[0];
             File pidFile = new File(options.pidFile);
+            if (pidFile.exists()) {
+                int oldPid =
+                        NumberUtils.toInt(
+                                new String(Files.readAllBytes(pidFile.toPath()), UTF_8), 0);
+                // check if this process is running
+                if (oldPid > 0) {
+                    OSProcess oldProcess = new SystemInfo().getOperatingSystem().getProcess(oldPid);
+                    if (oldProcess != null) {
+                        logger.severe(
+                                String.format(
+                                        "Refusing to start because PID file '%s' already exists and the previous process %d (%s) is still running.",
+                                        pidFile.getAbsolutePath(),
+                                        oldPid,
+                                        oldProcess.getCommandLine()));
+                        System.exit(1);
+                    } else {
+                        logger.fine(
+                                String.format(
+                                        "Ignoring PID file '%s' because the previous process %d is no longer running.",
+                                        pidFile.getAbsolutePath(), oldPid));
+                    }
+                }
+            }
             pidFile.deleteOnExit();
             try {
                 Files.write(pidFile.toPath(), pid.getBytes(UTF_8));
