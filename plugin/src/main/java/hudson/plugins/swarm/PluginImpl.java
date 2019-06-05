@@ -9,6 +9,8 @@ import hudson.Util;
 import hudson.model.Computer;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.slaves.NodeProperty;
 import hudson.slaves.SlaveComputer;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
@@ -154,11 +156,20 @@ public class PluginImpl extends Plugin {
 
             jenkins.checkPermission(SlaveComputer.CREATE);
 
+            List<NodeProperty<Node>> nodeProperties = new ArrayList<>();
+
             String[] toolLocations = req.getParameterValues("toolLocation");
-            List<ToolLocationNodeProperty> nodeProperties = new ArrayList<>();
             if (!ArrayUtils.isEmpty(toolLocations)) {
                 List<ToolLocation> parsedToolLocations = parseToolLocations(toolLocations);
                 nodeProperties.add(new ToolLocationNodeProperty(parsedToolLocations));
+            }
+
+            String[] environmentVariables = req.getParameterValues("environmentVariable");
+            if (!ArrayUtils.isEmpty(environmentVariables)) {
+                List<EnvironmentVariablesNodeProperty.Entry> parsedEnvironmentVariables =
+                        parseEnvironmentVariables(environmentVariables);
+                nodeProperties.add(
+                        new EnvironmentVariablesNodeProperty(parsedEnvironmentVariables));
             }
 
             if (hash == null && jenkins.getNode(name) != null && !deleteExistingClients) {
@@ -210,7 +221,7 @@ public class PluginImpl extends Plugin {
         }
     }
 
-    private List<ToolLocation> parseToolLocations(String[] toolLocations) {
+    private static List<ToolLocation> parseToolLocations(String[] toolLocations) {
         List<ToolLocationNodeProperty.ToolLocation> result = new ArrayList<>();
 
         for (String toolLocKeyValue : toolLocations) {
@@ -238,6 +249,22 @@ public class PluginImpl extends Plugin {
             if (!found) {
                 throw new RuntimeException("No tool '" + toolLoc[0] + "' is defined on Jenkins.");
             }
+        }
+
+        return result;
+    }
+
+    private static List<EnvironmentVariablesNodeProperty.Entry> parseEnvironmentVariables(
+            String[] environmentVariables) {
+        List<EnvironmentVariablesNodeProperty.Entry> result = new ArrayList<>();
+
+        for (String environmentVariable : environmentVariables) {
+            // Limit the split on only the first occurrence of ':' so that the value can contain ':'
+            // characters.
+            String[] keyValue = environmentVariable.split(":", 2);
+            EnvironmentVariablesNodeProperty.Entry var =
+                    new EnvironmentVariablesNodeProperty.Entry(keyValue[0], keyValue[1]);
+            result.add(var);
         }
 
         return result;
