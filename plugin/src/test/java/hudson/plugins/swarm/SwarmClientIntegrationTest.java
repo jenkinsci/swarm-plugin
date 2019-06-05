@@ -10,6 +10,7 @@ import hudson.Functions;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
+import hudson.model.Result;
 import hudson.plugins.swarm.test.ProcessDestroyer;
 import hudson.plugins.swarm.test.TestUtils;
 import hudson.tasks.BatchFile;
@@ -25,6 +26,10 @@ import java.util.HashSet;
 import java.util.Set;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.NumberUtils;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.ClassRule;
@@ -266,6 +271,30 @@ public class SwarmClientIntegrationTest {
         node.process.waitFor();
         assertFalse("Client should exit on kill", node.process.isAlive());
         assertFalse("PID file removed", pidFile.exists());
+    }
+
+
+    @Test
+    public void gracefulShutdownOnKill() throws Exception {
+        TestUtils.SwarmClientProcessWrapper node =
+                TestUtils.runSwarmClient(
+                        "agentDeletePid",
+                        j,
+                        processDestroyer,
+                        temporaryFolder);
+
+        TestUtils.waitForNode("agentDeletePid", j);
+
+
+        // Now run a job that will hold up the node.
+        WorkflowJob project = j.createProject(WorkflowJob.class);
+        project.setDefinition(new CpsFlowDefinition("sleep(10)", true));
+        WorkflowRun build = project.scheduleBuild2(0).waitForStart();
+
+        node.process.destroy();
+        node.process.waitFor();
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(build));
     }
 
     /**

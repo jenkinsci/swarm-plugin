@@ -9,8 +9,10 @@ import hudson.Util;
 import hudson.model.Computer;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
+import hudson.model.User;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
+import hudson.slaves.OfflineCause;
 import hudson.slaves.SlaveComputer;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
@@ -73,14 +75,18 @@ public class PluginImpl extends Plugin {
             return;
         }
 
-        normalResponse(req, rsp, nn.getLabelString());
+        normalLabelResponse(req, rsp, nn.getLabelString());
     }
 
-    private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
+    private static void normalLabelResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
+        normalResponse(req, rsp, "<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
+    }
+
+    private static void normalResponse(StaplerRequest req, StaplerResponse rsp, String rawXml) throws IOException {
         rsp.setContentType("text/xml");
 
         Writer w = rsp.getCompressedWriter(req);
-        w.write("<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
+        w.write(rawXml);
         w.close();
     }
 
@@ -106,7 +112,7 @@ public class PluginImpl extends Plugin {
         nn.setLabelString(setToString(hs));
         nn.getAssignedLabels();
 
-        normalResponse(req, rsp, nn.getLabelString());
+        normalLabelResponse(req, rsp, nn.getLabelString());
     }
 
     private static String setToString(Set<String> labels) {
@@ -134,7 +140,7 @@ public class PluginImpl extends Plugin {
         hs.removeAll(lBadLabels);
         nn.setLabelString(setToString(hs));
         nn.getAssignedLabels();
-        normalResponse(req, rsp, nn.getLabelString());
+        normalLabelResponse(req, rsp, nn.getLabelString());
     }
 
     /**
@@ -220,6 +226,38 @@ public class PluginImpl extends Plugin {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Allows the client to mark a slave offline
+     */
+    public void doMarkSlaveOffline(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
+                              @QueryParameter String reason, @QueryParameter String secret) throws IOException {
+        if (!getSwarmSecret().equals(secret)) {
+            rsp.setStatus(SC_FORBIDDEN);
+            return;
+        }
+
+        Jenkins jenkins = Jenkins.getInstance();
+
+        jenkins.checkPermission(SlaveComputer.DISCONNECT);
+
+        Node node = getNodeByName(name, rsp);
+
+        node.toComputer().setTemporarilyOffline(true, new OfflineCause.UserCause(User.current(), reason));
+
+        normalResponse(req, rsp, "<response/>"); //TODO: not sure what to send here
+    }
+
+    public void doGetSlaveReadyForShutdown(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name) throws IOException {
+        Jenkins jenkins = Jenkins.getInstance();
+
+        Node node = getNodeByName(name, rsp);
+
+        boolean ready = node.toComputer().isOffline() && node.toComputer().isIdle();
+
+        normalResponse(req, rsp, "<slaveInfo><readyStatus>" + ready + "</readyStatus></slaveInfo>");
+    }
+
 
     private static List<ToolLocation> parseToolLocations(String[] toolLocations) {
         List<ToolLocationNodeProperty.ToolLocation> result = new ArrayList<>();

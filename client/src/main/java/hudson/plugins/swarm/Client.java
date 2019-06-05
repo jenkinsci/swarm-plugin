@@ -145,10 +145,17 @@ public class Client {
         // The Jenkins that we are trying to connect to.
         Candidate target;
 
+        ShutdownHook shutdownHook = null;
+
         // wait until we get the ACK back
         int retry = 0;
         while (true) {
             try {
+                if (shutdownHook != null) {
+                    Runtime.getRuntime().removeShutdownHook(shutdownHook);
+                    shutdownHook = null;
+                }
+
                 if (options.master == null) {
                     logger.info("No Jenkins master supplied on command line, performing auto-discovery");
                     target = swarmClient.discoverFromBroadcast();
@@ -190,7 +197,13 @@ public class Client {
                     labelFileWatcherThread.start();
                 }
 
+                /*
+                 * Set up a shutdown hook so we disconnect gracefully
+                 */
+                shutdownHook = new ShutdownHook(swarmClient, target);
+                Runtime.getRuntime().addShutdownHook(shutdownHook);
                 swarmClient.connect(target);
+
                 if (options.noRetryAfterConnected) {
                     logger.warning("Connection closed, exiting...");
                     swarmClient.exitWithStatus(0);
@@ -285,4 +298,26 @@ public class Client {
         }
         return false;
     }
+
+
+    public static class ShutdownHook extends Thread {
+        private SwarmClient client;
+        private Candidate target;
+
+        public ShutdownHook(SwarmClient client, Candidate target) {
+            this.client = client;
+            this.target = target;
+        }
+
+        @Override
+        public void run() {
+            logger.warning("Client shutdown initiated");
+            try {
+                client.takeSlaveOfflineAndWait(target, "JVM is shutting down");
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Unable to perform graceful slave shutdown: ", e);
+            }
+        }
+    }
+
 }
