@@ -189,13 +189,12 @@ public class SwarmClientIntegrationTest {
     public void pidFilePreventsStart() throws Exception {
         File pidFile = getPidFile();
         // Start the first client with a PID file and ensure it's up.
-        Node node1 =
-                TestUtils.createSwarmClient(
-                        j,
-                        processDestroyer,
-                        temporaryFolder,
-                        "-pidFile",
-                        pidFile.getAbsolutePath());
+        TestUtils.createSwarmClient(
+                j,
+                processDestroyer,
+                temporaryFolder,
+                "-pidFile",
+                pidFile.getAbsolutePath());
 
         int firstClientPid = readPidFromFile(pidFile);
 
@@ -214,7 +213,7 @@ public class SwarmClientIntegrationTest {
         assertFalse("Second client should fail to start", node2.process.isAlive());
         assertEquals("Exit code", 1, node2.process.exitValue());
         assertTrue(
-                "Log message mentions 'already exists'",
+                "Log message mentions 'already exists' in: " + Files.readAllLines(node2.stderr.toPath()),
                 Files.readAllLines(node2.stderr.toPath()).stream()
                         .anyMatch(line -> line.contains("already exists")));
 
