@@ -122,6 +122,10 @@ public class Options {
     @Option(name = "-labelsFile", usage = "File location with space delimited list of labels.  If the file changes, the client is restarted.")
     public String labelsFile;
 
-    @Option(name = "-pidFile", usage = "File to write PID to. The client will refuse to start if this file exists and the previous process is still running.")
+    @Option(
+            name = "-pidFile",
+            usage =
+                    "File to write PID to. The client will refuse to start if this file exists "
+                            + "and the previous process is still running.")
     public String pidFile;
 }

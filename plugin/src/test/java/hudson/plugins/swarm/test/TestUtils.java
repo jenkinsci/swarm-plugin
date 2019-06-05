@@ -95,10 +95,10 @@ public class TestUtils {
     }
 
     /**
-     * This is a subset of {@link #createSwarmClient(String, JenkinsRule, ProcessDestroyer, TemporaryFolder, String...)}
+     * This is a subset of {@link #createSwarmClient(String, JenkinsRule, ProcessDestroyer,
+     * TemporaryFolder, String...)}
      */
-    public static Node waitForNode(String agentName,
-                                   JenkinsRule j) throws Exception {
+    public static Node waitForNode(String agentName, JenkinsRule j) throws Exception {
         Computer computer = waitOnline(agentName, j.jenkins);
         assertNotNull(computer);
         assertTrue(computer.isOnline());
@@ -108,8 +108,9 @@ public class TestUtils {
     }
 
     /**
-     * This is a subset of {@link #createSwarmClient(String, JenkinsRule, ProcessDestroyer, TemporaryFolder, String...)}
-     *  it does not wait for computer to be added on the server.
+     * This is a subset of {@link #createSwarmClient(String, JenkinsRule, ProcessDestroyer,
+     * TemporaryFolder, String...)} it does not wait for computer to be added on the server.
+     *
      * @return a wrapper with useful handles to inspect the result, on success or failure.
      * @throws Exception
      */
@@ -159,6 +160,4 @@ public class TestUtils {
             this.process = process;
         }
     }
-
-
 }
