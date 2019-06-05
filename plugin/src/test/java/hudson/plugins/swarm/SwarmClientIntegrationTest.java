@@ -190,7 +190,7 @@ public class SwarmClientIntegrationTest {
     @Test
     public void pidFilePreventsStart() throws Exception {
         File pidFile = getPidFile();
-        // Start the first client with a pid file and ensure it's up.
+        // Start the first client with a PID file and ensure it's up.
         Node node1 = TestUtils.createSwarmClient(
                 j,
                 processDestroyer,
@@ -217,9 +217,9 @@ public class SwarmClientIntegrationTest {
         assertTrue("Log message mentions 'already exists'",
                 Files.readAllLines(node2.stderr.toPath()).stream().anyMatch(line -> line.contains("already exists")));
 
-        //now let's ensure that the original process is still OK and so is its pid file
+        //now let's ensure that the original process is still OK and so is its PID file
         assertNotNull("Original client should still be running", os.getProcess(firstClientPid));
-        assertEquals("Pid in PID file should not change", firstClientPid, readPidFromFile(pidFile));
+        assertEquals("PID in PID file should not change", firstClientPid, readPidFromFile(pidFile));
     }
 
     @Test
@@ -227,7 +227,7 @@ public class SwarmClientIntegrationTest {
         File pidFile = getPidFile();
         Files.write(pidFile.toPath(), "66000".getBytes());
 
-        // Pid file should be ignored since the process isn't running.
+        // PID file should be ignored since the process isn't running.
         TestUtils.createSwarmClient(
                 j,
                 processDestroyer,
@@ -237,16 +237,19 @@ public class SwarmClientIntegrationTest {
 
         int newPid = readPidFromFile(pidFile);
 
-        // Java Process doesn't provide the pid, so we have to work around it.
+        // Java Process doesn't provide the PID, so we have to work around it.
         // Find all of our child processes, one of them must be the client we just started,
-        // and thus would match the pid in the pidFile.
+        // and thus would match the PID in the PID file.
         OSProcess[] childProcesses = os.getChildProcesses(os.getProcessId(), 0, null);
-        assertTrue("Pid in pidFile must match our new pid",
+        assertTrue("PID in PID file must match our new PID",
                 Arrays.stream(childProcesses).anyMatch(proc -> proc.getProcessID() == newPid));
     }
 
     @Test
     public void pidFileDeletedOnExit() throws Exception {
+        Assume.assumeFalse(
+                "TODO The PID file doesn't seem to be deleted on exit on Windows", Functions.isWindows());
+
         File pidFile = getPidFile();
         TestUtils.SwarmClientProcessWrapper node = TestUtils.runSwarmClient(
                 "agentDeletePid",
@@ -257,28 +260,26 @@ public class SwarmClientIntegrationTest {
                 pidFile.getAbsolutePath());
 
         while(!pidFile.exists()) {
-            Thread.sleep(1000); //ensure the process writes the pid
+            Thread.sleep(1000); //ensure the process writes the PID
         }
-        assertTrue("Pid file created", pidFile.exists());
+        assertTrue("PID file created", pidFile.exists());
         node.process.destroy();
         node.process.waitFor();
         assertFalse("Client should exit on kill", node.process.isAlive());
-        Assume.assumeFalse(
-                "TODO The PID file doesn't seem to be deleted on exit on Windows", Functions.isWindows());
-        assertFalse("Pid file removed", pidFile.exists());
+        assertFalse("PID file removed", pidFile.exists());
     }
 
     /**
-     * @return a dedicated unique pid file object for an as yet non-existent file.
+     * @return a dedicated unique PID file object for an as yet non-existent file.
      * @throws IOException
      */
-    public File getPidFile() throws IOException {
+    private static File getPidFile() throws IOException {
         File pidFile = File.createTempFile("swarm-client", ".pid", temporaryFolder.getRoot());
         pidFile.delete(); //we want the process to create it, here we just want a unique name.
         return pidFile;
     }
 
-    public int readPidFromFile(File pidFile) throws IOException {
+    private static int readPidFromFile(File pidFile) throws IOException {
         return NumberUtils.toInt(
                 new String(Files.readAllBytes(pidFile.toPath()), UTF_8));
     }

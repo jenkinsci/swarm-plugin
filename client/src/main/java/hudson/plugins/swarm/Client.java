@@ -69,7 +69,7 @@ public class Client {
                     OSProcess oldProcess = new SystemInfo().getOperatingSystem().getProcess(oldPid);
                     if (oldProcess != null) {
                         logger.severe(
-                                String.format("PID file '%s' already exists, refusing to start.  Previous process %d (%s) is running",
+                                String.format("Refusing to start because PID file '%s' already exists and the previous process %d (%s) is still running.",
                                         pidFile.getAbsolutePath(),
                                         oldPid,
                                         oldProcess.getCommandLine())
@@ -77,7 +77,7 @@ public class Client {
                         System.exit(1);
                     } else {
                         logger.fine(String.format(
-                                "Found an old pidFile with pid %d, but that process isn't running, ignoring", oldPid));
+                                "Ignoring PID file '%s' because the previous process %d is no longer running.", pidFile.getAbsolutePath(), oldPid));
                     }
                 }
             }
