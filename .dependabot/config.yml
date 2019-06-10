@@ -11,6 +11,8 @@ update_configs:
     - match:
         dependency_name: "org.jenkins-ci.main:jenkins-core"
     - match:
+        dependency_name: "org.jenkins-ci:symbol-annotation"
+    - match:
         dependency_name: "org.jenkins-ci.plugins*"
     - match:
         dependency_name: "io.jenkins.plugins*"
