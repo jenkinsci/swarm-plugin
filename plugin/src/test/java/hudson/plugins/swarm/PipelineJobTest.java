@@ -24,7 +24,9 @@ import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 public class PipelineJobTest {
 
-    @Rule public RestartableJenkinsRule story = new RestartableJenkinsRule();
+    @Rule
+    public RestartableJenkinsRule story =
+            new RestartableJenkinsRule.Builder().withReusedPort().build();
 
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
 
@@ -157,9 +159,6 @@ public class PipelineJobTest {
      */
     @Test
     public void buildShellScriptAfterRestart() {
-        Assume.assumeNotNull(
-                System.getProperty("port"), "This test requires a fixed port to be available.");
-
         story.then(
                 s -> {
                     // "-deleteExistingClients" is needed so that the Swarm Client can connect
