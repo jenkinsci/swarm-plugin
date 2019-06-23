@@ -110,7 +110,10 @@ public class LabelFileWatcher implements Runnable {
         return context;
     }
 
-    private void softLabelUpdate(String sNewLabels) throws SoftLabelUpdateException, MalformedURLException {
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "False positive for try-with-resources in Java 11")
+    private void softLabelUpdate(String sNewLabels)  throws SoftLabelUpdateException, MalformedURLException {
         // 1. get labels from master
         // 2. issue remove command for all old labels
         // 3. issue update commands for new labels

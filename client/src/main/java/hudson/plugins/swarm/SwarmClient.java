@@ -212,6 +212,9 @@ public class SwarmClient {
         }
     }
 
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "False positive for try-with-resources in Java 11")
     public Candidate discoverFromMasterUrl() throws IOException, RetryException {
         logger.config("discoverFromMasterUrl() invoked");
 
@@ -376,6 +379,9 @@ public class SwarmClient {
         return context;
     }
 
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "False positive for try-with-resources in Java 11")
     protected static synchronized Crumb getCsrfCrumb(
             CloseableHttpClient client, HttpClientContext context, Candidate target)
             throws IOException {
@@ -409,6 +415,9 @@ public class SwarmClient {
         return new Crumb(crumbResponse[0], crumbResponse[1]);
     }
 
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "False positive for try-with-resources in Java 11")
     protected void createSwarmSlave(Candidate target) throws IOException, RetryException {
         logger.fine("createSwarmSlave() invoked");
 
@@ -521,6 +530,9 @@ public class SwarmClient {
         }
     }
 
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "False positive for try-with-resources in Java 11")
     protected static synchronized void postLabelRemove(
             String name,
             String labels,
@@ -557,6 +569,9 @@ public class SwarmClient {
         }
     }
 
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "False positive for try-with-resources in Java 11")
     protected static synchronized void postLabelAppend(
             String name,
             String labels,
