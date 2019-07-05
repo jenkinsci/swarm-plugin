@@ -15,9 +15,9 @@ For example:
 
 ```
 java \
-	-Dhttp.proxyHost=127.0.0.1 \
-	-Dhttp.proxyPort=3128 \
-	-jar swarm-client.jar
+    -Dhttp.proxyHost=127.0.0.1 \
+    -Dhttp.proxyPort=3128 \
+    -jar swarm-client.jar
 ```
 
 For more information about these properties, see [the Java
