@@ -521,6 +521,57 @@ public class SwarmClient {
         }
     }
 
+    protected static synchronized void postSlaveOffline(
+            String name,
+            CloseableHttpClient client,
+            HttpClientContext context,
+            Candidate target,
+            String reason)
+            throws IOException, RetryException {
+        HttpPost post =
+                new HttpPost(
+                        target.url
+                                + "plugin/swarm/markSlaveOffline?name="
+                                + name
+                                + "&secret="
+                                + target.secret
+                                + SwarmClient.param("reason", reason));
+
+        post.addHeader("Connection", "close");
+
+        Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, context, target);
+        if (csrfCrumb != null) {
+            post.addHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+        }
+
+        try (CloseableHttpResponse response = client.execute(post, context)) {
+            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                String msg =
+                        String.format(
+                                "Failed to mark slave offline. %s - %s",
+                                response.getStatusLine().getStatusCode(),
+                                EntityUtils.toString(response.getEntity(), UTF_8));
+                logger.log(Level.SEVERE, msg);
+                throw new RetryException(msg);
+            }
+        }
+    }
+
+    public void takeSlaveOfflineAndWait(Candidate target, String reason) throws IOException, RetryException, InterruptedException {
+        logger.log(Level.WARNING, "WARNING: Taking this slave instance down due to: " + reason);
+        URL urlForAuth = new URL(target.getURL());
+        CloseableHttpClient h = createHttpClient(urlForAuth);
+        HttpClientContext context = createHttpClientContext(urlForAuth);
+
+        postSlaveOffline(name, h, context, target, reason);
+
+        while(!getSlaveReadyForShutdown(name, h, context, target)) {
+            logger.info("Slave not ready for shutdown, waiting");
+            Thread.sleep(60000); //TODO: configure this and the total duration
+        }
+    }
+
+
     protected static synchronized void postLabelRemove(
             String name,
             String labels,
@@ -555,6 +606,43 @@ public class SwarmClient {
                 throw new RetryException(msg);
             }
         }
+    }
+
+    private static synchronized boolean getSlaveReadyForShutdown(String name,
+                                                              CloseableHttpClient client,
+                                                              HttpClientContext context,
+                                                              Candidate target) throws IOException, RetryException {
+        HttpGet get =
+                new HttpGet(
+                        target.url
+                                + "plugin/swarm/getSlaveReadyForShutdown?name="
+                                + name);
+
+        get.addHeader("Connection", "close");
+
+        boolean result = false;
+        try (CloseableHttpResponse response = client.execute(get, context)) {
+            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                String msg =
+                        String.format(
+                                "Failed to check slave ready for shutdown. %s - %s",
+                                response.getStatusLine().getStatusCode(),
+                                EntityUtils.toString(response.getEntity(), UTF_8));
+                logger.log(Level.SEVERE, msg);
+                throw new RetryException(msg);
+            }
+            Document xml;
+            try {
+                xml = XmlUtils.parse(response.getEntity().getContent());
+            } catch (SAXException e) {
+                String msg = "Invalid XML received from getSlaveReadyForShutdown";
+                logger.log(Level.SEVERE, msg, e);
+                throw new RetryException(msg);
+            }
+            String statusString = getChildElementString(xml.getDocumentElement(), "readyStatus");
+            result = Boolean.valueOf(statusString);
+        }
+        return result;
     }
 
     protected static synchronized void postLabelAppend(
@@ -772,5 +860,6 @@ public class SwarmClient {
             this.crumb = crumb;
         }
     }
+
 
 }
