@@ -79,9 +79,9 @@ public class PluginImpl extends Plugin {
     private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
         rsp.setContentType("text/xml");
 
-        Writer w = rsp.getCompressedWriter(req);
-        w.write("<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
-        w.close();
+        try (Writer w = rsp.getCompressedWriter(req)) {
+            w.write("<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
+        }
     }
 
     /**
@@ -280,8 +280,8 @@ public class PluginImpl extends Plugin {
         jenkins.checkPermission(SlaveComputer.CREATE);
 
         rsp.setContentType("text/xml");
-        Writer w = rsp.getCompressedWriter(req);
-        w.write("<slaveInfo><swarmSecret>" + getSwarmSecret() + "</swarmSecret></slaveInfo>");
-        w.close();
+        try (Writer w = rsp.getCompressedWriter(req)) {
+            w.write("<slaveInfo><swarmSecret>" + getSwarmSecret() + "</swarmSecret></slaveInfo>");
+        }
     }
 }
