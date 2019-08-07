@@ -26,7 +26,7 @@
       <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-      <slf4j.version>1.7.26</slf4j.version>
+      <slf4j.version>1.7.27</slf4j.version>
     </properties>
 
     <repositories>
