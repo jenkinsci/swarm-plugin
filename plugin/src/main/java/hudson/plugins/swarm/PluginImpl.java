@@ -209,7 +209,7 @@ public class PluginImpl extends Plugin {
                                     + req.getRemoteHost()
                                     + ((description == null || description.isEmpty())
                                             ? ""
-                                            : (" : " + description)),
+                                            : (": " + description)),
                             remoteFsRoot,
                             String.valueOf(executors),
                             mode,

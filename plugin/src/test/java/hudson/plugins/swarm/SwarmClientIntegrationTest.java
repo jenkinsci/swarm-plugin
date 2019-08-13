@@ -353,7 +353,7 @@ public class SwarmClientIntegrationTest {
         assertTrue(
                 node.getNodeDescription(),
                 Pattern.matches(
-                        "Swarm slave from ([a-zA-Z_0-9-\\.]+) : foobar",
+                        "Swarm slave from ([a-zA-Z_0-9-\\.]+): foobar",
                         node.getNodeDescription()));
     }
 
