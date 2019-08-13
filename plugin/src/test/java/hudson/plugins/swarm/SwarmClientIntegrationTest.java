@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.junit.After;
@@ -334,6 +335,26 @@ public class SwarmClientIntegrationTest {
 
     private static Set<String> decode(String labels) {
         return new HashSet<>(Arrays.asList(labels.split("\\s+")));
+    }
+
+    @Test
+    public void defaultDescription() throws Exception {
+        Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder);
+        assertTrue(
+                node.getNodeDescription(),
+                Pattern.matches("Swarm slave from ([a-zA-Z_0-9-\\.]+)", node.getNodeDescription()));
+    }
+
+    @Test
+    public void customDescription() throws Exception {
+        Node node =
+                TestUtils.createSwarmClient(
+                        j, processDestroyer, temporaryFolder, "-description", "foobar");
+        assertTrue(
+                node.getNodeDescription(),
+                Pattern.matches(
+                        "Swarm slave from ([a-zA-Z_0-9-\\.]+) : foobar",
+                        node.getNodeDescription()));
     }
 
     @After
