@@ -202,10 +202,19 @@ public class PluginImpl extends Plugin {
                 }
             }
 
-            SwarmSlave slave = new SwarmSlave(name, "Swarm slave from " + req.getRemoteHost() +
-                    ( (description == null || description.isEmpty()) ? "" : (" : " + description) ),
-                    remoteFsRoot, String.valueOf(executors), mode,
-                    "swarm " + Util.fixNull(labels), nodeProperties);
+            SwarmSlave slave =
+                    new SwarmSlave(
+                            name,
+                            "Swarm slave from "
+                                    + req.getRemoteHost()
+                                    + ((description == null || description.isEmpty())
+                                            ? ""
+                                            : (" : " + description)),
+                            remoteFsRoot,
+                            String.valueOf(executors),
+                            mode,
+                            "swarm " + Util.fixNull(labels),
+                            nodeProperties);
 
             jenkins.addNode(slave);
             rsp.setContentType("text/plain; charset=iso-8859-1");
