@@ -85,7 +85,7 @@ public class LabelFileWatcher implements Runnable {
         return HttpClients.createSystem();
     }
 
-    protected HttpClientContext createHttpClientContext(URL urlForAuth) {
+    private HttpClientContext createHttpClientContext(URL urlForAuth) {
         logger.fine("createHttpClientContext() invoked");
 
         HttpClientContext context = HttpClientContext.create();

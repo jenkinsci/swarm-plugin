@@ -174,7 +174,7 @@ public class SwarmClient {
         return candidates.get(new Random().nextInt(candidates.size()));
     }
 
-    protected void sendBroadcast(DatagramSocket socket) throws IOException {
+    private void sendBroadcast(DatagramSocket socket) throws IOException {
         logger.fine("sendBroadcast() invoked");
 
         byte[] buffer = new byte[128];
@@ -185,7 +185,7 @@ public class SwarmClient {
         socket.send(packet);
     }
 
-    protected List<DatagramPacket> collectBroadcastResponses(DatagramSocket socket) throws IOException, RetryException {
+    private List<DatagramPacket> collectBroadcastResponses(DatagramSocket socket) throws IOException, RetryException {
         List<DatagramPacket> responses = new ArrayList<>();
 
         logger.fine("collectBroadcastResponses() invoked");
@@ -354,7 +354,7 @@ public class SwarmClient {
         return HttpClients.createSystem();
     }
 
-    protected HttpClientContext createHttpClientContext(URL urlForAuth) {
+    private HttpClientContext createHttpClientContext(URL urlForAuth) {
         logger.fine("createHttpClientContext() invoked");
 
         HttpClientContext context = HttpClientContext.create();
@@ -382,7 +382,7 @@ public class SwarmClient {
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
-    protected static synchronized Crumb getCsrfCrumb(
+    private static synchronized Crumb getCsrfCrumb(
             CloseableHttpClient client, HttpClientContext context, Candidate target)
             throws IOException {
         logger.finer("getCsrfCrumb() invoked");
@@ -614,7 +614,7 @@ public class SwarmClient {
         return URLEncoder.encode(value, "UTF-8");
     }
 
-    protected static synchronized String param(String name, String value) throws UnsupportedEncodingException {
+    private static synchronized String param(String name, String value) throws UnsupportedEncodingException {
         logger.finer("param() invoked");
 
         if (value == null) {
@@ -688,7 +688,7 @@ public class SwarmClient {
      *                     the same machine)
      * @return our best effort at a consistent hash
      */
-    public static String hash(File remoteFsRoot) {
+    private static String hash(File remoteFsRoot) {
         logger.config("hash() invoked");
 
         StringBuilder buf = new StringBuilder();

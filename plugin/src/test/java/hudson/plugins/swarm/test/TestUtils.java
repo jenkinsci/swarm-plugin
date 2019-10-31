@@ -98,7 +98,7 @@ public class TestUtils {
      * This is a subset of {@link #createSwarmClient(String, JenkinsRule, ProcessDestroyer,
      * TemporaryFolder, String...)}
      */
-    public static Node waitForNode(String agentName, JenkinsRule j) throws Exception {
+    private static Node waitForNode(String agentName, JenkinsRule j) throws Exception {
         Computer computer = waitOnline(agentName, j.jenkins);
         assertNotNull(computer);
         assertTrue(computer.isOnline());

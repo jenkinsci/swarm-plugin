@@ -47,7 +47,7 @@ public class SwarmClientIntegrationTest {
 
     @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    public static OperatingSystem os = new SystemInfo().getOperatingSystem();
+    private final OperatingSystem os = new SystemInfo().getOperatingSystem();
 
     private final ProcessDestroyer processDestroyer = new ProcessDestroyer();
 
