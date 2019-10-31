@@ -112,7 +112,6 @@ public class TestUtils {
      * TemporaryFolder, String...)} it does not wait for computer to be added on the server.
      *
      * @return a wrapper with useful handles to inspect the result, on success or failure.
-     * @throws Exception
      */
     public static SwarmClientProcessWrapper runSwarmClient(
             String agentName,

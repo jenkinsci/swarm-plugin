@@ -271,7 +271,6 @@ public class SwarmClientIntegrationTest {
 
     /**
      * @return a dedicated unique PID file object for an as yet non-existent file.
-     * @throws IOException
      */
     private static File getPidFile() throws IOException {
         File pidFile = File.createTempFile("swarm-client", ".pid", temporaryFolder.getRoot());
