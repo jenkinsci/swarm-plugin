@@ -1,6 +1,5 @@
 package hudson.plugins.swarm;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -19,6 +18,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -279,7 +279,8 @@ public class SwarmClientIntegrationTest {
     }
 
     private static int readPidFromFile(File pidFile) throws IOException {
-        return NumberUtils.toInt(new String(Files.readAllBytes(pidFile.toPath()), UTF_8));
+        return NumberUtils.toInt(
+                new String(Files.readAllBytes(pidFile.toPath()), StandardCharsets.UTF_8));
     }
 
     private void addRemoveLabelsViaFile(

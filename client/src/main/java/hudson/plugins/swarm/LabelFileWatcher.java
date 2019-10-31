@@ -1,13 +1,12 @@
 package hudson.plugins.swarm;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -59,7 +58,7 @@ public class LabelFileWatcher implements Runnable {
         opts = options;
         this.name = name;
         sFileName = options.labelsFile;
-        sLabels = new String(Files.readAllBytes(Paths.get(sFileName)), UTF_8);
+        sLabels = new String(Files.readAllBytes(Paths.get(sFileName)), StandardCharsets.UTF_8);
         sArgs = args;
         logger.config("Labels loaded: " + sLabels);
     }
@@ -265,14 +264,19 @@ public class LabelFileWatcher implements Runnable {
                 logger.log(Level.WARNING, "LabelFileWatcher InterruptedException occurred.", e);
             }
             try {
-                sTempLabels = new String(Files.readAllBytes(Paths.get(sFileName)), UTF_8);
+                sTempLabels =
+                        new String(
+                                Files.readAllBytes(Paths.get(sFileName)), StandardCharsets.UTF_8);
                 if (sTempLabels.equalsIgnoreCase(sLabels)) {
                     logger.log(Level.FINEST, "Nothing to do. " + sFileName + " has not changed.");
                 } else {
                     try {
                         // try to do the "soft" form of label updating (manipulating the labels through the plugin APIs
                         softLabelUpdate(sTempLabels);
-                        sLabels = new String(Files.readAllBytes(Paths.get(sFileName)), UTF_8);
+                        sLabels =
+                                new String(
+                                        Files.readAllBytes(Paths.get(sFileName)),
+                                        StandardCharsets.UTF_8);
                     } catch (SoftLabelUpdateException e) {
                         // if we're unable to
                         logger.log(Level.WARNING, "WARNING: Normal process, soft label update failed. " + e.getLocalizedMessage() + ", forcing swarm client reboot.  This can be disruptive to Jenkins jobs.  Check your swarm client log files to see why this is happening.");

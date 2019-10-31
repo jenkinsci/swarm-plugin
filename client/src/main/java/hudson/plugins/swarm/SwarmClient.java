@@ -1,7 +1,5 @@
 package hudson.plugins.swarm;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
@@ -22,6 +20,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -95,7 +94,10 @@ public class SwarmClient {
         if (options.labelsFile != null) {
             logger.info("Loading labels from " + options.labelsFile + "...");
             try {
-                String labels = new String(Files.readAllBytes(Paths.get(options.labelsFile)), UTF_8);
+                String labels =
+                        new String(
+                                Files.readAllBytes(Paths.get(options.labelsFile)),
+                                StandardCharsets.UTF_8);
                 options.labels.addAll(Arrays.asList(labels.split(" ")));
                 logger.info("Labels found in file: " + labels);
                 logger.info("Effective label list: " + Arrays.toString(options.labels.toArray()).replaceAll("\n", "").replaceAll("\r", ""));
@@ -132,7 +134,8 @@ public class SwarmClient {
 
         List<Candidate> candidates = new ArrayList<>();
         for (DatagramPacket recv : responses) {
-            String responseXml = new String(recv.getData(), 0, recv.getLength(), UTF_8);
+            String responseXml =
+                    new String(recv.getData(), 0, recv.getLength(), StandardCharsets.UTF_8);
 
             Document xml;
 
@@ -404,7 +407,8 @@ public class SwarmClient {
                 return null;
             }
 
-            String crumbResponseString = EntityUtils.toString(response.getEntity(), UTF_8);
+            String crumbResponseString =
+                    EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
             crumbResponse = crumbResponseString.split(":");
             if (crumbResponse.length != 2) {
                 logger.log(Level.SEVERE, "Unexpected CSRF crumb response: " + crumbResponseString);
@@ -490,7 +494,7 @@ public class SwarmClient {
                         String.format(
                                 "Failed to create a slave on Jenkins, response code: %s%n%s",
                                 response.getStatusLine().getStatusCode(),
-                                EntityUtils.toString(response.getEntity(), UTF_8));
+                                EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
                 logger.log(Level.SEVERE, msg);
                 throw new RetryException(msg);
             }
@@ -562,7 +566,7 @@ public class SwarmClient {
                         String.format(
                                 "Failed to remove slave labels. %s - %s",
                                 response.getStatusLine().getStatusCode(),
-                                EntityUtils.toString(response.getEntity(), UTF_8));
+                                EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
                 logger.log(Level.SEVERE, msg);
                 throw new RetryException(msg);
             }
@@ -601,7 +605,7 @@ public class SwarmClient {
                         String.format(
                                 "Failed to update slave labels. Slave is probably messed up. %s - %s",
                                 response.getStatusLine().getStatusCode(),
-                                EntityUtils.toString(response.getEntity(), UTF_8));
+                                EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
                 logger.log(Level.SEVERE, msg);
                 throw new RetryException(msg);
             }
