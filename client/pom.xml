@@ -26,7 +26,7 @@
       <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-      <slf4j.version>1.7.26</slf4j.version>
+      <slf4j.version>1.7.28</slf4j.version>
     </properties>
 
     <repositories>
@@ -121,17 +121,17 @@
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>remoting</artifactId>
-        <version>3.33</version>
+        <version>3.35</version>
       </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
-        <version>4.5.9</version>
+        <version>4.5.10</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.12</version>
+        <version>1.13</version>
       </dependency>
       <dependency>
         <groupId>commons-lang</groupId>
@@ -163,7 +163,7 @@
       <dependency>
         <groupId>com.github.oshi</groupId>
         <artifactId>oshi-core</artifactId>
-        <version>3.13.3</version>
+        <version>4.1.1</version>
       </dependency>
     </dependencies>
 </project>

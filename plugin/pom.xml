@@ -42,7 +42,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.1.1</version>
           <executions>
             <execution>
               <id>copy</id>
@@ -69,7 +68,6 @@
         <plugin>
           <groupId>org.jenkins-ci.tools</groupId>
           <artifactId>maven-hpi-plugin</artifactId>
-          <version>3.6</version>
           <configuration>
             <warSourceDirectory>${project.build.directory}/${project.artifactId}</warSourceDirectory>
           </configuration>
@@ -103,6 +101,12 @@
                 <groupId>org.jenkins-ci.plugins</groupId>
                 <artifactId>script-security</artifactId>
                 <version>1.39</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>1.7.28</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -160,7 +164,7 @@
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core</artifactId>
-            <version>3.13.3</version>
+            <version>4.1.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

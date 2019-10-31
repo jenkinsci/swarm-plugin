@@ -79,9 +79,9 @@ public class PluginImpl extends Plugin {
     private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
         rsp.setContentType("text/xml");
 
-        Writer w = rsp.getCompressedWriter(req);
-        w.write("<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
-        w.close();
+        try (Writer w = rsp.getCompressedWriter(req)) {
+            w.write("<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
+        }
     }
 
     /**
@@ -202,8 +202,19 @@ public class PluginImpl extends Plugin {
                 }
             }
 
-            SwarmSlave slave = new SwarmSlave(name, "Swarm slave from " + req.getRemoteHost() + " : " + description,
-                    remoteFsRoot, String.valueOf(executors), mode, "swarm " + Util.fixNull(labels), nodeProperties);
+            SwarmSlave slave =
+                    new SwarmSlave(
+                            name,
+                            "Swarm slave from "
+                                    + req.getRemoteHost()
+                                    + ((description == null || description.isEmpty())
+                                            ? ""
+                                            : (": " + description)),
+                            remoteFsRoot,
+                            String.valueOf(executors),
+                            mode,
+                            "swarm " + Util.fixNull(labels),
+                            nodeProperties);
 
             jenkins.addNode(slave);
             rsp.setContentType("text/plain; charset=iso-8859-1");
@@ -280,8 +291,8 @@ public class PluginImpl extends Plugin {
         jenkins.checkPermission(SlaveComputer.CREATE);
 
         rsp.setContentType("text/xml");
-        Writer w = rsp.getCompressedWriter(req);
-        w.write("<slaveInfo><swarmSecret>" + getSwarmSecret() + "</swarmSecret></slaveInfo>");
-        w.close();
+        try (Writer w = rsp.getCompressedWriter(req)) {
+            w.write("<slaveInfo><swarmSecret>" + getSwarmSecret() + "</swarmSecret></slaveInfo>");
+        }
     }
 }
