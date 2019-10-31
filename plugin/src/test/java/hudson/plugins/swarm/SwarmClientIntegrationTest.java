@@ -273,7 +273,7 @@ public class SwarmClientIntegrationTest {
      */
     private static File getPidFile() throws IOException {
         File pidFile = File.createTempFile("swarm-client", ".pid", temporaryFolder.getRoot());
-        pidFile.delete(); // we want the process to create it, here we just want a unique name.
+        Files.delete(pidFile.toPath()); // we want the process to create it, here we just want a unique name.
         return pidFile;
     }
 
@@ -363,6 +363,6 @@ public class SwarmClientIntegrationTest {
         } catch (InterruptedException e) {
             e.printStackTrace(System.err);
         }
-        getPidFile().delete();
+        Files.deleteIfExists(getPidFile().toPath());
     }
 }
