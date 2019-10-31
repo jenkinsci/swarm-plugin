@@ -54,7 +54,7 @@ public class TestUtils {
         Computer computer = getComputer(agentName, jenkins);
         while (computer == null) {
             Thread.sleep(100);
-            computer = computer = getComputer(agentName, jenkins);
+            computer = getComputer(agentName, jenkins);
         }
 
         while (!computer.isOnline()) {
