@@ -1,11 +1,10 @@
 package hudson.plugins.swarm;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Level;
@@ -64,7 +63,10 @@ public class Client {
             if (pidFile.exists()) {
                 int oldPid =
                         NumberUtils.toInt(
-                                new String(Files.readAllBytes(pidFile.toPath()), UTF_8), 0);
+                                new String(
+                                        Files.readAllBytes(pidFile.toPath()),
+                                        StandardCharsets.UTF_8),
+                                0);
                 // check if this process is running
                 if (oldPid > 0) {
                     OSProcess oldProcess = new SystemInfo().getOperatingSystem().getProcess(oldPid);
@@ -86,7 +88,7 @@ public class Client {
             }
             pidFile.deleteOnExit();
             try {
-                Files.write(pidFile.toPath(), pid.getBytes(UTF_8));
+                Files.write(pidFile.toPath(), pid.getBytes(StandardCharsets.UTF_8));
             } catch (IOException exception) {
                 logger.severe("Failed writing PID file: " + options.pidFile);
                 System.exit(1);
@@ -100,7 +102,11 @@ public class Client {
         }
         // read pass from file if no other password was specified
         if (options.password == null && options.passwordFile != null) {
-            options.password = new String(Files.readAllBytes(Paths.get(options.passwordFile)), UTF_8).trim();
+            options.password =
+                    new String(
+                                    Files.readAllBytes(Paths.get(options.passwordFile)),
+                                    StandardCharsets.UTF_8)
+                            .trim();
         }
 
 

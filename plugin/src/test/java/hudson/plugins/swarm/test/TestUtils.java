@@ -54,7 +54,7 @@ public class TestUtils {
         Computer computer = getComputer(agentName, jenkins);
         while (computer == null) {
             Thread.sleep(100);
-            computer = computer = getComputer(agentName, jenkins);
+            computer = getComputer(agentName, jenkins);
         }
 
         while (!computer.isOnline()) {
@@ -98,7 +98,7 @@ public class TestUtils {
      * This is a subset of {@link #createSwarmClient(String, JenkinsRule, ProcessDestroyer,
      * TemporaryFolder, String...)}
      */
-    public static Node waitForNode(String agentName, JenkinsRule j) throws Exception {
+    private static Node waitForNode(String agentName, JenkinsRule j) throws Exception {
         Computer computer = waitOnline(agentName, j.jenkins);
         assertNotNull(computer);
         assertTrue(computer.isOnline());
@@ -112,7 +112,6 @@ public class TestUtils {
      * TemporaryFolder, String...)} it does not wait for computer to be added on the server.
      *
      * @return a wrapper with useful handles to inspect the result, on success or failure.
-     * @throws Exception
      */
     public static SwarmClientProcessWrapper runSwarmClient(
             String agentName,
