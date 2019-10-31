@@ -15,7 +15,6 @@ import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -226,7 +225,7 @@ public class SwarmClientIntegrationTest {
     @Test
     public void pidFileForStaleProcessIsIgnored() throws Exception {
         File pidFile = getPidFile();
-        Files.write(pidFile.toPath(), "66000".getBytes());
+        Files.write(pidFile.toPath(), "66000".getBytes(StandardCharsets.UTF_8));
 
         // PID file should be ignored since the process isn't running.
         TestUtils.createSwarmClient(
@@ -314,7 +313,7 @@ public class SwarmClientIntegrationTest {
 
         String origLabels = node.getLabelString();
 
-        try (Writer writer = new FileWriter(labelsFile)) {
+        try (Writer writer = Files.newBufferedWriter(labelsFile.toPath(), StandardCharsets.UTF_8)) {
             writer.write(encode(labelsToAdd));
         }
 
