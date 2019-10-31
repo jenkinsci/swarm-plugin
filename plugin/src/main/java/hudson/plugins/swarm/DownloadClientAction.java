@@ -14,14 +14,17 @@ import org.kohsuke.stapler.StaplerResponse;
 @Extension
 public class DownloadClientAction implements UnprotectedRootAction {
 
+    @Override
     public String getIconFileName() {
         return null;
     }
 
+    @Override
     public String getDisplayName() {
         return null;
     }
 
+    @Override
     public String getUrlName() {
         return "swarm";
     }
