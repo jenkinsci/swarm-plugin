@@ -41,7 +41,7 @@ import org.kohsuke.stapler.StaplerResponse;
 public class PluginImpl extends Plugin {
 
     private Node getNodeByName(String name, StaplerResponse rsp) throws IOException {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.get();
 
         try {
             Node n = jenkins.getNode(name);
@@ -156,7 +156,7 @@ public class PluginImpl extends Plugin {
         }
 
         try {
-            Jenkins jenkins = Jenkins.getInstance();
+            Jenkins jenkins = Jenkins.get();
 
             jenkins.checkPermission(SlaveComputer.CREATE);
 
@@ -294,7 +294,7 @@ public class PluginImpl extends Plugin {
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
     public void doSlaveInfo(StaplerRequest req, StaplerResponse rsp) throws IOException {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.get();
         jenkins.checkPermission(SlaveComputer.CREATE);
 
         rsp.setContentType("text/xml");

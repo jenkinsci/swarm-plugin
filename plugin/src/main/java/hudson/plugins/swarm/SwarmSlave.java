@@ -83,7 +83,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
             final Slave node = computer.getNode();
             if (node != null) {
                 try {
-                    Jenkins.getInstance().removeNode(node);
+                    Jenkins.get().removeNode(node);
                 } catch (IOException e) {
                     e.printStackTrace(listener.error(e.getMessage()));
                 }

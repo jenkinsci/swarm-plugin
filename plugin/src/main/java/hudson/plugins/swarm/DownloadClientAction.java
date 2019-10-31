@@ -32,7 +32,7 @@ public class DownloadClientAction implements UnprotectedRootAction {
     // serve static resources
     @Restricted(NoExternalUse.class)
     public void doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
-        Plugin plugin = Jenkins.getInstance().getPlugin("swarm");
+        Plugin plugin = Jenkins.get().getPlugin("swarm");
         if (plugin != null) {
             plugin.doDynamic(req, rsp);
         }
