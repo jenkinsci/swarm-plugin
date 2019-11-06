@@ -1,0 +1,18 @@
+version: 1
+update_configs:
+- package_manager: "java:maven"
+  directory: "/"
+  update_schedule: "daily"
+  default_reviewers:
+    - "basil"
+  default_assignees:
+    - "basil"
+  ignored_updates:
+    - match:
+        dependency_name: "org.jenkins-ci.main:jenkins-core"
+    - match:
+        dependency_name: "org.jenkins-ci:symbol-annotation"
+    - match:
+        dependency_name: "org.jenkins-ci.plugins*"
+    - match:
+        dependency_name: "io.jenkins.plugins*"

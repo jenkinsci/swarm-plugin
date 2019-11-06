@@ -41,6 +41,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
         super(name, nodeDescription, remoteFS, numExecutors, mode, labelString, launcher, retentionStrategy, nodeProperties);
     }
 
+    @Override
     public Node asNode() {
         return this;
     }
@@ -48,6 +49,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
     @Extension
     public static final class DescriptorImpl extends SlaveDescriptor {
 
+        @Override
         public String getDisplayName() {
             return "Swarm Slave";
         }
@@ -81,7 +83,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
             final Slave node = computer.getNode();
             if (node != null) {
                 try {
-                    Jenkins.getInstance().removeNode(node);
+                    Jenkins.get().removeNode(node);
                 } catch (IOException e) {
                     e.printStackTrace(listener.error(e.getMessage()));
                 }

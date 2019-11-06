@@ -1,6 +1,5 @@
 package hudson.plugins.swarm;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -16,13 +15,14 @@ import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.junit.After;
@@ -46,7 +46,7 @@ public class SwarmClientIntegrationTest {
 
     @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    public static OperatingSystem os = new SystemInfo().getOperatingSystem();
+    private final OperatingSystem os = new SystemInfo().getOperatingSystem();
 
     private final ProcessDestroyer processDestroyer = new ProcessDestroyer();
 
@@ -225,7 +225,7 @@ public class SwarmClientIntegrationTest {
     @Test
     public void pidFileForStaleProcessIsIgnored() throws Exception {
         File pidFile = getPidFile();
-        Files.write(pidFile.toPath(), "66000".getBytes());
+        Files.write(pidFile.toPath(), "66000".getBytes(StandardCharsets.UTF_8));
 
         // PID file should be ignored since the process isn't running.
         TestUtils.createSwarmClient(
@@ -270,16 +270,16 @@ public class SwarmClientIntegrationTest {
 
     /**
      * @return a dedicated unique PID file object for an as yet non-existent file.
-     * @throws IOException
      */
     private static File getPidFile() throws IOException {
         File pidFile = File.createTempFile("swarm-client", ".pid", temporaryFolder.getRoot());
-        pidFile.delete(); // we want the process to create it, here we just want a unique name.
+        Files.delete(pidFile.toPath()); // we want the process to create it, here we just want a unique name.
         return pidFile;
     }
 
     private static int readPidFromFile(File pidFile) throws IOException {
-        return NumberUtils.toInt(new String(Files.readAllBytes(pidFile.toPath()), UTF_8));
+        return NumberUtils.toInt(
+                new String(Files.readAllBytes(pidFile.toPath()), StandardCharsets.UTF_8));
     }
 
     private void addRemoveLabelsViaFile(
@@ -313,7 +313,7 @@ public class SwarmClientIntegrationTest {
 
         String origLabels = node.getLabelString();
 
-        try (Writer writer = new FileWriter(labelsFile)) {
+        try (Writer writer = Files.newBufferedWriter(labelsFile.toPath(), StandardCharsets.UTF_8)) {
             writer.write(encode(labelsToAdd));
         }
 
@@ -336,6 +336,26 @@ public class SwarmClientIntegrationTest {
         return new HashSet<>(Arrays.asList(labels.split("\\s+")));
     }
 
+    @Test
+    public void defaultDescription() throws Exception {
+        Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder);
+        assertTrue(
+                node.getNodeDescription(),
+                Pattern.matches("Swarm slave from ([a-zA-Z_0-9-\\.]+)", node.getNodeDescription()));
+    }
+
+    @Test
+    public void customDescription() throws Exception {
+        Node node =
+                TestUtils.createSwarmClient(
+                        j, processDestroyer, temporaryFolder, "-description", "foobar");
+        assertTrue(
+                node.getNodeDescription(),
+                Pattern.matches(
+                        "Swarm slave from ([a-zA-Z_0-9-\\.]+): foobar",
+                        node.getNodeDescription()));
+    }
+
     @After
     public void tearDown() throws IOException {
         try {
@@ -343,6 +363,6 @@ public class SwarmClientIntegrationTest {
         } catch (InterruptedException e) {
             e.printStackTrace(System.err);
         }
-        getPidFile().delete();
+        Files.deleteIfExists(getPidFile().toPath());
     }
 }

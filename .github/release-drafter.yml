@@ -1,0 +1,2 @@
+_extends: .github
+tag-template: swarm-plugin-$NEXT_MINOR_VERSION

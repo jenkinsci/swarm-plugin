@@ -25,49 +25,49 @@ THE SOFTWARE.
 -->
 
 <service_bundle type="manifest" name="Jenkins">
-	<service name="application/hudson" type="service" version="1">
-		
-		<create_default_instance enabled="true" />
-		
-		<!-- Only one instance of Jenkins should ever run per server -->
-		<single_instance />
-		
-		<dependency name="multi-user-server" type="service" grouping="require_all" restart_on="none">
-			<service_fmri value="svc:/milestone/multi-user-server" />
-		</dependency>
+    <service name="application/hudson" type="service" version="1">
 
-		<method_context>
-			<method_credential user='root' group='root' />
-			<method_environment>
-				<envvar name='PATH' value='/usr/bin:/usr/sbin:/usr/ccs/bin:/usr/local/bin:/usr/local/sbin:/usr/sfw/bin' />
-			</method_environment>
-		</method_context>
+        <create_default_instance enabled="true" />
 
-		<!-- Set the HUDSON_HOME env variable, and run the war file in /apps/hudson/hudson.war -->
-		<exec_method type="method" name="start"	exec="/lib/svc/method/svc-hudson-swarm-client" timeout_seconds="0"/>
-		<exec_method type="method" name="stop" exec=":kill -TERM" timeout_seconds="30"/>
+        <!-- Only one instance of Jenkins should ever run per server -->
+        <single_instance />
 
-		<!-- We are going to be kicking off a single child process so we want Wait mode-->
-		<property_group name='startd' type='framework'>
-			<propval name='duration' type='astring' value='child' />
-		</property_group>
+        <dependency name="multi-user-server" type="service" grouping="require_all" restart_on="none">
+            <service_fmri value="svc:/milestone/multi-user-server" />
+        </dependency>
 
-		<property_group name='hudson' type='application'>
-			<!-- command line option to the swarm client. "java -jar /usr/local/bin/hudson-swarm-client.jar" to see the list -->
-			<propval name='options' type='astring' value='' />
-			<!-- JVM options -->
-			<propval name='jvm_options' type='astring' value='-Xmx256m' />
-		</property_group>
+        <method_context>
+            <method_credential user='root' group='root' />
+            <method_environment>
+                <envvar name='PATH' value='/usr/bin:/usr/sbin:/usr/ccs/bin:/usr/local/bin:/usr/local/sbin:/usr/sfw/bin' />
+            </method_environment>
+        </method_context>
 
-		<stability value="Unstable" />
+        <!-- Set the HUDSON_HOME env variable, and run the war file in /apps/hudson/hudson.war -->
+        <exec_method type="method" name="start" exec="/lib/svc/method/svc-hudson-swarm-client" timeout_seconds="0"/>
+        <exec_method type="method" name="stop" exec=":kill -TERM" timeout_seconds="30"/>
 
-		<template>
-			<common_name>
-				<loctext xml:lang='C'>Jenkins Swarm Client</loctext>
-			</common_name>
-			<documentation>
-				<doc_link name='jenkins-ci.org' uri='http://wiki.jenkins-ci.org/display/JENKINS/Swarm+Plugin' />
-			</documentation>
-		</template>
-	</service>
+        <!-- We are going to be kicking off a single child process so we want Wait mode-->
+        <property_group name='startd' type='framework'>
+            <propval name='duration' type='astring' value='child' />
+        </property_group>
+
+        <property_group name='hudson' type='application'>
+            <!-- command line option to the swarm client. "java -jar /usr/local/bin/hudson-swarm-client.jar" to see the list -->
+            <propval name='options' type='astring' value='' />
+            <!-- JVM options -->
+            <propval name='jvm_options' type='astring' value='-Xmx256m' />
+        </property_group>
+
+        <stability value="Unstable" />
+
+        <template>
+            <common_name>
+                <loctext xml:lang='C'>Jenkins Swarm Client</loctext>
+            </common_name>
+            <documentation>
+                <doc_link name='jenkins-ci.org' uri='http://wiki.jenkins-ci.org/display/JENKINS/Swarm+Plugin' />
+            </documentation>
+        </template>
+    </service>
 </service_bundle>
