@@ -221,6 +221,12 @@ public class SwarmClient {
             args.add("-credentials");
             args.add(options.username + ":" + options.password);
         }
+
+        if (!options.disableWorkDir) {
+            args.add("-workDir");
+            args.add(".");
+        }
+
         args.add("-headless");
         args.add("-noreconnect");
 

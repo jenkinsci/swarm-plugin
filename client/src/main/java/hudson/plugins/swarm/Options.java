@@ -125,4 +125,8 @@ public class Options {
                     "File to write PID to. The client will refuse to start if this file exists "
                             + "and the previous process is still running.")
     public String pidFile;
+
+    @Option(name = "-disableWorkDir",
+            usage = "Disable Remoting Working Directory and run agent in legacy mode.")
+    public boolean disableWorkDir = false;
 }

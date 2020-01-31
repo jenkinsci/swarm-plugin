@@ -49,6 +49,9 @@ $ java -jar swarm-client.jar --help
                                           (default: false)
  -disableSslVerification                : Disables SSL verification in the
                                           HttpClient. (default: false)
+ -disableWorkDir                        : Disable Remoting Working Directory
+                                          and run agent in legacy mode.
+                                          (default: false)
  -e (--env)                             : An environment variable to be defined
                                           on this slave. It is specified as
                                           'key=value'. Multiple variables are
