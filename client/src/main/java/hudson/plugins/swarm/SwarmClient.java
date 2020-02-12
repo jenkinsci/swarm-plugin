@@ -286,7 +286,7 @@ public class SwarmClient {
         List<String> jnlpArgs = Collections.emptyList();
 
         try {
-            launcher.slaveJnlpURL = new URL(target.url + "computer/" + name + "/slave-agent.jnlp");
+            launcher.agentJnlpURL = new URL(target.url + "computer/" + name + "/slave-agent.jnlp");
         } catch (MalformedURLException e) {
             e.printStackTrace();
             logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + target.url, e);
@@ -295,7 +295,7 @@ public class SwarmClient {
 
         if (options.username != null && options.password != null) {
             launcher.auth = options.username + ":" + options.password;
-            launcher.slaveJnlpCredentials = options.username + ":" + options.password;
+            launcher.agentJnlpCredentials = options.username + ":" + options.password;
         }
 
         try {
