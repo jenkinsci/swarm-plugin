@@ -19,8 +19,10 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.commons.lang.RandomStringUtils;
@@ -354,6 +356,36 @@ public class SwarmClientIntegrationTest {
                 Pattern.matches(
                         "Swarm slave from ([a-zA-Z_0-9-\\.]+): foobar",
                         node.getNodeDescription()));
+    }
+
+    @Test
+    public void missingMasterOption() throws Exception {
+        File swarmClientJar =
+                File.createTempFile("swarm-client", ".jar", temporaryFolder.getRoot());
+        TestUtils.download(j.getURL(), swarmClientJar);
+
+        List<String> command = new ArrayList<>();
+        command.add(
+                System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
+        command.add("-Djava.awt.headless=true");
+        command.add("-jar");
+        command.add(swarmClientJar.toString());
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+        File stdout = File.createTempFile("stdout", ".log", temporaryFolder.getRoot());
+        pb.redirectOutput(stdout);
+        File stderr = File.createTempFile("stderr", ".log", temporaryFolder.getRoot());
+        pb.redirectError(stderr);
+        Process process = pb.start();
+        processDestroyer.record(process);
+        process.waitFor();
+        assertFalse("Client should fail to start", process.isAlive());
+        assertEquals("Exit code should be 1", 1, process.exitValue());
+        assertTrue(
+                "Log message mentions 'Option \"-master\" is required' in: "
+                        + Files.readAllLines(stderr.toPath()),
+                Files.readAllLines(stderr.toPath()).stream()
+                        .anyMatch(line -> line.contains("Option \"-master\" is required")));
     }
 
     @After

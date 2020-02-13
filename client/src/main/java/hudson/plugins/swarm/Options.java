@@ -24,7 +24,7 @@ public class Options {
     @Option(name = "-executors", usage = "Number of executors")
     public int executors = Runtime.getRuntime().availableProcessors();
 
-    @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'. If this option is specified, auto-discovery will be skipped")
+    @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'.", required = true)
     public String master;
 
     @Option(name = "-tunnel", usage = "Connect to the specified host and port, instead of connecting directly to Jenkins. " +
@@ -54,9 +54,6 @@ public class Options {
 
     @Option(name = "-maxRetryInterval", usage = "Max time to wait before retry in seconds. Default is 60 seconds.")
     public int maxRetryInterval = 60;
-
-    @Option(name = "-autoDiscoveryAddress", usage = "Use this address for UDP-based auto-discovery (default 255.255.255.255)")
-    public String autoDiscoveryAddress = "255.255.255.255";
 
     @Option(name = "-disableSslVerification", usage = "Disables SSL verification in the HttpClient.")
     public boolean disableSslVerification;

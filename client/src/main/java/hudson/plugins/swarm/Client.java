@@ -18,14 +18,6 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 
-/**
- * Swarm client.
- * <p>
- * Discovers nearby Jenkins via UDP broadcast, and picks eligible one randomly and
- * joins it.
- *
- * @author Kohsuke Kawaguchi
- */
 public class Client {
 
     private static final Logger logger = Logger.getLogger(Client.class.getPackage().getName());
@@ -155,12 +147,7 @@ public class Client {
         int retry = 0;
         while (true) {
             try {
-                if (options.master == null) {
-                    logger.info("No Jenkins master supplied on command line, performing auto-discovery");
-                    target = swarmClient.discoverFromBroadcast();
-                } else {
-                    target = swarmClient.discoverFromMasterUrl();
-                }
+                target = swarmClient.discoverFromMasterUrl();
 
                 if (options.password == null && options.username == null) {
                     swarmClient.verifyThatUrlIsHudson(target);
