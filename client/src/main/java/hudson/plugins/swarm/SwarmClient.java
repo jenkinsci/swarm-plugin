@@ -3,13 +3,10 @@ package hudson.plugins.swarm;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -17,7 +14,6 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -38,7 +34,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.KeyManager;
@@ -115,104 +110,6 @@ public class SwarmClient {
 
     public String getName() {
         return name;
-    }
-
-    public Candidate discoverFromBroadcast() throws IOException, RetryException {
-        logger.config("discoverFromBroadcast() invoked");
-
-        DatagramSocket socket = new DatagramSocket();
-        socket.setBroadcast(true);
-
-        sendBroadcast(socket);
-        List<DatagramPacket> responses = collectBroadcastResponses(socket);
-        return getCandidateFromDatagramResponses(responses);
-    }
-
-    private Candidate getCandidateFromDatagramResponses(List<DatagramPacket> responses)
-            throws RetryException {
-        logger.finer("getCandidateFromDatagramResponses() invoked");
-
-        List<Candidate> candidates = new ArrayList<>();
-        for (DatagramPacket recv : responses) {
-            String responseXml =
-                    new String(recv.getData(), 0, recv.getLength(), StandardCharsets.UTF_8);
-
-            Document xml;
-
-            String address = printable(recv.getAddress());
-
-            try (InputStream inputStream = new ByteArrayInputStream(recv.getData())) {
-                xml = XmlUtils.parse(inputStream);
-            } catch (IOException | SAXException e) {
-                logger.severe("Invalid response XML from " + address + ": " + responseXml);
-                continue;
-            }
-            if (!StringUtils.isBlank(options.candidateTag)) {
-                logger.finer(address + options.candidateTag);
-                continue;
-            }
-            String swarm = getChildElementString(xml.getDocumentElement(), "swarm");
-            if (swarm == null) {
-                logger.warning(address + " doesn't support swarm");
-                continue;
-            }
-
-            String url = options.master == null ? getChildElementString(
-                    xml.getDocumentElement(), "url") : options.master;
-
-            if (url == null) {
-                logger.warning("Jenkins master at '" + address + "' doesn't have a valid Jenkins URL configuration set. Please go to <jenkins url>/configure and set a valid URL.");
-                continue;
-            }
-            candidates.add(new Candidate(url, swarm));
-        }
-
-        if (candidates.isEmpty()) {
-            logger.severe("No nearby Jenkins supports swarming");
-            throw new RetryException("No nearby Jenkins supports swarming");
-        }
-
-        logger.finer("Found " + candidates.size() + " eligible Jenkins.");
-
-        return candidates.get(new Random().nextInt(candidates.size()));
-    }
-
-    private void sendBroadcast(DatagramSocket socket) throws IOException {
-        logger.fine("sendBroadcast() invoked");
-
-        byte[] buffer = new byte[128];
-        Arrays.fill(buffer, (byte) 1);
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-        packet.setAddress(InetAddress.getByName(options.autoDiscoveryAddress));
-        packet.setPort(Integer.getInteger("jenkins.udp", Integer.getInteger("hudson.udp", 33848)));
-        socket.send(packet);
-    }
-
-    private List<DatagramPacket> collectBroadcastResponses(DatagramSocket socket) throws IOException, RetryException {
-        List<DatagramPacket> responses = new ArrayList<>();
-
-        logger.fine("collectBroadcastResponses() invoked");
-
-        // wait for 5 secs to gather up all the replies
-        long limit = System.currentTimeMillis() + (5 * 1000);
-        while (true) {
-            try {
-                socket.setSoTimeout(Math.max(1, (int) (limit - System.currentTimeMillis())));
-
-                DatagramPacket recv = new DatagramPacket(new byte[2048], 2048);
-                socket.receive(recv);
-                responses.add(recv);
-            } catch (SocketTimeoutException e) {
-                // timed out
-                logger.log(Level.FINEST, "SocketTimeoutException occurred, may be normal.", e);
-                if (responses.isEmpty()) {
-                    String msg = "Failed to receive a reply to broadcast.";
-                    logger.log(Level.WARNING, msg, e);
-                    throw new RetryException(msg);
-                }
-                return responses;
-            }
-        }
     }
 
     @SuppressFBWarnings(

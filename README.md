@@ -5,25 +5,22 @@
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/swarm.svg)](https://plugins.jenkins.io/swarm)
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=jenkinsci/swarm-plugin)](https://dependabot.com)
 
-Swarm enables nodes to auto-discover a nearby Jenkins master and join it
-automatically, thereby forming an ad-hoc cluster. This plugin makes it
-easier to auto-scale a Jenkins cluster by spinning up and tearing down
-new nodes, since no manual intervention is required to make them join or
-leave the cluster.
+Swarm enables nodes to join a nearby Jenkins master, thereby forming an
+ad-hoc cluster. This plugin makes it easier to scale a Jenkins cluster
+by spinning up and tearing down new nodes.
 
 This plugin consists of two pieces:
 
- 1. A self-contained client that discovers a nearby Jenkins (via a UDP
-    broadcast) and joins it.
+ 1. A self-contained client that can join an existing Jenkins master.
  2. A plugin that needs to be installed on Jenkins master to accept
     Swarm clients.
 
 With the Swarm client, a person who is willing to contribute some of his
 computing power to the cluster just needs to run a virtual machine with
-the Swarm client, and the cluster automatically gets additional agent.
-Because the Swarm client is running on a separate VM, there is no need
-to worry about the builds/tests interfering with the host system or
-altering its settings unexpectedly.
+the Swarm client and the cluster gets an additional agent. Because the
+Swarm client is running on a separate VM, there is no need to worry
+about the builds/tests interfering with the host system or altering its
+settings unexpectedly.
 
 ## Usage
 
@@ -44,10 +41,6 @@ altering its settings unexpectedly.
 
 ```
 $ java -jar swarm-client.jar --help
- -autoDiscoveryAddress VAL              : Use this address for UDP-based
-                                          auto-discovery (default
-                                          255.255.255.255) (default:
-                                          255.255.255.255)
  -candidateTag VAL                      : Show swarm candidate with tag only
  -deleteExistingClients                 : Deletes any existing slave with the
                                           same name. (default: false)
@@ -71,9 +64,7 @@ $ java -jar swarm-client.jar --help
                                           list of labels.  If the file changes,
                                           the client is restarted.
  -master VAL                            : The complete target Jenkins URL like
-                                          'http://server:8080/jenkins/'. If
-                                          this option is specified,
-                                          auto-discovery will be skipped
+                                          'http://server:8080/jenkins/'.
  -maxRetryInterval N                    : Max time to wait before retry in
                                           seconds. Default is 60 seconds.
                                           (default: 60)
