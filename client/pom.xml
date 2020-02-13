@@ -12,13 +12,13 @@
     <groupId>org.jenkins-ci.plugins</groupId>
     <packaging>jar</packaging>
     <name>Jenkins Swarm Plugin Client</name>
-    <version>3.18</version>
+    <version>3.19-SNAPSHOT</version>
 
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/swarm-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/swarm-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/swarm-plugin</url>
-        <tag>swarm-plugin-3.18</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
