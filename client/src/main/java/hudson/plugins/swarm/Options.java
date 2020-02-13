@@ -55,6 +55,9 @@ public class Options {
     @Option(name = "-maxRetryInterval", usage = "Max time to wait before retry in seconds. Default is 60 seconds.")
     public int maxRetryInterval = 60;
 
+    @Option(name = "-useJitter", usage = "Use a continually randomized reconnect interval between zero and retryInterval, still subject to retryBackOffStrategy and maxRetryInterval.")
+    public boolean useJitter;
+
     @Option(name = "-autoDiscoveryAddress", usage = "Use this address for UDP-based auto-discovery (default 255.255.255.255)")
     public String autoDiscoveryAddress = "255.255.255.255";
 
