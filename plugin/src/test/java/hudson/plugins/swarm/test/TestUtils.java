@@ -23,7 +23,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 public class TestUtils {
 
     /** Download the Swarm Client from the given Jenkins URL into the given temporary directory. */
-    private static void download(URL jenkinsUrl, File output) throws Exception {
+    public static void download(URL jenkinsUrl, File output) throws Exception {
         URL input =
                 jenkinsUrl.toURI().resolve(new URI(null, "swarm/swarm-client.jar", null)).toURL();
         FileUtils.copyURLToFile(input, output);

@@ -24,7 +24,7 @@ public class Options {
     @Option(name = "-executors", usage = "Number of executors")
     public int executors = Runtime.getRuntime().availableProcessors();
 
-    @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'.")
+    @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'.", required = true)
     public String master;
 
     @Option(name = "-tunnel", usage = "Connect to the specified host and port, instead of connecting directly to Jenkins. " +
