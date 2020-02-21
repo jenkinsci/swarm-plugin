@@ -224,7 +224,7 @@ public class SwarmClient {
 
         if (!options.disableWorkDir) {
             args.add("-workDir");
-            args.add(".");
+            args.add(options.workDir.getPath());
         }
 
         args.add("-headless");

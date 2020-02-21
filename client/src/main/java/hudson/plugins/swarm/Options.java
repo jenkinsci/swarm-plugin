@@ -129,4 +129,9 @@ public class Options {
     @Option(name = "-disableWorkDir",
             usage = "Disable Remoting Working Directory and run agent in legacy mode.")
     public boolean disableWorkDir = false;
+
+    @Option(name = "-workDir",
+            usage = "Remoting working directory"
+    )
+    public File workDir = remoteFsRoot;
 }

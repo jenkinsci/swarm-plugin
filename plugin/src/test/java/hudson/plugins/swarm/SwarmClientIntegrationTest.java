@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -386,6 +387,33 @@ public class SwarmClientIntegrationTest {
                         + Files.readAllLines(stderr.toPath()),
                 Files.readAllLines(stderr.toPath()).stream()
                         .anyMatch(line -> line.contains("Option \"-master\" is required")));
+    }
+
+    @Test
+    public void workDirEnabledByDefaultWithFsRootAsDefaultPath() throws Exception {
+        final File fsRootPath = temporaryFolder.newFolder("fsrootdir");
+        Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
+                "-fsroot", fsRootPath.getAbsolutePath());
+
+        assertTrue("Workdir created by default", Files.isDirectory(new File(fsRootPath, "remoting").toPath()));
+    }
+
+    @Test
+    public void workDirWithCustomPath() throws Exception {
+        final File workDirPath = temporaryFolder.newFolder("customworkdir");
+        Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
+                "-workDir", workDirPath.getAbsolutePath());
+
+        assertTrue("Custom workdir created", Files.isDirectory(new File(workDirPath, "remoting").toPath()));
+    }
+
+    @Test
+    public void disableWorkDirRunsInLegacyMode() throws Exception {
+        final File fsRootPath = temporaryFolder.newFolder("fsrootdir");
+        Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
+                "-fsroot", fsRootPath.getAbsolutePath(), "-disableWorkDir");
+
+        assertFalse("Workdir not created", Files.isDirectory(new File(fsRootPath, "remoting").toPath()));
     }
 
     @After
