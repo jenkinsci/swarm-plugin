@@ -127,11 +127,13 @@ public class Options {
     public String pidFile;
 
     @Option(name = "-disableWorkDir",
-            usage = "Disable Remoting Working Directory and run agent in legacy mode.")
+            usage = "Disable Remoting Working Directory and run agent in legacy mode.",
+            forbids = {"-workDir"})
     public boolean disableWorkDir = false;
 
     @Option(name = "-workDir",
-            usage = "Remoting working directory"
+            usage = "Remoting working directory.",
+            forbids = {"-disableWorkDir"}
     )
     public File workDir = remoteFsRoot;
 }
