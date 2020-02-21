@@ -135,5 +135,5 @@ public class Options {
             usage = "Remoting working directory.",
             forbids = {"-disableWorkDir"}
     )
-    public File workDir = remoteFsRoot;
+    public File workDir;
 }

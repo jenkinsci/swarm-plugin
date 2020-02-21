@@ -49,6 +49,8 @@ public class SwarmClientIntegrationTest {
 
     @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
 
+    @Rule public TemporaryFolder temporaryRemotingFolder = new TemporaryFolder();
+
     private final OperatingSystem os = new SystemInfo().getOperatingSystem();
 
     private final ProcessDestroyer processDestroyer = new ProcessDestroyer();
@@ -391,7 +393,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void workDirEnabledByDefaultWithFsRootAsDefaultPath() throws Exception {
-        final File fsRootPath = temporaryFolder.newFolder("fsrootdir");
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
         Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
                 "-fsroot", fsRootPath.getAbsolutePath());
 
@@ -400,7 +402,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void workDirWithCustomPath() throws Exception {
-        final File workDirPath = temporaryFolder.newFolder("customworkdir");
+        final File workDirPath = temporaryRemotingFolder.newFolder("customworkdir");
         Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
                 "-workDir", workDirPath.getAbsolutePath());
 
@@ -409,7 +411,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void disableWorkDirRunsInLegacyMode() throws Exception {
-        final File fsRootPath = temporaryFolder.newFolder("fsrootdir");
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
         Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
                 "-fsroot", fsRootPath.getAbsolutePath(), "-disableWorkDir");
 
