@@ -137,6 +137,7 @@ public class TestUtils {
         Collections.addAll(command, args);
 
         ProcessBuilder pb = new ProcessBuilder(command);
+        pb.directory(temporaryFolder.newFolder());
         pb.environment().put("ON_SWARM_CLIENT", "true");
         File stdout = File.createTempFile("stdout", ".log", temporaryFolder.getRoot());
         pb.redirectOutput(stdout);
