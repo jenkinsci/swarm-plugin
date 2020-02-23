@@ -56,10 +56,14 @@ $ java -jar swarm-client.jar --help
                                           on this slave. It is specified as
                                           'key=value'. Multiple variables are
                                           allowed.
- -executors N                           : Number of executors (default: 8)
+ -executors N                           : Number of executors (default: 16)
+ -failIfWorkDirIsMissing                : Fail if workDir or internalDir are
+                                          missing. (default: false)
  -fsroot FILE                           : Directory where Jenkins places files
                                           (default: .)
- -help (--help)                         : Show the help screen (default: false)
+ -help (--help)                         : Show the help screen (default: true)
+ -internalDir FILE                      : Remoting internal directory.
+ -jar-cache FILE                        : Remoting jar cache directory.
  -labels VAL                            : Whitespace-separated list of labels
                                           to be assigned for this slave.
                                           Multiple options are allowed.
@@ -127,4 +131,5 @@ $ java -jar swarm-client.jar --help
                                           behavior
  -username VAL                          : The Jenkins username for
                                           authentication
+ -workDir FILE                          : Remoting working directory.
 ```
