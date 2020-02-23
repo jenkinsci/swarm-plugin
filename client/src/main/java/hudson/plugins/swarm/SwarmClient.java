@@ -232,6 +232,10 @@ public class SwarmClient {
                 args.add("-internalDir");
                 args.add(options.internalDir.getPath());
             }
+
+            if (options.failIfWokDirIsMissing) {
+                args.add("-failIfWorkDirIsMissing");
+            }
         }
 
         if (options.jarCache != null) {

@@ -402,7 +402,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void workDirWithCustomPath() throws Exception {
-        final File workDirPath = temporaryRemotingFolder.newFolder("customworkdir");
+        final File workDirPath = new File(temporaryRemotingFolder.getRoot(), "customworkdir");
         Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
                 "-workDir", workDirPath.getAbsolutePath());
 
@@ -416,6 +416,31 @@ public class SwarmClientIntegrationTest {
                 "-fsroot", fsRootPath.getAbsolutePath(), "-disableWorkDir");
 
         assertFalse("Workdir not created", Files.isDirectory(new File(fsRootPath, "remoting").toPath()));
+    }
+
+    @Test
+    public void failIfWorkDirIsMissingDoesNothingIfDirectoryExists() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        final File workDirPath = temporaryFolder.newFolder("remoting");
+        Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
+                "-fsroot", fsRootPath.getAbsolutePath(), "-workDir", workDirPath.getParent(),
+                "-failIfWorkDirIsMissing");
+
+        assertTrue("Custom workdir created", Files.isDirectory(workDirPath.toPath()));
+    }
+
+    @Test
+    public void failIfWorkDirIsMissingFailsOnMissingWorkDir() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        final File workDirPath = new File(temporaryRemotingFolder.getRoot(), "customworkdir");
+        TestUtils.SwarmClientProcessWrapper node = TestUtils.runSwarmClient("should_fail",
+                j, processDestroyer, temporaryFolder,
+                "-fsroot", fsRootPath.getAbsolutePath(), "-workDir", workDirPath.getAbsolutePath(),
+                "-retry", "0", "-retryInterval", "0", "-maxRetryInterval", "0", "-failIfWorkDirIsMissing");
+
+        node.process.waitFor();
+        assertEquals("Process fails", 1, node.process.exitValue());
+        assertFalse("Custom workdir not created", Files.isDirectory(new File(workDirPath, "remoting").toPath()));
     }
 
     @Test

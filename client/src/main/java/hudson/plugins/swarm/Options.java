@@ -128,22 +128,25 @@ public class Options {
 
     @Option(name = "-disableWorkDir",
             usage = "Disable Remoting Working Directory and run agent in legacy mode.",
-            forbids = {"-workDir", "-internalDir"})
+            forbids = {"-workDir", "-internalDir", "-failIfWorkDirIsMissing"})
     public boolean disableWorkDir = false;
 
     @Option(name = "-workDir",
             usage = "Remoting working directory.",
-            forbids = {"-disableWorkDir"}
-    )
+            forbids = {"-disableWorkDir"})
     public File workDir;
 
     @Option(name = "-internalDir",
             usage = "Remoting internal directory.",
-            forbids = {"-disableWorkDir"}
-    )
+            forbids = {"-disableWorkDir"})
     public File internalDir;
 
     @Option(name = "-jar-cache",
             usage = "Remoting jar cache directory.")
     public File jarCache;
+
+    @Option(name = "-failIfWorkDirIsMissing",
+            usage = "Fail if workDir or internalDir are missing ('false' by default)",
+            forbids = {"-disableWorkDir"})
+    public boolean failIfWokDirIsMissing = false;
 }
