@@ -438,6 +438,16 @@ public class SwarmClientIntegrationTest {
         assertTrue("Internal dir jarcache exists", Files.isDirectory(new File(fsRootPath, "custominternaldir/jarCache").toPath()));
     }
 
+    @Test
+    public void jarCacheWithCustomPath() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        final File jarCachePath = new File(temporaryRemotingFolder.getRoot(), "customjarcache");
+        Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
+                "-fsroot", fsRootPath.getAbsolutePath(), "-jar-cache", jarCachePath.getPath());
+
+        assertTrue("Internal dir jarcache exists", Files.isDirectory(jarCachePath.toPath()));
+    }
+
     @After
     public void tearDown() throws IOException {
         try {

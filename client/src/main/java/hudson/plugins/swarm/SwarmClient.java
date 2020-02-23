@@ -234,6 +234,11 @@ public class SwarmClient {
             }
         }
 
+        if (options.jarCache != null) {
+            args.add("-jar-cache");
+            args.add(options.jarCache.getPath());
+        }
+
         args.add("-headless");
         args.add("-noreconnect");
 

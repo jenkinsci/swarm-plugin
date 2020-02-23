@@ -142,4 +142,8 @@ public class Options {
             forbids = {"-disableWorkDir"}
     )
     public File internalDir;
+
+    @Option(name = "-jar-cache",
+            usage = "Remoting jar cache directory.")
+    public File jarCache;
 }
