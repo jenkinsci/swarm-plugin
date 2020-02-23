@@ -227,6 +227,11 @@ public class SwarmClient {
                     ? options.workDir.getPath() : options.remoteFsRoot.getPath();
             args.add("-workDir");
             args.add(workDirPath);
+
+            if (options.internalDir != null) {
+                args.add("-internalDir");
+                args.add(options.internalDir.getPath());
+            }
         }
 
         args.add("-headless");

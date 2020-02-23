@@ -128,7 +128,7 @@ public class Options {
 
     @Option(name = "-disableWorkDir",
             usage = "Disable Remoting Working Directory and run agent in legacy mode.",
-            forbids = {"-workDir"})
+            forbids = {"-workDir", "-internalDir"})
     public boolean disableWorkDir = false;
 
     @Option(name = "-workDir",
@@ -136,4 +136,10 @@ public class Options {
             forbids = {"-disableWorkDir"}
     )
     public File workDir;
+
+    @Option(name = "-internalDir",
+            usage = "Remoting internal directory.",
+            forbids = {"-disableWorkDir"}
+    )
+    public File internalDir;
 }

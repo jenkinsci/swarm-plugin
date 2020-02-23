@@ -418,6 +418,26 @@ public class SwarmClientIntegrationTest {
         assertFalse("Workdir not created", Files.isDirectory(new File(fsRootPath, "remoting").toPath()));
     }
 
+    @Test
+    public void internalDirIsInWorkDirByDefault() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
+                "-fsroot", fsRootPath.getAbsolutePath());
+
+        assertTrue("Internal dir logs exists", Files.isDirectory(new File(fsRootPath, "remoting/logs").toPath()));
+        assertTrue("Internal dir jarcache exists", Files.isDirectory(new File(fsRootPath, "remoting/jarCache").toPath()));
+    }
+
+    @Test
+    public void internalDirWithCustomPath() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
+                "-fsroot", fsRootPath.getAbsolutePath(), "-internalDir", "custominternaldir");
+
+        assertTrue("Internal dir logs exists", Files.isDirectory(new File(fsRootPath, "custominternaldir/logs").toPath()));
+        assertTrue("Internal dir jarcache exists", Files.isDirectory(new File(fsRootPath, "custominternaldir/jarCache").toPath()));
+    }
+
     @After
     public void tearDown() throws IOException {
         try {
