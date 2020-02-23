@@ -146,7 +146,7 @@ public class Options {
     public File jarCache;
 
     @Option(name = "-failIfWorkDirIsMissing",
-            usage = "Fail if workDir or internalDir are missing ('false' by default)",
+            usage = "Fail if workDir or internalDir are missing ('false' by default).",
             forbids = {"-disableWorkDir"})
     public boolean failIfWokDirIsMissing = false;
 }
