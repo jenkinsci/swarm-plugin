@@ -127,26 +127,26 @@ public class Options {
     public String pidFile;
 
     @Option(name = "-disableWorkDir",
-            usage = "Disable Remoting Working Directory and run agent in legacy mode.",
+            usage = "Disable Remoting working directory support and run the agent in legacy mode.",
             forbids = {"-workDir", "-internalDir", "-failIfWorkDirIsMissing"})
     public boolean disableWorkDir = false;
 
     @Option(name = "-workDir",
-            usage = "Remoting working directory.",
-            forbids = {"-disableWorkDir"})
+            usage = "The Remoting working directory where the JAR cache and logs will be stored.",
+            forbids = "-disableWorkDir")
     public File workDir;
 
     @Option(name = "-internalDir",
-            usage = "Remoting internal directory.",
-            forbids = {"-disableWorkDir"})
+            usage = "The name of the directory within the Remoting working directory where files internal to Remoting will be stored.",
+            forbids = "-disableWorkDir")
     public File internalDir;
 
     @Option(name = "-jar-cache",
-            usage = "Remoting jar cache directory.")
+            usage = "Cache directory that stores JAR files sent from the master.")
     public File jarCache;
 
     @Option(name = "-failIfWorkDirIsMissing",
-            usage = "Fail if workDir or internalDir are missing.",
-            forbids = {"-disableWorkDir"})
-    public boolean failIfWokDirIsMissing = false;
+            usage = "Fail if the requested Remoting working directory or internal directory is missing.",
+            forbids = "-disableWorkDir")
+    public boolean failIfWorkDirIsMissing = false;
 }

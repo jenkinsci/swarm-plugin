@@ -233,7 +233,7 @@ public class SwarmClient {
                 args.add(options.internalDir.getPath());
             }
 
-            if (options.failIfWokDirIsMissing) {
+            if (options.failIfWorkDirIsMissing) {
                 args.add("-failIfWorkDirIsMissing");
             }
         }
