@@ -381,11 +381,6 @@ public class SwarmClientIntegrationTest {
         process.waitFor();
         assertFalse("Client should fail to start", process.isAlive());
         assertEquals("Exit code should be 1", 1, process.exitValue());
-        assertTrue(
-                "Log message mentions 'Option \"-master\" is required' in: "
-                        + Files.readAllLines(stderr.toPath()),
-                Files.readAllLines(stderr.toPath()).stream()
-                        .anyMatch(line -> line.contains("Option \"-master\" is required")));
     }
 
     @After
