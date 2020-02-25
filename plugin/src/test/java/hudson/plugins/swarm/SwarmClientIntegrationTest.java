@@ -397,7 +397,10 @@ public class SwarmClientIntegrationTest {
         TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
                 "-fsroot", fsRootPath.getAbsolutePath());
 
-        assertTrue("Workdir exists", new File(fsRootPath, "remoting").isDirectory());
+        assertDirectories(fsRootPath,
+                new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                new File(fsRootPath, "remoting/jarCache"));
     }
 
     @Test
@@ -406,7 +409,10 @@ public class SwarmClientIntegrationTest {
         TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
                 "-workDir", workDirPath.getAbsolutePath());
 
-        assertTrue("Custom workdir exists", new File(workDirPath, "remoting").isDirectory());
+        assertDirectories(workDirPath,
+                new File(workDirPath, "remoting"),
+                new File(workDirPath, "remoting/logs"),
+                new File(workDirPath, "remoting/jarCache"));
     }
 
     @Test
@@ -415,7 +421,10 @@ public class SwarmClientIntegrationTest {
         TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
                 "-fsroot", fsRootPath.getAbsolutePath(), "-disableWorkDir");
 
-        assertFalse("Workdir not exists", new File(fsRootPath, "remoting").isDirectory());
+        assertDirectories(fsRootPath);
+        assertNoDirectories(new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                new File(fsRootPath, "remoting/jarCache"));
     }
 
     @Test
@@ -426,7 +435,10 @@ public class SwarmClientIntegrationTest {
                 "-fsroot", fsRootPath.getAbsolutePath(), "-workDir", workDirPath.getParent(),
                 "-failIfWorkDirIsMissing");
 
-        assertTrue("Custom workdir exists", workDirPath.isDirectory());
+        assertDirectories(fsRootPath,
+                workDirPath,
+                new File(workDirPath, "logs"),
+                new File(workDirPath, "jarCache"));
     }
 
     @Test
@@ -440,7 +452,11 @@ public class SwarmClientIntegrationTest {
 
         node.process.waitFor();
         assertEquals("Process fails", 1, node.process.exitValue());
-        assertFalse("Custom workdir not exists", new File(workDirPath, "remoting").isDirectory());
+
+        assertDirectories(fsRootPath);
+        assertNoDirectories(new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                new File(fsRootPath, "remoting/jarCache"));
     }
 
     @Test
@@ -449,8 +465,10 @@ public class SwarmClientIntegrationTest {
         TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
                 "-fsroot", fsRootPath.getAbsolutePath());
 
-        assertTrue("Internal dir logs exists", new File(fsRootPath, "remoting/logs").isDirectory());
-        assertTrue("Internal dir jarcache exists", new File(fsRootPath, "remoting/jarCache").isDirectory());
+        assertDirectories(fsRootPath,
+                new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                new File(fsRootPath, "remoting/jarCache"));
     }
 
     @Test
@@ -459,8 +477,10 @@ public class SwarmClientIntegrationTest {
         TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
                 "-fsroot", fsRootPath.getAbsolutePath(), "-internalDir", "custominternaldir");
 
-        assertTrue("Internal dir logs exists", new File(fsRootPath, "custominternaldir/logs").isDirectory());
-        assertTrue("Internal dir jarcache exists", new File(fsRootPath, "custominternaldir/jarCache").isDirectory());
+        assertDirectories(fsRootPath,
+                new File(fsRootPath, "custominternaldir"),
+                new File(fsRootPath, "custominternaldir/logs"),
+                new File(fsRootPath, "custominternaldir/jarCache"));
     }
 
     @Test
@@ -470,7 +490,10 @@ public class SwarmClientIntegrationTest {
         TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,
                 "-fsroot", fsRootPath.getAbsolutePath(), "-jar-cache", jarCachePath.getPath());
 
-        assertTrue("Internal dir jarcache exists", jarCachePath.isDirectory());
+        assertDirectories(fsRootPath,
+                new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                jarCachePath);
     }
 
     @After
@@ -481,5 +504,13 @@ public class SwarmClientIntegrationTest {
             e.printStackTrace(System.err);
         }
         Files.deleteIfExists(getPidFile().toPath());
+    }
+
+    private void assertDirectories(File... paths) {
+        Arrays.stream(paths).forEach(path -> assertTrue(path.getPath() + " exists", path.isDirectory()));
+    }
+
+    private void assertNoDirectories(File... paths) {
+        Arrays.stream(paths).forEach(path -> assertFalse(path.getPath() + " not exists", path.isDirectory()));
     }
 }
