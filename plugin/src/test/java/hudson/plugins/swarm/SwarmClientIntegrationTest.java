@@ -482,6 +482,58 @@ public class SwarmClientIntegrationTest {
                 new File(fsRootPath, "remoting/jarCache"));
     }
 
+    @Test
+    public void internalDirIsInWorkDirByDefault() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        TestUtils.createSwarmClient(
+                j, processDestroyer, temporaryFolder, "-fsroot", fsRootPath.getAbsolutePath());
+
+        assertDirectories(
+                fsRootPath,
+                new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                new File(fsRootPath, "remoting/jarCache"));
+    }
+
+    @Test
+    public void internalDirWithCustomPath() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        TestUtils.createSwarmClient(
+                j,
+                processDestroyer,
+                temporaryFolder,
+                "-fsroot",
+                fsRootPath.getAbsolutePath(),
+                "-internalDir",
+                "custominternaldir");
+
+        assertDirectories(
+                fsRootPath,
+                new File(fsRootPath, "custominternaldir"),
+                new File(fsRootPath, "custominternaldir/logs"),
+                new File(fsRootPath, "custominternaldir/jarCache"));
+    }
+
+    @Test
+    public void jarCacheWithCustomPath() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        final File jarCachePath = new File(temporaryRemotingFolder.getRoot(), "customjarcache");
+        TestUtils.createSwarmClient(
+                j,
+                processDestroyer,
+                temporaryFolder,
+                "-fsroot",
+                fsRootPath.getAbsolutePath(),
+                "-jar-cache",
+                jarCachePath.getPath());
+
+        assertDirectories(
+                fsRootPath,
+                new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                jarCachePath);
+    }
+
     @After
     public void tearDown() throws IOException {
         try {
