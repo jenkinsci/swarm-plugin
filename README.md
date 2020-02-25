@@ -49,21 +49,26 @@ $ java -jar swarm-client.jar --help
                                           (default: false)
  -disableSslVerification                : Disables SSL verification in the
                                           HttpClient. (default: false)
- -disableWorkDir                        : Disable Remoting Working Directory
-                                          and run agent in legacy mode.
-                                          (default: false)
+ -disableWorkDir                        : Disable Remoting working directory
+                                          support and run the agent in legacy
+                                          mode. (default: false)
  -e (--env)                             : An environment variable to be defined
                                           on this slave. It is specified as
                                           'key=value'. Multiple variables are
                                           allowed.
  -executors N                           : Number of executors (default: 16)
- -failIfWorkDirIsMissing                : Fail if workDir or internalDir are
-                                          missing. (default: false)
+ -failIfWorkDirIsMissing                : Fail if the requested Remoting
+                                          working directory or internal
+                                          directory is missing. (default: false)
  -fsroot FILE                           : Directory where Jenkins places files
                                           (default: .)
  -help (--help)                         : Show the help screen (default: true)
- -internalDir FILE                      : Remoting internal directory.
- -jar-cache FILE                        : Remoting jar cache directory.
+ -internalDir FILE                      : The name of the directory within the
+                                          Remoting working directory where
+                                          files internal to Remoting will be
+                                          stored.
+ -jar-cache FILE                        : Cache directory that stores JAR files
+                                          sent from the master.
  -labels VAL                            : Whitespace-separated list of labels
                                           to be assigned for this slave.
                                           Multiple options are allowed.
@@ -131,5 +136,6 @@ $ java -jar swarm-client.jar --help
                                           behavior
  -username VAL                          : The Jenkins username for
                                           authentication
- -workDir FILE                          : Remoting working directory.
+ -workDir FILE                          : The Remoting working directory where
+                                          the JAR cache and logs will be stored.
 ```
