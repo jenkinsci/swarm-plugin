@@ -221,6 +221,30 @@ public class SwarmClient {
             args.add("-credentials");
             args.add(options.username + ":" + options.password);
         }
+
+        if (!options.disableWorkDir) {
+            final String workDirPath =
+                    options.workDir != null
+                            ? options.workDir.getPath()
+                            : options.remoteFsRoot.getPath();
+            args.add("-workDir");
+            args.add(workDirPath);
+
+            if (options.internalDir != null) {
+                args.add("-internalDir");
+                args.add(options.internalDir.getPath());
+            }
+
+            if (options.failIfWorkDirIsMissing) {
+                args.add("-failIfWorkDirIsMissing");
+            }
+        }
+
+        if (options.jarCache != null) {
+            args.add("-jar-cache");
+            args.add(options.jarCache.getPath());
+        }
+
         args.add("-headless");
         args.add("-noreconnect");
 

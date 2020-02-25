@@ -125,4 +125,35 @@ public class Options {
                     "File to write PID to. The client will refuse to start if this file exists "
                             + "and the previous process is still running.")
     public String pidFile;
+
+    @Option(
+            name = "-disableWorkDir",
+            usage = "Disable Remoting working directory support and run the agent in legacy mode.",
+            forbids = {"-workDir", "-internalDir", "-failIfWorkDirIsMissing"})
+    public boolean disableWorkDir = false;
+
+    @Option(
+            name = "-workDir",
+            usage = "The Remoting working directory where the JAR cache and logs will be stored.",
+            forbids = "-disableWorkDir")
+    public File workDir;
+
+    @Option(
+            name = "-internalDir",
+            usage =
+                    "The name of the directory within the Remoting working directory where files internal to Remoting will be stored.",
+            forbids = "-disableWorkDir")
+    public File internalDir;
+
+    @Option(
+            name = "-jar-cache",
+            usage = "Cache directory that stores JAR files sent from the master.")
+    public File jarCache;
+
+    @Option(
+            name = "-failIfWorkDirIsMissing",
+            usage =
+                    "Fail if the requested Remoting working directory or internal directory is missing.",
+            forbids = "-disableWorkDir")
+    public boolean failIfWorkDirIsMissing = false;
 }
