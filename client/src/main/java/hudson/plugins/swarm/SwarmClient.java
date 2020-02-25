@@ -223,8 +223,10 @@ public class SwarmClient {
         }
 
         if (!options.disableWorkDir) {
-            final String workDirPath = options.workDir != null
-                    ? options.workDir.getPath() : options.remoteFsRoot.getPath();
+            final String workDirPath =
+                    options.workDir != null
+                            ? options.workDir.getPath()
+                            : options.remoteFsRoot.getPath();
             args.add("-workDir");
             args.add(workDirPath);
 
