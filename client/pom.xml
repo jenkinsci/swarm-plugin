@@ -162,7 +162,7 @@
       <dependency>
         <groupId>com.github.oshi</groupId>
         <artifactId>oshi-core</artifactId>
-        <version>4.4.2</version>
+        <version>4.5.0</version>
       </dependency>
     </dependencies>
 </project>
