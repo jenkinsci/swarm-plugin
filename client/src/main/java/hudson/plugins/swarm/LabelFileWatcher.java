@@ -31,11 +31,12 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -81,7 +82,12 @@ public class LabelFileWatcher implements Runnable {
             }
         }
 
-        return HttpClients.createSystem();
+        HttpClientBuilder builder = HttpClientBuilder.create();
+        builder.useSystemProperties();
+        if (opts.disableSslHostnameVerification) {
+            builder.setSSLHostnameVerifier(new NoopHostnameVerifier());
+        }
+        return builder.build();
     }
 
     private HttpClientContext createHttpClientContext(URL urlForAuth) {

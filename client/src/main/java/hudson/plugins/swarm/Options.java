@@ -55,7 +55,12 @@ public class Options {
     @Option(name = "-maxRetryInterval", usage = "Max time to wait before retry in seconds. Default is 60 seconds.")
     public int maxRetryInterval = 60;
 
-    @Option(name = "-disableSslVerification", usage = "Disables SSL verification in the HttpClient.")
+    @Option(
+            name = "-disableSslVerification",
+            usage =
+                    "Disables SSL trust verification in the HTTP client. Note that SSL trust "
+                            + "verification should not be confused with SSL hostname "
+                            + "verification.")
     public boolean disableSslVerification;
 
     @Option(name = "-sslFingerprints", usage = "Whitespace-separated list of accepted certificate fingerprints (SHA-256/Hex), "+
@@ -63,6 +68,14 @@ public class Options {
                                                "No revocation, expiration or not yet valid check will be performed " +
                                                "for custom fingerprints! Multiple options are allowed.")
     public String sslFingerprints = "";
+
+    @Option(
+            name = "-disableSslHostnameVerification",
+            usage =
+                    "Disables SSL hostname verification in the HTTP client. Note that SSL "
+                            + "hostname verification should not be confused with SSL trust "
+                            + "verification.")
+    public boolean disableSslHostnameVerification = false;
 
     @Option(name = "-disableClientsUniqueId", usage = "Disables client's unique ID.")
     public boolean disableClientsUniqueId;

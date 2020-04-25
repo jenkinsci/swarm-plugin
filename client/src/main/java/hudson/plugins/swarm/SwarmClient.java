@@ -36,6 +36,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -52,12 +53,14 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.jenkinsci.remoting.util.https.NoCheckHostnameVerifier;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -195,6 +198,10 @@ public class SwarmClient {
             launcher.agentJnlpCredentials = options.username + ":" + options.password;
         }
 
+        if (options.disableSslHostnameVerification) {
+            HttpsURLConnection.setDefaultHostnameVerifier(new NoCheckHostnameVerifier());
+        }
+
         try {
             jnlpArgs = launcher.parseJnlpArguments();
         } catch (Exception e) {
@@ -275,7 +282,12 @@ public class SwarmClient {
             }
         }
 
-        return HttpClients.createSystem();
+        HttpClientBuilder builder = HttpClientBuilder.create();
+        builder.useSystemProperties();
+        if (options.disableSslHostnameVerification) {
+            builder.setSSLHostnameVerifier(new NoopHostnameVerifier());
+        }
+        return builder.build();
     }
 
     private HttpClientContext createHttpClientContext(URL urlForAuth) {

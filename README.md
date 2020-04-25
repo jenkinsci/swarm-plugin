@@ -47,8 +47,16 @@ $ java -jar swarm-client.jar --help
  -description VAL                       : Description to be put on the slave
  -disableClientsUniqueId                : Disables client's unique ID.
                                           (default: false)
- -disableSslVerification                : Disables SSL verification in the
-                                          HttpClient. (default: false)
+ -disableSslHostnameVerification        : Disables SSL hostname verification in
+                                          the HTTP client. Note that SSL
+                                          hostname verification should not be
+                                          confused with SSL trust verification.
+                                          (default: false)
+ -disableSslVerification                : Disables SSL trust verification in
+                                          the HTTP client. Note that SSL trust
+                                          verification should not be confused
+                                          with SSL hostname verification.
+                                          (default: false)
  -disableWorkDir                        : Disable Remoting working directory
                                           support and run the agent in legacy
                                           mode. (default: false)
