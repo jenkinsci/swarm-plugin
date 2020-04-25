@@ -52,11 +52,12 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -195,6 +196,14 @@ public class SwarmClient {
             launcher.agentJnlpCredentials = options.username + ":" + options.password;
         }
 
+        if (options.disableSslVerification) {
+            try {
+                launcher.setNoCertificateCheck(true);
+            } catch (KeyManagementException | NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         try {
             jnlpArgs = launcher.parseJnlpArguments();
         } catch (Exception e) {
@@ -209,6 +218,10 @@ public class SwarmClient {
 
         args.add("-url");
         args.add(target.url);
+
+        if (options.disableSslVerification) {
+            args.add("-disableHttpsCertValidation");
+        }
 
         // if the tunnel option is set in the command line, use it
         if (options.tunnel != null) {
@@ -275,7 +288,12 @@ public class SwarmClient {
             }
         }
 
-        return HttpClients.createSystem();
+        HttpClientBuilder builder = HttpClientBuilder.create();
+        builder.useSystemProperties();
+        if (options.disableSslVerification) {
+            builder.setSSLHostnameVerifier(new NoopHostnameVerifier());
+        }
+        return builder.build();
     }
 
     private HttpClientContext createHttpClientContext(URL urlForAuth) {
