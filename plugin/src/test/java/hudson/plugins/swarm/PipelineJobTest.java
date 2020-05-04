@@ -196,9 +196,6 @@ public class PipelineJobTest {
         for (int i = 0; i < numSemaphores; i++) {
             sb.append("  semaphore 'wait-" + i + "'\n");
         }
-        // TODO: Once JENKINS-41854 is fixed, remove the next two lines.
-        sb.append("}\n");
-        sb.append("node('" + node.getNodeName() + "') {\n");
         sb.append(
                 "  isUnix() ? sh('echo ON_SWARM_CLIENT=$ON_SWARM_CLIENT') : bat('echo ON_SWARM_CLIENT=%ON_SWARM_CLIENT%')");
         sb.append("}\n");
