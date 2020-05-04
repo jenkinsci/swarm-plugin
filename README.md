@@ -1,8 +1,9 @@
 # Swarm
 
 [![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/swarm-plugin/master)](https://ci.jenkins.io/job/Plugins/job/swarm-plugin/job/master/)
-[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/swarm.svg)](https://plugins.jenkins.io/swarm)
-[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/swarm.svg)](https://plugins.jenkins.io/swarm)
+[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/swarm.svg)](https://plugins.jenkins.io/swarm/)
+[![GitHub Release](https://img.shields.io/github/release/jenkinsci/swarm-plugin.svg?label=changelog)](https://github.com/jenkinsci/swarm-plugin/releases/latest)
+[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/swarm.svg?color=blue)](https://plugins.jenkins.io/swarm/)
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=jenkinsci/swarm-plugin)](https://dependabot.com)
 
 Swarm enables nodes to join a nearby Jenkins master, thereby forming an
