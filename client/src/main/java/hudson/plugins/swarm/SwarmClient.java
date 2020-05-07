@@ -215,6 +215,10 @@ public class SwarmClient {
         args.add("-headless");
         args.add("-noreconnect");
 
+        if(options.webSocket){
+            args.add("-webSocket");
+        }
+
         try {
             Main.main(args.toArray(new String[0]));
         } catch (Exception e) {

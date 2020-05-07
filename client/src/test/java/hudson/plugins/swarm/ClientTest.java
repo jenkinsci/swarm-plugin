@@ -29,6 +29,14 @@ public class ClientTest {
     }
 
     @Test
+    public void should_run_with_web_socket() {
+        Options options = givenBackOff(NONE);
+        options.webSocket = true;
+        options.retry = -1;
+        runAndVerify(options, "Running long enough");
+    }
+
+    @Test
     public void should_keep_retrying_if_there_is_no_limit() {
         Options options = givenBackOff(NONE);
         options.retry = -1;
@@ -55,7 +63,7 @@ public class ClientTest {
 
     private Options givenBackOff(RetryBackOffStrategy retryBackOffStrategy) {
         Options options = new Options();
-        options.master = "http://localhost:8080";
+        options.master = "http://localhost:8080/";
         options.retryBackOffStrategy = retryBackOffStrategy;
         options.retry = 10;
         options.retryInterval = 10;

@@ -37,6 +37,9 @@ public class Options {
                     "in which case the missing portion will be auto-configured like the default behavior")
     public String tunnel;
 
+    @Option(name = "-webSocket", usage = "Connect using websockets")
+    public boolean webSocket;
+
     @Option(name = "-noRetryAfterConnected", usage = "Do not retry if a successful connection gets closed.")
     public boolean noRetryAfterConnected;
 
