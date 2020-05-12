@@ -115,7 +115,7 @@ $ java -jar swarm-client.jar -help
                                           Default is 'none'. (default: NONE)
  -retryInterval N                       : Time to wait before retry in seconds.
                                           Default is 10 seconds. (default: 10)
- -webSocket                             : Connect using websockets
+ -webSocket                             : Connect using the WebSocket protocol
  -showHostName (--showHostName)         : Show hostname instead of IP address
                                           (default: false)
  -sslFingerprints VAL                   : Whitespace-separated list of accepted
