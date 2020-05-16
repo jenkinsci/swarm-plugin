@@ -13,7 +13,19 @@ import hudson.plugins.swarm.test.SwarmClientRule;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
 
+import hudson.util.VersionNumber;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.junit.After;
@@ -104,6 +116,8 @@ public class SwarmClientIntegrationTest {
                 ? new BatchFile("echo " + key + "=%" + key + "%")
                 : new Shell("echo " + key + "=$" + key);
     }
+
+
 
     /** Ensures that a node can be created with a colon in the description. */
     @Test
@@ -227,6 +241,16 @@ public class SwarmClientIntegrationTest {
         assertTrue(
                 "PID in PID file must match our new PID",
                 childProcesses.stream().anyMatch(proc -> proc.getProcessID() == newPid));
+    }
+
+
+    /** Ensures that a node can be created with websockets. */
+    @Test
+    @Issue("JENKINS-61969")
+    public void webSocket() throws Exception {
+        Assume.assumeTrue(j.jenkins.getVersion().isNewerThanOrEqualTo(new VersionNumber("2.229")));
+        Node node = TestUtils.createSwarmClient("websocket-agent",j, processDestroyer, temporaryFolder,"-webSocket");
+        assertTrue(node.getNodeDescription().endsWith("swarm_ip:127.0.0.1"));
     }
 
     @Test
