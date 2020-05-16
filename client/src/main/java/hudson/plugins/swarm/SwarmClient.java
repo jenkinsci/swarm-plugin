@@ -84,7 +84,6 @@ public class SwarmClient {
             this.hash = "";
         }
         this.name = options.name;
-
         if (options.labelsFile != null) {
             logger.info("Loading labels from " + options.labelsFile + "...");
             try {
@@ -216,7 +215,16 @@ public class SwarmClient {
         args.add("-noreconnect");
 
         if(options.webSocket){
-            args.add("-webSocket");
+            String[] parts = launcher.VERSION.split(".");
+            int majorVersion = Integer.parseInt(parts[0]);
+            int minorVersion = Integer.parseInt(parts[1]);
+
+            if(majorVersion >= 2 && minorVersion >= 229){
+                args.add("-webSocket");
+            }
+            else{
+                throw new RuntimeException(target.url + " does not support webhooks");
+            }
         }
 
         try {
