@@ -249,8 +249,8 @@ public class SwarmClientIntegrationTest {
     @Issue("JENKINS-61969")
     public void webSocket() throws Exception {
         Assume.assumeTrue(j.jenkins.getVersion().isNewerThanOrEqualTo(new VersionNumber("2.229")));
-        Node node = TestUtils.createSwarmClient("websocket-agent",j, processDestroyer, temporaryFolder,"-webSocket");
-        assertTrue(node.getNodeDescription().endsWith("swarm_ip:127.0.0.1"));
+        Node node = TestUtils.createSwarmClient(j, processDestroyer, temporaryFolder,"-webSocket");
+        assertTrue(node.isAcceptingTasks());
     }
 
     @Test
