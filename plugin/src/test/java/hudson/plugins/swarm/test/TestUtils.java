@@ -1,9 +1,9 @@
 package hudson.plugins.swarm.test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import hudson.model.Computer;
@@ -23,7 +23,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 public class TestUtils {
 
     /** Download the Swarm Client from the given Jenkins URL into the given temporary directory. */
-    private static void download(URL jenkinsUrl, File output) throws Exception {
+    public static void download(URL jenkinsUrl, File output) throws Exception {
         URL input =
                 jenkinsUrl.toURI().resolve(new URI(null, "swarm/swarm-client.jar", null)).toURL();
         FileUtils.copyURLToFile(input, output);
@@ -137,6 +137,7 @@ public class TestUtils {
         Collections.addAll(command, args);
 
         ProcessBuilder pb = new ProcessBuilder(command);
+        pb.directory(temporaryFolder.newFolder());
         pb.environment().put("ON_SWARM_CLIENT", "true");
         File stdout = File.createTempFile("stdout", ".log", temporaryFolder.getRoot());
         pb.redirectOutput(stdout);

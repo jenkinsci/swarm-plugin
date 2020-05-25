@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.UUID;
 import javax.servlet.ServletOutputStream;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.ArrayUtils;
@@ -285,9 +286,10 @@ public class PluginImpl extends Plugin {
         return result;
     }
 
+    private static final UUID secret = UUID.randomUUID();
+
     private static String getSwarmSecret() {
-        UDPFragmentImpl fragment = UDPFragmentImpl.all().get(UDPFragmentImpl.class);
-        return fragment == null ? "" : fragment.secret.toString();
+        return secret.toString();
     }
 
     @SuppressFBWarnings(

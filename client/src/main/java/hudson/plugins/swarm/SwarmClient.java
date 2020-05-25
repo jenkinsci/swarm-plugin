@@ -3,13 +3,10 @@ package hudson.plugins.swarm;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -17,7 +14,6 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -38,7 +34,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.KeyManager;
@@ -57,11 +52,12 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -115,104 +111,6 @@ public class SwarmClient {
 
     public String getName() {
         return name;
-    }
-
-    public Candidate discoverFromBroadcast() throws IOException, RetryException {
-        logger.config("discoverFromBroadcast() invoked");
-
-        DatagramSocket socket = new DatagramSocket();
-        socket.setBroadcast(true);
-
-        sendBroadcast(socket);
-        List<DatagramPacket> responses = collectBroadcastResponses(socket);
-        return getCandidateFromDatagramResponses(responses);
-    }
-
-    private Candidate getCandidateFromDatagramResponses(List<DatagramPacket> responses)
-            throws RetryException {
-        logger.finer("getCandidateFromDatagramResponses() invoked");
-
-        List<Candidate> candidates = new ArrayList<>();
-        for (DatagramPacket recv : responses) {
-            String responseXml =
-                    new String(recv.getData(), 0, recv.getLength(), StandardCharsets.UTF_8);
-
-            Document xml;
-
-            String address = printable(recv.getAddress());
-
-            try (InputStream inputStream = new ByteArrayInputStream(recv.getData())) {
-                xml = XmlUtils.parse(inputStream);
-            } catch (IOException | SAXException e) {
-                logger.severe("Invalid response XML from " + address + ": " + responseXml);
-                continue;
-            }
-            if (!StringUtils.isBlank(options.candidateTag)) {
-                logger.finer(address + options.candidateTag);
-                continue;
-            }
-            String swarm = getChildElementString(xml.getDocumentElement(), "swarm");
-            if (swarm == null) {
-                logger.warning(address + " doesn't support swarm");
-                continue;
-            }
-
-            String url = options.master == null ? getChildElementString(
-                    xml.getDocumentElement(), "url") : options.master;
-
-            if (url == null) {
-                logger.warning("Jenkins master at '" + address + "' doesn't have a valid Jenkins URL configuration set. Please go to <jenkins url>/configure and set a valid URL.");
-                continue;
-            }
-            candidates.add(new Candidate(url, swarm));
-        }
-
-        if (candidates.isEmpty()) {
-            logger.severe("No nearby Jenkins supports swarming");
-            throw new RetryException("No nearby Jenkins supports swarming");
-        }
-
-        logger.finer("Found " + candidates.size() + " eligible Jenkins.");
-
-        return candidates.get(new Random().nextInt(candidates.size()));
-    }
-
-    private void sendBroadcast(DatagramSocket socket) throws IOException {
-        logger.fine("sendBroadcast() invoked");
-
-        byte[] buffer = new byte[128];
-        Arrays.fill(buffer, (byte) 1);
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-        packet.setAddress(InetAddress.getByName(options.autoDiscoveryAddress));
-        packet.setPort(Integer.getInteger("jenkins.udp", Integer.getInteger("hudson.udp", 33848)));
-        socket.send(packet);
-    }
-
-    private List<DatagramPacket> collectBroadcastResponses(DatagramSocket socket) throws IOException, RetryException {
-        List<DatagramPacket> responses = new ArrayList<>();
-
-        logger.fine("collectBroadcastResponses() invoked");
-
-        // wait for 5 secs to gather up all the replies
-        long limit = System.currentTimeMillis() + (5 * 1000);
-        while (true) {
-            try {
-                socket.setSoTimeout(Math.max(1, (int) (limit - System.currentTimeMillis())));
-
-                DatagramPacket recv = new DatagramPacket(new byte[2048], 2048);
-                socket.receive(recv);
-                responses.add(recv);
-            } catch (SocketTimeoutException e) {
-                // timed out
-                logger.log(Level.FINEST, "SocketTimeoutException occurred, may be normal.", e);
-                if (responses.isEmpty()) {
-                    String msg = "Failed to receive a reply to broadcast.";
-                    logger.log(Level.WARNING, msg, e);
-                    throw new RetryException(msg);
-                }
-                return responses;
-            }
-        }
     }
 
     @SuppressFBWarnings(
@@ -286,7 +184,7 @@ public class SwarmClient {
         List<String> jnlpArgs = Collections.emptyList();
 
         try {
-            launcher.slaveJnlpURL = new URL(target.url + "computer/" + name + "/slave-agent.jnlp");
+            launcher.agentJnlpURL = new URL(target.url + "computer/" + name + "/slave-agent.jnlp");
         } catch (MalformedURLException e) {
             e.printStackTrace();
             logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + target.url, e);
@@ -295,7 +193,15 @@ public class SwarmClient {
 
         if (options.username != null && options.password != null) {
             launcher.auth = options.username + ":" + options.password;
-            launcher.slaveJnlpCredentials = options.username + ":" + options.password;
+            launcher.agentJnlpCredentials = options.username + ":" + options.password;
+        }
+
+        if (options.disableSslVerification) {
+            try {
+                launcher.setNoCertificateCheck(true);
+            } catch (KeyManagementException | NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         try {
@@ -313,6 +219,10 @@ public class SwarmClient {
         args.add("-url");
         args.add(target.url);
 
+        if (options.disableSslVerification) {
+            args.add("-disableHttpsCertValidation");
+        }
+
         // if the tunnel option is set in the command line, use it
         if (options.tunnel != null) {
             args.add("-tunnel");
@@ -324,6 +234,30 @@ public class SwarmClient {
             args.add("-credentials");
             args.add(options.username + ":" + options.password);
         }
+
+        if (!options.disableWorkDir) {
+            final String workDirPath =
+                    options.workDir != null
+                            ? options.workDir.getPath()
+                            : options.remoteFsRoot.getPath();
+            args.add("-workDir");
+            args.add(workDirPath);
+
+            if (options.internalDir != null) {
+                args.add("-internalDir");
+                args.add(options.internalDir.getPath());
+            }
+
+            if (options.failIfWorkDirIsMissing) {
+                args.add("-failIfWorkDirIsMissing");
+            }
+        }
+
+        if (options.jarCache != null) {
+            args.add("-jar-cache");
+            args.add(options.jarCache.getPath());
+        }
+
         args.add("-headless");
         args.add("-noreconnect");
 
@@ -354,7 +288,12 @@ public class SwarmClient {
             }
         }
 
-        return HttpClients.createSystem();
+        HttpClientBuilder builder = HttpClientBuilder.create();
+        builder.useSystemProperties();
+        if (options.disableSslVerification) {
+            builder.setSSLHostnameVerifier(new NoopHostnameVerifier());
+        }
+        return builder.build();
     }
 
     private HttpClientContext createHttpClientContext(URL urlForAuth) {

@@ -19,8 +19,10 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.commons.lang.RandomStringUtils;
@@ -45,6 +47,8 @@ public class SwarmClientIntegrationTest {
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
 
     @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    @Rule public TemporaryFolder temporaryRemotingFolder = new TemporaryFolder();
 
     private final OperatingSystem os = new SystemInfo().getOperatingSystem();
 
@@ -236,10 +240,10 @@ public class SwarmClientIntegrationTest {
         // Java Process doesn't provide the PID, so we have to work around it.
         // Find all of our child processes, one of them must be the client we just started,
         // and thus would match the PID in the PID file.
-        OSProcess[] childProcesses = os.getChildProcesses(os.getProcessId(), 0, null);
+        List<OSProcess> childProcesses = os.getChildProcesses(os.getProcessId(), 0, null);
         assertTrue(
                 "PID in PID file must match our new PID",
-                Arrays.stream(childProcesses).anyMatch(proc -> proc.getProcessID() == newPid));
+                childProcesses.stream().anyMatch(proc -> proc.getProcessID() == newPid));
     }
 
     @Test
@@ -356,6 +360,180 @@ public class SwarmClientIntegrationTest {
                         node.getNodeDescription()));
     }
 
+    @Test
+    public void missingMasterOption() throws Exception {
+        File swarmClientJar =
+                File.createTempFile("swarm-client", ".jar", temporaryFolder.getRoot());
+        TestUtils.download(j.getURL(), swarmClientJar);
+
+        List<String> command = new ArrayList<>();
+        command.add(
+                System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
+        command.add("-Djava.awt.headless=true");
+        command.add("-jar");
+        command.add(swarmClientJar.toString());
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+        File stdout = File.createTempFile("stdout", ".log", temporaryFolder.getRoot());
+        pb.redirectOutput(stdout);
+        File stderr = File.createTempFile("stderr", ".log", temporaryFolder.getRoot());
+        pb.redirectError(stderr);
+        Process process = pb.start();
+        processDestroyer.record(process);
+        process.waitFor();
+        assertFalse("Client should fail to start", process.isAlive());
+        assertEquals("Exit code should be 1", 1, process.exitValue());
+    }
+
+    @Test
+    public void workDirEnabledByDefaultWithFsRootAsDefaultPath() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        TestUtils.createSwarmClient(
+                j, processDestroyer, temporaryFolder, "-fsroot", fsRootPath.getAbsolutePath());
+
+        assertDirectories(
+                fsRootPath,
+                new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                new File(fsRootPath, "remoting/jarCache"));
+    }
+
+    @Test
+    public void workDirWithCustomPath() throws Exception {
+        final File workDirPath = new File(temporaryRemotingFolder.getRoot(), "customworkdir");
+        TestUtils.createSwarmClient(
+                j, processDestroyer, temporaryFolder, "-workDir", workDirPath.getAbsolutePath());
+
+        assertDirectories(
+                workDirPath,
+                new File(workDirPath, "remoting"),
+                new File(workDirPath, "remoting/logs"),
+                new File(workDirPath, "remoting/jarCache"));
+    }
+
+    @Test
+    public void disableWorkDirRunsInLegacyMode() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        TestUtils.createSwarmClient(
+                j,
+                processDestroyer,
+                temporaryFolder,
+                "-fsroot",
+                fsRootPath.getAbsolutePath(),
+                "-disableWorkDir");
+
+        assertDirectories(fsRootPath);
+        assertNoDirectories(
+                new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                new File(fsRootPath, "remoting/jarCache"));
+    }
+
+    @Test
+    public void failIfWorkDirIsMissingDoesNothingIfDirectoryExists() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        final File workDirPath = temporaryFolder.newFolder("remoting");
+        TestUtils.createSwarmClient(
+                j,
+                processDestroyer,
+                temporaryFolder,
+                "-fsroot",
+                fsRootPath.getAbsolutePath(),
+                "-workDir",
+                workDirPath.getParent(),
+                "-failIfWorkDirIsMissing");
+
+        assertDirectories(
+                fsRootPath,
+                workDirPath,
+                new File(workDirPath, "logs"),
+                new File(workDirPath, "jarCache"));
+    }
+
+    @Test
+    public void failIfWorkDirIsMissingFailsOnMissingWorkDir() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        final File workDirPath = new File(temporaryRemotingFolder.getRoot(), "customworkdir");
+        TestUtils.SwarmClientProcessWrapper node =
+                TestUtils.runSwarmClient(
+                        "should_fail",
+                        j,
+                        processDestroyer,
+                        temporaryFolder,
+                        "-fsroot",
+                        fsRootPath.getAbsolutePath(),
+                        "-workDir",
+                        workDirPath.getAbsolutePath(),
+                        "-retry",
+                        "0",
+                        "-retryInterval",
+                        "0",
+                        "-maxRetryInterval",
+                        "0",
+                        "-failIfWorkDirIsMissing");
+
+        node.process.waitFor();
+        assertEquals("Process fails", 1, node.process.exitValue());
+
+        assertDirectories(fsRootPath);
+        assertNoDirectories(
+                new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                new File(fsRootPath, "remoting/jarCache"));
+    }
+
+    @Test
+    public void internalDirIsInWorkDirByDefault() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        TestUtils.createSwarmClient(
+                j, processDestroyer, temporaryFolder, "-fsroot", fsRootPath.getAbsolutePath());
+
+        assertDirectories(
+                fsRootPath,
+                new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                new File(fsRootPath, "remoting/jarCache"));
+    }
+
+    @Test
+    public void internalDirWithCustomPath() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        TestUtils.createSwarmClient(
+                j,
+                processDestroyer,
+                temporaryFolder,
+                "-fsroot",
+                fsRootPath.getAbsolutePath(),
+                "-internalDir",
+                "custominternaldir");
+
+        assertDirectories(
+                fsRootPath,
+                new File(fsRootPath, "custominternaldir"),
+                new File(fsRootPath, "custominternaldir/logs"),
+                new File(fsRootPath, "custominternaldir/jarCache"));
+    }
+
+    @Test
+    public void jarCacheWithCustomPath() throws Exception {
+        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        final File jarCachePath = new File(temporaryRemotingFolder.getRoot(), "customjarcache");
+        TestUtils.createSwarmClient(
+                j,
+                processDestroyer,
+                temporaryFolder,
+                "-fsroot",
+                fsRootPath.getAbsolutePath(),
+                "-jar-cache",
+                jarCachePath.getPath());
+
+        assertDirectories(
+                fsRootPath,
+                new File(fsRootPath, "remoting"),
+                new File(fsRootPath, "remoting/logs"),
+                jarCachePath);
+    }
+
     @After
     public void tearDown() throws IOException {
         try {
@@ -364,5 +542,15 @@ public class SwarmClientIntegrationTest {
             e.printStackTrace(System.err);
         }
         Files.deleteIfExists(getPidFile().toPath());
+    }
+
+    private void assertDirectories(File... paths) {
+        Arrays.stream(paths)
+                .forEach(path -> assertTrue(path.getPath() + " exists", path.isDirectory()));
+    }
+
+    private void assertNoDirectories(File... paths) {
+        Arrays.stream(paths)
+                .forEach(path -> assertFalse(path.getPath() + " not exists", path.isDirectory()));
     }
 }

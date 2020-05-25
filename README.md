@@ -1,29 +1,27 @@
 # Swarm
 
 [![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/swarm-plugin/master)](https://ci.jenkins.io/job/Plugins/job/swarm-plugin/job/master/)
-[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/swarm.svg)](https://plugins.jenkins.io/swarm)
-[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/swarm.svg)](https://plugins.jenkins.io/swarm)
+[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/swarm.svg)](https://plugins.jenkins.io/swarm/)
+[![GitHub Release](https://img.shields.io/github/release/jenkinsci/swarm-plugin.svg?label=changelog)](https://github.com/jenkinsci/swarm-plugin/releases/latest)
+[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/swarm.svg?color=blue)](https://plugins.jenkins.io/swarm/)
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=jenkinsci/swarm-plugin)](https://dependabot.com)
 
-Swarm enables nodes to auto-discover a nearby Jenkins master and join it
-automatically, thereby forming an ad-hoc cluster. This plugin makes it
-easier to auto-scale a Jenkins cluster by spinning up and tearing down
-new nodes, since no manual intervention is required to make them join or
-leave the cluster.
+Swarm enables nodes to join a nearby Jenkins master, thereby forming an
+ad-hoc cluster. This plugin makes it easier to scale a Jenkins cluster
+by spinning up and tearing down new nodes.
 
 This plugin consists of two pieces:
 
- 1. A self-contained client that discovers a nearby Jenkins (via a UDP
-    broadcast) and joins it.
+ 1. A self-contained client that can join an existing Jenkins master.
  2. A plugin that needs to be installed on Jenkins master to accept
     Swarm clients.
 
 With the Swarm client, a person who is willing to contribute some of his
 computing power to the cluster just needs to run a virtual machine with
-the Swarm client, and the cluster automatically gets additional agent.
-Because the Swarm client is running on a separate VM, there is no need
-to worry about the builds/tests interfering with the host system or
-altering its settings unexpectedly.
+the Swarm client and the cluster gets an additional agent. Because the
+Swarm client is running on a separate VM, there is no need to worry
+about the builds/tests interfering with the host system or altering its
+settings unexpectedly.
 
 ## Usage
 
@@ -44,10 +42,6 @@ altering its settings unexpectedly.
 
 ```
 $ java -jar swarm-client.jar --help
- -autoDiscoveryAddress VAL              : Use this address for UDP-based
-                                          auto-discovery (default
-                                          255.255.255.255) (default:
-                                          255.255.255.255)
  -candidateTag VAL                      : Show swarm candidate with tag only
  -deleteExistingClients                 : Deletes any existing slave with the
                                           same name. (default: false)
@@ -56,14 +50,26 @@ $ java -jar swarm-client.jar --help
                                           (default: false)
  -disableSslVerification                : Disables SSL verification in the
                                           HttpClient. (default: false)
+ -disableWorkDir                        : Disable Remoting working directory
+                                          support and run the agent in legacy
+                                          mode. (default: false)
  -e (--env)                             : An environment variable to be defined
                                           on this slave. It is specified as
                                           'key=value'. Multiple variables are
                                           allowed.
- -executors N                           : Number of executors (default: 8)
+ -executors N                           : Number of executors (default: 16)
+ -failIfWorkDirIsMissing                : Fail if the requested Remoting
+                                          working directory or internal
+                                          directory is missing. (default: false)
  -fsroot FILE                           : Directory where Jenkins places files
                                           (default: .)
- -help (--help)                         : Show the help screen (default: false)
+ -help (--help)                         : Show the help screen (default: true)
+ -internalDir FILE                      : The name of the directory within the
+                                          Remoting working directory where
+                                          files internal to Remoting will be
+                                          stored.
+ -jar-cache FILE                        : Cache directory that stores JAR files
+                                          sent from the master.
  -labels VAL                            : Whitespace-separated list of labels
                                           to be assigned for this slave.
                                           Multiple options are allowed.
@@ -71,9 +77,7 @@ $ java -jar swarm-client.jar --help
                                           list of labels.  If the file changes,
                                           the client is restarted.
  -master VAL                            : The complete target Jenkins URL like
-                                          'http://server:8080/jenkins/'. If
-                                          this option is specified,
-                                          auto-discovery will be skipped
+                                          'http://server:8080/jenkins/'.
  -maxRetryInterval N                    : Max time to wait before retry in
                                           seconds. Default is 60 seconds.
                                           (default: 60)
@@ -133,4 +137,6 @@ $ java -jar swarm-client.jar --help
                                           behavior
  -username VAL                          : The Jenkins username for
                                           authentication
+ -workDir FILE                          : The Remoting working directory where
+                                          the JAR cache and logs will be stored.
 ```
