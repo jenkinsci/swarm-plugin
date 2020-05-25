@@ -55,8 +55,10 @@ public class Options {
     @Option(name = "-maxRetryInterval", usage = "Max time to wait before retry in seconds. Default is 60 seconds.")
     public int maxRetryInterval = 60;
 
-    @Option(name = "-useJitter", usage = "Use a continually randomized reconnect interval between zero and retryInterval, still subject to retryBackOffStrategy and maxRetryInterval.")
-    public boolean useJitter;
+    @Option(name = "-retryIntervalJitter", usage = "Apply a random jitter amount to retryInterval in seconds, "+
+                                                   "still subject to retryBackOffStrategy and maxRetryInterval. "+
+                                                   "Default is 0 seconds")
+    public int retryIntervalJitter = 0;
 
     @Option(name = "-disableSslVerification", usage = "Disables SSL verification in the HttpClient.")
     public boolean disableSslVerification;
