@@ -1,6 +1,6 @@
 package hudson.plugins.swarm;
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 public enum RetryBackOffStrategy {
 
@@ -35,7 +35,7 @@ public enum RetryBackOffStrategy {
     };
 
     private static int jitter(int min, int max) {
-        Random rng = new Random();
+        Random rng = new SecureRandom();
         return Math.round(min + (rng.nextFloat() * (max-min)));
     };
 
