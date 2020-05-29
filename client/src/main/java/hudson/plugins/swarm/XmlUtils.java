@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -31,7 +31,7 @@ public final class XmlUtils {
      * @throws SAXException Error parsing the XML stream data e.g. badly formed XML.
      * @throws IOException Error reading from the steam.
      */
-    public static @Nonnull Document parse(@Nonnull InputStream stream)
+    public static @NonNull Document parse(@NonNull InputStream stream)
             throws IOException, SAXException {
         DocumentBuilder docBuilder;
 
