@@ -234,8 +234,7 @@ public class SwarmClientIntegrationTest {
                 Functions.isWindows());
 
         Path pidFile = getPidFile();
-        Node node =
-                swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
+        swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
 
         while (!Files.isRegularFile(pidFile)) {
             // Ensure the process writes the PID.
