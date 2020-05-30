@@ -75,7 +75,6 @@
       </plugins>
     </build>
     <properties>
-        <surefire.rerunFailingTestsCount>1</surefire.rerunFailingTestsCount>
         <workflow-support-plugin.version>3.3</workflow-support-plugin.version>
     </properties>
     <dependencyManagement>
