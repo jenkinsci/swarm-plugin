@@ -61,11 +61,10 @@ public class SwarmClientRule extends ExternalResource {
     private boolean isActive = false;
 
     /**
-     * The final name of the agent within Jenkins, if the client is active. Note that this name may
-     * be different than what the user requested, unless the {@code -disableClientsUniqueId} option
-     * was used when starting the client.
+     * The {@link Computer} object corresponding to the agent within Jenkins, if the client is
+     * active.
      */
-    private String agentName;
+    private Computer computer;
 
     /** A {@link Tailer} for watching the client's standard out stream, if the client is active. */
     private Tailer stdoutTailer;
@@ -107,17 +106,17 @@ public class SwarmClientRule extends ExternalResource {
                             + " creating a new one.");
         }
 
-        String proposedAgentName = "agent" + j.get().jenkins.getNodes().size();
-        return createSwarmClientWithName(proposedAgentName, args);
+        String agentName = "agent" + j.get().jenkins.getNodes().size();
+        return createSwarmClientWithName(agentName, args);
     }
 
     /**
      * Create a new Swarm agent on the local host and wait for it to come online before returning.
      *
-     * @param proposedAgentName The proposed name of the agent.
+     * @param agentName The proposed name of the agent.
      * @param args The arguments to pass to the client.
      */
-    public synchronized Node createSwarmClientWithName(String proposedAgentName, String... args)
+    public synchronized Node createSwarmClientWithName(String agentName, String... args)
             throws InterruptedException, IOException {
         if (isActive) {
             throw new IllegalStateException(
@@ -132,7 +131,7 @@ public class SwarmClientRule extends ExternalResource {
 
         // Form the list of command-line arguments.
         List<String> command =
-                getCommand(swarmClientJar, Optional.of(j.get().getURL()), proposedAgentName, args);
+                getCommand(swarmClientJar, Optional.of(j.get().getURL()), agentName, args);
 
         LOGGER.log(Level.INFO, "Starting client process.");
         try {
@@ -168,15 +167,14 @@ public class SwarmClientRule extends ExternalResource {
             isActive = true;
         }
 
-        LOGGER.log(Level.INFO, "Waiting for \"{0}\" to come online.", proposedAgentName);
-        Computer computer = waitOnline(proposedAgentName);
+        LOGGER.log(Level.INFO, "Waiting for \"{0}\" to come online.", agentName);
+        computer = waitOnline(agentName);
         assertNotNull(computer);
         assertTrue(computer.isOnline());
         Node node = computer.getNode();
         assertNotNull(node);
 
-        agentName = node.getNodeName();
-        LOGGER.log(Level.INFO, "\"{0}\" is now online.", agentName);
+        LOGGER.log(Level.INFO, "\"{0}\" is now online.", node.getNodeName());
         return node;
     }
 
@@ -185,11 +183,11 @@ public class SwarmClientRule extends ExternalResource {
      *
      * @param swarmClientJar The path to the client JAR.
      * @param url The URL of the Jenkins master, if one is being provided to the client.
-     * @param proposedAgentName The proposed name of the agent.
+     * @param agentName The proposed name of the agent.
      * @param args Any other desired arguments.
      */
     public static List<String> getCommand(
-            Path swarmClientJar, Optional<URL> url, String proposedAgentName, String... args) {
+            Path swarmClientJar, Optional<URL> url, String agentName, String... args) {
         List<String> command = new ArrayList<>();
         command.add(
                 System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
@@ -197,7 +195,7 @@ public class SwarmClientRule extends ExternalResource {
         command.add("-jar");
         command.add(swarmClientJar.toString());
         command.add("-name");
-        command.add(proposedAgentName);
+        command.add(agentName);
         if (url.isPresent()) {
             command.add("-master");
             command.add(url.get().toString());
@@ -230,19 +228,19 @@ public class SwarmClientRule extends ExternalResource {
     }
 
     /** Wait for the agent with the given name to come online against the given Jenkins instance. */
-    private Computer waitOnline(String proposedAgentName) throws InterruptedException {
+    private Computer waitOnline(String agentName) throws InterruptedException {
         try (Timeout t = Timeout.limit(60, TimeUnit.SECONDS)) {
-            Computer computer = getComputer(proposedAgentName);
-            while (computer == null) {
+            Computer result = getComputer(agentName);
+            while (result == null) {
                 Thread.sleep(500L);
-                computer = getComputer(proposedAgentName);
+                result = getComputer(agentName);
             }
 
-            while (!computer.isOnline()) {
+            while (!result.isOnline()) {
                 Thread.sleep(500L);
             }
 
-            return computer;
+            return result;
         }
     }
 
@@ -250,17 +248,14 @@ public class SwarmClientRule extends ExternalResource {
      * Gets the computer corresponding to the proposed agent name. At this point we do not yet know
      * the final agent name, so we have to keep iterating until we find the agent that starts with
      * the proposed name.
-     *
-     * @param proposedAgentName
-     * @return
      */
-    private Computer getComputer(String proposedAgentName) {
+    private Computer getComputer(String agentName) {
         List<Computer> candidates = new ArrayList<>();
-        for (Computer computer : j.get().jenkins.getComputers()) {
-            if (computer.getName().equals(proposedAgentName)) {
-                return computer;
-            } else if (computer.getName().startsWith(proposedAgentName + '-')) {
-                candidates.add(computer);
+        for (Computer candidate : j.get().jenkins.getComputers()) {
+            if (candidate.getName().equals(agentName)) {
+                return candidate;
+            } else if (candidate.getName().startsWith(agentName + '-')) {
+                candidates.add(candidate);
             }
         }
         if (candidates.isEmpty()) {
@@ -336,10 +331,8 @@ public class SwarmClientRule extends ExternalResource {
             }
 
             // Wait for the agent to be disconnected from the master
-            if (agentName != null) {
+            if (computer != null) {
                 try (Timeout t = Timeout.limit(60, TimeUnit.SECONDS)) {
-                    Computer computer = j.get().jenkins.getComputer(agentName);
-                    assertNotNull(computer);
                     while (computer.isOnline()) {
                         Thread.sleep(500L);
                     }
@@ -347,7 +340,7 @@ public class SwarmClientRule extends ExternalResource {
                     e.printStackTrace();
                     interrupted = true;
                 } finally {
-                    agentName = null;
+                    computer = null;
                 }
             }
         } finally {
