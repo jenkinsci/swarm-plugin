@@ -156,8 +156,6 @@ public class Client {
                 logger.info(
                         "Attempting to connect to "
                                 + target.url
-                                + " "
-                                + target.secret
                                 + " with ID "
                                 + swarmClient.getHash());
 
