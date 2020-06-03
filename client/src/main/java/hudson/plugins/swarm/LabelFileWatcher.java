@@ -64,7 +64,7 @@ public class LabelFileWatcher implements Runnable {
         logger.config("Labels loaded: " + sLabels);
     }
 
-    private CloseableHttpClient createHttpClient(URL urlForAuth) {
+    private CloseableHttpClient createHttpClient() {
         logger.fine("createHttpClient() invoked");
 
         if (opts.disableSslVerification || !opts.sslFingerprints.isEmpty()) {
@@ -124,7 +124,7 @@ public class LabelFileWatcher implements Runnable {
         // 3. issue update commands for new labels
         logger.log(Level.CONFIG, "NOTICE: " + sFileName + " has changed.  Attempting soft label update (no node restart)");
         URL urlForAuth = new URL(targ.getURL());
-        CloseableHttpClient h = createHttpClient(urlForAuth);
+        CloseableHttpClient h = createHttpClient();
         HttpClientContext context = createHttpClientContext(urlForAuth);
 
         logger.log(Level.CONFIG, "Getting current labels from master");

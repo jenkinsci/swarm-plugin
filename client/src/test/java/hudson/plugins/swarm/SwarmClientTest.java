@@ -26,7 +26,7 @@ public class SwarmClientTest {
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
-        CloseableHttpClient hc = swc.createHttpClient(url);
+        CloseableHttpClient hc = swc.createHttpClient();
         assertNotNull(hc);
     }
 

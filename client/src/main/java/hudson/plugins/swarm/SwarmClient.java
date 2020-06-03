@@ -59,11 +59,9 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
-import org.xml.sax.SAXException;
 
 public class SwarmClient {
 
@@ -234,7 +232,7 @@ public class SwarmClient {
         }
     }
 
-    protected CloseableHttpClient createHttpClient(URL urlForAuth) {
+    protected CloseableHttpClient createHttpClient() {
         logger.fine("createHttpClient() invoked");
 
         if (options.disableSslVerification || !options.sslFingerprints.isEmpty()) {
@@ -329,7 +327,7 @@ public class SwarmClient {
         logger.fine("createSwarmSlave() invoked");
 
         URL urlForAuth = new URL(target.url);
-        CloseableHttpClient client = createHttpClient(urlForAuth);
+        CloseableHttpClient client = createHttpClient();
         HttpClientContext context = createHttpClientContext(urlForAuth);
 
         // Jenkins does not do any authentication negotiation,
