@@ -14,6 +14,7 @@ import jenkins.slaves.DefaultJnlpSlaveReceiver;
 
 import org.jenkinsci.remoting.engine.JnlpConnectionState;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 
 /**
@@ -48,6 +49,8 @@ public class SwarmLauncher extends JNLPLauncher {
 
     @Extension
     public static class DescriptorImpl extends Descriptor<ComputerLauncher> {
+
+        @Nonnull
         @Override
         public String getDisplayName() {
             return "Launch Swarm agent";
