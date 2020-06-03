@@ -28,7 +28,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -174,7 +173,7 @@ public class SwarmClient {
             Thread.sleep(10 * 1000);
         }
 
-        List<String> args = new LinkedList<>();
+        List<String> args = new ArrayList<>();
         args.add(jnlpArgs.get(0));
         args.add(jnlpArgs.get(1));
 
