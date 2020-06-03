@@ -113,9 +113,6 @@ public class SwarmClient {
         return name;
     }
 
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification = "False positive for try-with-resources in Java 11")
     public Candidate discoverFromMasterUrl() throws IOException, RetryException {
         logger.config("discoverFromMasterUrl() invoked");
 
@@ -131,40 +128,7 @@ public class SwarmClient {
             throw new RuntimeException(msg, e);
         }
 
-        logger.config("Connecting to " + masterURL + " to configure swarm client.");
-        CloseableHttpClient client = createHttpClient(masterURL);
-        HttpClientContext context = createHttpClientContext(masterURL);
-
-        String swarmSecret;
-
-        String url = masterURL.toExternalForm() + "plugin/swarm/slaveInfo";
-        HttpGet get = new HttpGet(url);
-        get.addHeader("Connection", "close");
-        try (CloseableHttpResponse response = client.execute(get, context)) {
-            if (response.getStatusLine().getStatusCode() != 200) {
-                if (response.getStatusLine().getStatusCode() == 404) {
-                    String msg = "Failed to fetch swarm information from Jenkins, plugin not installed?";
-                    logger.log(Level.SEVERE, msg);
-                    throw new RetryException(msg);
-                } else {
-                    String msg = "Failed to fetch slave info from Jenkins, HTTP response code: " + response.getStatusLine().getStatusCode();
-                    logger.log(Level.SEVERE, msg);
-                    throw new RetryException(msg);
-                }
-            }
-
-            Document xml;
-            try {
-                xml = XmlUtils.parse(response.getEntity().getContent());
-            } catch (SAXException e) {
-                String msg = "Invalid XML received from " + url;
-                logger.log(Level.SEVERE, msg, e);
-                throw new RetryException(msg);
-            }
-            swarmSecret = getChildElementString(xml.getDocumentElement(), "swarmSecret");
-        }
-
-        return new Candidate(masterURL.toExternalForm(), swarmSecret);
+        return new Candidate(masterURL.toExternalForm());
     }
 
     /**
@@ -412,8 +376,6 @@ public class SwarmClient {
                                 + param("labels", sMyLabels)
                                 + toolLocationBuilder.toString()
                                 + environmentVariablesBuilder.toString()
-                                + "&secret="
-                                + target.secret
                                 + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
                                 + param("hash", hash)
                                 + param(
@@ -488,8 +450,6 @@ public class SwarmClient {
                         target.url
                                 + "plugin/swarm/removeSlaveLabels?name="
                                 + name
-                                + "&secret="
-                                + target.secret
                                 + SwarmClient.param("labels", labels));
 
         post.addHeader("Connection", "close");
@@ -527,8 +487,6 @@ public class SwarmClient {
                         target.url
                                 + "plugin/swarm/addSlaveLabels?name="
                                 + name
-                                + "&secret="
-                                + target.secret
                                 + param("labels", labels));
 
         post.addHeader("Connection", "close");

@@ -131,13 +131,7 @@ public class LabelFileWatcher implements Runnable {
 
         Document xml;
 
-        HttpGet get =
-                new HttpGet(
-                        targ.getURL()
-                                + "/plugin/swarm/getSlaveLabels?name="
-                                + name
-                                + "&secret="
-                                + targ.getSecret());
+        HttpGet get = new HttpGet(targ.getURL() + "/plugin/swarm/getSlaveLabels?name=" + name);
         try (CloseableHttpResponse response = h.execute(get, context)) {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 logger.log(

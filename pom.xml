@@ -21,7 +21,7 @@
     <artifactId>swarm-plugin</artifactId>
     <packaging>pom</packaging>
     <name>Jenkins Self-Organizing Swarm Plug-in</name>
-    <version>3.21-SNAPSHOT</version>
+    <version>3.22-SNAPSHOT</version>
 
     <properties>
         <jenkins.version>2.164.3</jenkins.version>

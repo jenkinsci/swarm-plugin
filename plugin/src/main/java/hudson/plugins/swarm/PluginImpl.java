@@ -1,7 +1,6 @@
 package hudson.plugins.swarm;
 
 import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -33,6 +32,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.verb.POST;
 
 /**
  * Exposes an entry point to add a new swarm slave.
@@ -62,14 +62,8 @@ public class PluginImpl extends Plugin {
     /**
      * Gets list of labels for slave
      */
-    public void doGetSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
-                                 @QueryParameter String secret) throws IOException {
-
-        if (!getSwarmSecret().equals(secret)) {
-            rsp.setStatus(SC_FORBIDDEN);
-            return;
-        }
-
+    public void doGetSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name)
+                                 throws IOException {
         Node nn = getNodeByName(name, rsp);
         if (nn == null) {
             return;
@@ -92,16 +86,15 @@ public class PluginImpl extends Plugin {
     /**
      * Adds labels to a slave.
      */
+    @POST
     public void doAddSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
-                            @QueryParameter String secret, @QueryParameter String labels)  throws IOException{
-        if (!getSwarmSecret().equals(secret)) {
-            rsp.setStatus(SC_FORBIDDEN);
-            return;
-        }
+                            @QueryParameter String labels)  throws IOException{
         Node nn = getNodeByName(name, rsp);
         if (nn == null) {
             return;
         }
+
+        nn.checkPermission(Computer.CONFIGURE);
 
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
@@ -121,16 +114,15 @@ public class PluginImpl extends Plugin {
     /**
      * Remove labels from a slave
      */
+    @POST
     public void doRemoveSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
-                            @QueryParameter String secret, @QueryParameter String labels) throws IOException {
-        if (!getSwarmSecret().equals(secret)) {
-            rsp.setStatus(SC_FORBIDDEN);
-            return;
-        }
+                            @QueryParameter String labels) throws IOException {
         Node nn = getNodeByName(name, rsp);
         if (nn == null) {
             return;
         }
+
+        nn.checkPermission(Computer.CONFIGURE);
 
         String sCurrentLabels = nn.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
@@ -145,17 +137,13 @@ public class PluginImpl extends Plugin {
     /**
      * Adds a new swarm slave.
      */
+    @POST
     public void doCreateSlave(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                               @QueryParameter String description, @QueryParameter int executors,
                               @QueryParameter String remoteFsRoot, @QueryParameter String labels,
-                              @QueryParameter String secret, @QueryParameter Node.Mode mode,
+                              @QueryParameter Node.Mode mode,
                               @QueryParameter(fixEmpty = true) String hash,
                               @QueryParameter boolean deleteExistingClients) throws IOException {
-        if (!getSwarmSecret().equals(secret)) {
-            rsp.setStatus(SC_FORBIDDEN);
-            return;
-        }
-
         try {
             Jenkins jenkins = Jenkins.get();
 
@@ -286,12 +274,15 @@ public class PluginImpl extends Plugin {
         return result;
     }
 
-    private static final UUID secret = UUID.randomUUID();
-
-    private static String getSwarmSecret() {
-        return secret.toString();
-    }
-
+    /**
+     * This merely exists to support older versions of the Swarm client that expect to be able to
+     * retrieve a UUID-based secret. Security is now handled through CSRF and permission checks
+     * rather than a UUID-based secret. Newer clients do not call this method or pass in a
+     * UUID-based secret, and newer versions of the server do not check for a UUID-based secret.
+     * When support for older clients that call this endpoint is removed, this endpoint can be
+     * deleted.
+     */
+    @Deprecated
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
@@ -301,7 +292,7 @@ public class PluginImpl extends Plugin {
 
         rsp.setContentType("text/xml");
         try (Writer w = rsp.getCompressedWriter(req)) {
-            w.write("<slaveInfo><swarmSecret>" + getSwarmSecret() + "</swarmSecret></slaveInfo>");
+            w.write("<slaveInfo><swarmSecret>" + UUID.randomUUID().toString() + "</swarmSecret></slaveInfo>");
         }
     }
 }
