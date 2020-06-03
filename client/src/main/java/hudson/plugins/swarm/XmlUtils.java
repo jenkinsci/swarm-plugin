@@ -18,7 +18,7 @@ import org.xml.sax.SAXException;
 @Restricted(NoExternalUse.class)
 public final class XmlUtils {
 
-    private static final Logger LOGGER =
+    private static final Logger logger =
             LogManager.getLogManager().getLogger(XmlUtils.class.getName());
 
     /**
@@ -77,7 +77,7 @@ public final class XmlUtils {
         try {
             documentBuilderFactory.setFeature(feature, state);
         } catch (Exception e) {
-            LOGGER.log(
+            logger.log(
                     Level.WARNING,
                     String.format(
                             "Failed to set the XML Document Builder factory feature %s to %s",

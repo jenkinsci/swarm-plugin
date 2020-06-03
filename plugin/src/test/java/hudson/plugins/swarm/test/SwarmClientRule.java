@@ -45,7 +45,7 @@ import java.util.logging.Logger;
  */
 public class SwarmClientRule extends ExternalResource {
 
-    private static final Logger LOGGER = Logger.getLogger(SwarmClientRule.class.getName());
+    private static final Logger logger = Logger.getLogger(SwarmClientRule.class.getName());
 
     /** A {@link Supplier} for compatibility with {@link RestartableJenkinsRule}. */
     private final Supplier<JenkinsRule> j;
@@ -132,7 +132,7 @@ public class SwarmClientRule extends ExternalResource {
         List<String> command =
                 getCommand(swarmClientJar, j.get().getURL(), agentName, args);
 
-        LOGGER.log(Level.INFO, "Starting client process.");
+        logger.log(Level.INFO, "Starting client process.");
         try {
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.directory(temporaryFolder.newFolder());
@@ -166,14 +166,14 @@ public class SwarmClientRule extends ExternalResource {
             isActive = true;
         }
 
-        LOGGER.log(Level.INFO, "Waiting for \"{0}\" to come online.", agentName);
+        logger.log(Level.INFO, "Waiting for \"{0}\" to come online.", agentName);
         computer = waitOnline(agentName);
         assertNotNull(computer);
         assertTrue(computer.isOnline());
         Node node = computer.getNode();
         assertNotNull(node);
 
-        LOGGER.log(Level.INFO, "\"{0}\" is now online.", node.getNodeName());
+        logger.log(Level.INFO, "\"{0}\" is now online.", node.getNodeName());
         return node;
     }
 
@@ -216,7 +216,7 @@ public class SwarmClientRule extends ExternalResource {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
-        LOGGER.log(
+        logger.log(
                 Level.INFO,
                 "Downloading Swarm client from \"{0}\" to \"{1}\".",
                 new Object[] {input, output});
@@ -276,7 +276,7 @@ public class SwarmClientRule extends ExternalResource {
                 try {
                     process.destroy();
                     assertTrue(process.waitFor(30, TimeUnit.SECONDS));
-                    LOGGER.log(
+                    logger.log(
                             Level.INFO,
                             "Swarm client exited with exit value {0}.",
                             process.exitValue());
@@ -367,7 +367,7 @@ public class SwarmClientRule extends ExternalResource {
 
         @Override
         public void handle(String line) {
-            LOGGER.log(Level.INFO, prefix + ": {0}", line);
+            logger.log(Level.INFO, prefix + ": {0}", line);
         }
     }
 }

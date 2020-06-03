@@ -42,7 +42,7 @@ import org.xml.sax.SAXException;
 
 public class LabelFileWatcher implements Runnable {
 
-    private final Logger logger = Logger.getLogger(LabelFileWatcher.class.getPackage().getName());
+    private static final Logger logger = Logger.getLogger(LabelFileWatcher.class.getName());
 
     private final String sFileName;
     private boolean bRunning = false;

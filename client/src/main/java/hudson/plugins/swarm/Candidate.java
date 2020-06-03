@@ -4,7 +4,7 @@ import java.util.logging.Logger;
 
 public class Candidate {
 
-    private static final Logger logger = Logger.getLogger(Candidate.class.getPackage().getName());
+    private static final Logger logger = Logger.getLogger(Candidate.class.getName());
 
     final String url;
 

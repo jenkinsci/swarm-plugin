@@ -20,7 +20,7 @@ import oshi.software.os.OSProcess;
 
 public class Client {
 
-    private static final Logger logger = Logger.getLogger(Client.class.getPackage().getName());
+    private static final Logger logger = Logger.getLogger(Client.class.getName());
 
     private final Options options;
 

@@ -64,7 +64,7 @@ import org.w3c.dom.Text;
 
 public class SwarmClient {
 
-    private static final Logger logger = Logger.getLogger(SwarmClient.class.getPackage().getName());
+    private static final Logger logger = Logger.getLogger(SwarmClient.class.getName());
 
     private final Options options;
     private final String hash;
