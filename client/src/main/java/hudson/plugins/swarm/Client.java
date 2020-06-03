@@ -30,19 +30,19 @@ public class Client {
     public static void main(String... args) throws InterruptedException, IOException {
         Options options = new Options();
         Client client = new Client(options);
-        CmdLineParser p = new CmdLineParser(options);
+        CmdLineParser parser = new CmdLineParser(options);
         try {
-            p.parseArgument(args);
+            parser.parseArgument(args);
         } catch (CmdLineException e) {
             logger.log(Level.SEVERE, "CmdLineException occurred during parseArgument", e);
-            p.printUsage(System.out);
+            parser.printUsage(System.out);
             System.exit(1);
         }
 
-        logArguments(p);
+        logArguments(parser);
 
         if (options.help) {
-            p.printUsage(System.out);
+            parser.printUsage(System.out);
             System.exit(0);
         }
 

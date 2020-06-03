@@ -116,16 +116,16 @@ public class SwarmClient {
         if (!options.master.endsWith("/")) {
             options.master += "/";
         }
-        URL masterURL;
+        URL masterUrl;
         try {
-            masterURL = new URL(options.master);
+            masterUrl = new URL(options.master);
         } catch (MalformedURLException e) {
             String msg = MessageFormat.format("The master URL \"{0}\" is invalid", options.master);
             logger.log(Level.SEVERE, msg, e);
             throw new RuntimeException(msg, e);
         }
 
-        return masterURL.toExternalForm();
+        return masterUrl.toExternalForm();
     }
 
     /**
@@ -328,9 +328,8 @@ public class SwarmClient {
     protected void createSwarmSlave(String targetUrl) throws IOException, RetryException {
         logger.fine("createSwarmSlave() invoked");
 
-        URL urlForAuth = new URL(targetUrl);
         CloseableHttpClient client = createHttpClient(options);
-        HttpClientContext context = createHttpClientContext(options, urlForAuth);
+        HttpClientContext context = createHttpClientContext(options, new URL(targetUrl));
 
         // Jenkins does not do any authentication negotiation,
         // ie. it does not return a 401 (Unauthorized)
@@ -538,8 +537,8 @@ public class SwarmClient {
                 throw new RetryException(msg);
             }
 
-            String v = con.getHeaderField("X-Hudson");
-            if (v == null) {
+            String version = con.getHeaderField("X-Hudson");
+            if (version == null) {
                 String msg = "This URL doesn't look like Jenkins.";
                 logger.log(Level.SEVERE, msg);
                 throw new RetryException(msg);
@@ -551,17 +550,17 @@ public class SwarmClient {
         }
     }
 
-    protected static String getChildElementString(Element parent, String tagName) {
+    static String getChildElementString(Element parent, String tagName) {
         logger.finer("getChildElementString() invoked");
 
-        for (Node n = parent.getFirstChild(); n != null; n = n.getNextSibling()) {
-            if (n instanceof Element) {
-                Element e = (Element) n;
-                if (e.getTagName().equals(tagName)) {
+        for (Node node = parent.getFirstChild(); node != null; node = node.getNextSibling()) {
+            if (node instanceof Element) {
+                Element element = (Element) node;
+                if (element.getTagName().equals(tagName)) {
                     StringBuilder buf = new StringBuilder();
-                    for (n = e.getFirstChild(); n != null; n = n.getNextSibling()) {
-                        if (n instanceof Text) {
-                            buf.append(n.getTextContent());
+                    for (node = element.getFirstChild(); node != null; node = node.getNextSibling()) {
+                        if (node instanceof Text) {
+                            buf.append(node.getTextContent());
                         }
                     }
                     return buf.toString();

@@ -30,24 +30,22 @@ public class LabelFileWatcher implements Runnable {
 
     private static final Logger logger = Logger.getLogger(LabelFileWatcher.class.getName());
 
-    private final String sFileName;
-    private boolean bRunning = false;
-    private final Options opts;
+    private boolean isRunning = false;
+    private final Options options;
     private final String name;
-    private String sLabels;
-    private String[] sArgs;
+    private String labels;
+    private String[] args;
     private final String targetUrl;
 
     public LabelFileWatcher(String targetUrl, Options options, String name, String... args)
             throws IOException {
-        logger.config("LabelFileWatcher() constructed with: " + options.labelsFile + ", and " + StringUtils.join(args));
+        logger.config("LabelFileWatcher() constructed with: " + options.labelsFile + " and " + StringUtils.join(args));
         this.targetUrl = targetUrl;
-        opts = options;
+        this.options = options;
         this.name = name;
-        sFileName = options.labelsFile;
-        sLabels = new String(Files.readAllBytes(Paths.get(sFileName)), StandardCharsets.UTF_8);
-        sArgs = args;
-        logger.config("Labels loaded: " + sLabels);
+        this.labels = new String(Files.readAllBytes(Paths.get(options.labelsFile)), StandardCharsets.UTF_8);
+        this.args = args;
+        logger.config("Labels loaded: " + labels);
     }
 
     @SuppressFBWarnings(
@@ -57,17 +55,16 @@ public class LabelFileWatcher implements Runnable {
         // 1. get labels from master
         // 2. issue remove command for all old labels
         // 3. issue update commands for new labels
-        logger.log(Level.CONFIG, "NOTICE: " + sFileName + " has changed.  Attempting soft label update (no node restart)");
-        URL urlForAuth = new URL(targetUrl);
-        CloseableHttpClient h = SwarmClient.createHttpClient(opts);
-        HttpClientContext context = SwarmClient.createHttpClientContext(opts, urlForAuth);
+        logger.log(Level.CONFIG, "NOTICE: " + options.labelsFile + " has changed.  Attempting soft label update (no node restart)");
+        CloseableHttpClient client = SwarmClient.createHttpClient(options);
+        HttpClientContext context = SwarmClient.createHttpClientContext(options, new URL(targetUrl));
 
         logger.log(Level.CONFIG, "Getting current labels from master");
 
         Document xml;
 
         HttpGet get = new HttpGet(targetUrl + "/plugin/swarm/getSlaveLabels?name=" + name);
-        try (CloseableHttpResponse response = h.execute(get, context)) {
+        try (CloseableHttpResponse response = client.execute(get, context)) {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 logger.log(
                         Level.CONFIG,
@@ -102,7 +99,7 @@ public class LabelFileWatcher implements Runnable {
             sb.append(" ");
             if (sb.length() > 1000) {
                 try {
-                    SwarmClient.postLabelRemove(name, sb.toString(), h, context, targetUrl);
+                    SwarmClient.postLabelRemove(name, sb.toString(), client, context, targetUrl);
                 } catch (IOException | RetryException e) {
                     String msg = "Exception when removing label from " + targetUrl;
                     logger.log(Level.SEVERE, msg, e);
@@ -113,7 +110,7 @@ public class LabelFileWatcher implements Runnable {
         }
         if (sb.length() > 0) {
             try {
-                SwarmClient.postLabelRemove(name, sb.toString(), h, context, targetUrl);
+                SwarmClient.postLabelRemove(name, sb.toString(), client, context, targetUrl);
             } catch (IOException | RetryException e) {
                 String msg = "Exception when removing label from " + targetUrl;
                 logger.log(Level.SEVERE, msg, e);
@@ -130,7 +127,7 @@ public class LabelFileWatcher implements Runnable {
             sb.append(" ");
             if (sb.length() > 1000) {
                 try {
-                    SwarmClient.postLabelAppend(name, sb.toString(), h, context, targetUrl);
+                    SwarmClient.postLabelAppend(name, sb.toString(), client, context, targetUrl);
                 } catch (IOException | RetryException e) {
                     String msg = "Exception when appending label to " + targetUrl;
                     logger.log(Level.SEVERE, msg, e);
@@ -142,7 +139,7 @@ public class LabelFileWatcher implements Runnable {
 
         if (sb.length() > 0) {
             try {
-                SwarmClient.postLabelAppend(name, sb.toString(), h, context, targetUrl);
+                SwarmClient.postLabelAppend(name, sb.toString(), client, context, targetUrl);
             } catch (IOException | RetryException e) {
                 String msg = "Exception when appending label to " + targetUrl;
                 logger.log(Level.SEVERE, msg, e);
@@ -152,8 +149,8 @@ public class LabelFileWatcher implements Runnable {
     }
 
     private void hardLabelUpdate() throws IOException {
-        logger.config("NOTICE: " + sFileName + " has changed.  Hard node restart attempt initiated.");
-        bRunning = false;
+        logger.config("NOTICE: " + options.labelsFile + " has changed.  Hard node restart attempt initiated.");
+        isRunning = false;
         final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
         try {
             final File currentJar = new File(LabelFileWatcher.class.getProtectionDomain().getCodeSource().getLocation().toURI());
@@ -170,7 +167,7 @@ public class LabelFileWatcher implements Runnable {
                 }
                 command.add("-jar");
                 command.add(currentJar.getPath());
-                Collections.addAll(command, sArgs);
+                Collections.addAll(command, args);
                 String sCommandString = Arrays.toString(command.toArray());
                 sCommandString = sCommandString.replaceAll("\n", "").replaceAll("\r", "").replaceAll(",", "");
                 logger.config("Invoking: " + sCommandString);
@@ -187,11 +184,11 @@ public class LabelFileWatcher implements Runnable {
     @SuppressFBWarnings("DM_EXIT")
     public void run() {
         String sTempLabels;
-        bRunning = true;
+        isRunning = true;
 
-        logger.config("LabelFileWatcher running, monitoring file: " + sFileName);
+        logger.config("LabelFileWatcher running, monitoring file: " + options.labelsFile);
 
-        while (bRunning) {
+        while (isRunning) {
             try {
                 logger.log(Level.FINE, "LabelFileWatcher sleeping 10 secs");
                 Thread.sleep(10 * 1000);
@@ -201,16 +198,16 @@ public class LabelFileWatcher implements Runnable {
             try {
                 sTempLabels =
                         new String(
-                                Files.readAllBytes(Paths.get(sFileName)), StandardCharsets.UTF_8);
-                if (sTempLabels.equalsIgnoreCase(sLabels)) {
-                    logger.log(Level.FINEST, "Nothing to do. " + sFileName + " has not changed.");
+                                Files.readAllBytes(Paths.get(options.labelsFile)), StandardCharsets.UTF_8);
+                if (sTempLabels.equalsIgnoreCase(labels)) {
+                    logger.log(Level.FINEST, "Nothing to do. " + options.labelsFile + " has not changed.");
                 } else {
                     try {
                         // try to do the "soft" form of label updating (manipulating the labels through the plugin APIs
                         softLabelUpdate(sTempLabels);
-                        sLabels =
+                        labels =
                                 new String(
-                                        Files.readAllBytes(Paths.get(sFileName)),
+                                        Files.readAllBytes(Paths.get(options.labelsFile)),
                                         StandardCharsets.UTF_8);
                     } catch (SoftLabelUpdateException e) {
                         // if we're unable to
@@ -219,7 +216,7 @@ public class LabelFileWatcher implements Runnable {
                     }
                 }
             } catch (IOException e) {
-                logger.log(Level.WARNING, "WARNING: unable to read " + sFileName + ", node may not be reporting proper labels to master.", e);
+                logger.log(Level.WARNING, "WARNING: unable to read " + options.labelsFile + ", node may not be reporting proper labels to master.", e);
             }
         }
 
