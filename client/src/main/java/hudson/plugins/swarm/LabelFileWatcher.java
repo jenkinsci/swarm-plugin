@@ -9,34 +9,19 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
+
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -64,57 +49,6 @@ public class LabelFileWatcher implements Runnable {
         logger.config("Labels loaded: " + sLabels);
     }
 
-    private CloseableHttpClient createHttpClient() {
-        logger.fine("createHttpClient() invoked");
-
-        if (opts.disableSslVerification || !opts.sslFingerprints.isEmpty()) {
-            try {
-                SSLContext ctx = SSLContext.getInstance("TLS");
-                String trusted = opts.disableSslVerification ? "" : opts.sslFingerprints;
-                ctx.init(new KeyManager[0], new TrustManager[]{new SwarmClient.DefaultTrustManager(trusted)}, new SecureRandom());
-                SSLContext.setDefault(ctx);
-            } catch (KeyManagementException e) {
-                logger.log(Level.SEVERE, "KeyManagementException occurred", e);
-                throw new RuntimeException(e);
-            } catch (NoSuchAlgorithmException e) {
-                logger.log(Level.SEVERE, "NoSuchAlgorithmException occurred", e);
-                throw new RuntimeException(e);
-            }
-        }
-
-        HttpClientBuilder builder = HttpClientBuilder.create();
-        builder.useSystemProperties();
-        if (opts.disableSslVerification) {
-            builder.setSSLHostnameVerifier(new NoopHostnameVerifier());
-        }
-        return builder.build();
-    }
-
-    private HttpClientContext createHttpClientContext(URL urlForAuth) {
-        logger.fine("createHttpClientContext() invoked");
-
-        HttpClientContext context = HttpClientContext.create();
-
-        if (opts.username != null && opts.password != null) {
-            logger.fine("Setting HttpClient credentials based on options passed");
-
-            CredentialsProvider credsProvider = new BasicCredentialsProvider();
-            credsProvider.setCredentials(
-                    new AuthScope(urlForAuth.getHost(), urlForAuth.getPort()),
-                    new UsernamePasswordCredentials(opts.username, opts.password));
-            context.setCredentialsProvider(credsProvider);
-
-            AuthCache authCache = new BasicAuthCache();
-            authCache.put(
-                    new HttpHost(
-                            urlForAuth.getHost(), urlForAuth.getPort(), urlForAuth.getProtocol()),
-                    new BasicScheme());
-            context.setAuthCache(authCache);
-        }
-
-        return context;
-    }
-
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
@@ -124,8 +58,8 @@ public class LabelFileWatcher implements Runnable {
         // 3. issue update commands for new labels
         logger.log(Level.CONFIG, "NOTICE: " + sFileName + " has changed.  Attempting soft label update (no node restart)");
         URL urlForAuth = new URL(targ.getURL());
-        CloseableHttpClient h = createHttpClient();
-        HttpClientContext context = createHttpClientContext(urlForAuth);
+        CloseableHttpClient h = SwarmClient.createHttpClient(opts);
+        HttpClientContext context = SwarmClient.createHttpClientContext(opts, urlForAuth);
 
         logger.log(Level.CONFIG, "Getting current labels from master");
 

@@ -231,13 +231,13 @@ public class SwarmClient {
         }
     }
 
-    protected CloseableHttpClient createHttpClient() {
+    static CloseableHttpClient createHttpClient(Options clientOptions) {
         logger.fine("createHttpClient() invoked");
 
-        if (options.disableSslVerification || !options.sslFingerprints.isEmpty()) {
+        if (clientOptions.disableSslVerification || !clientOptions.sslFingerprints.isEmpty()) {
             try {
                 SSLContext ctx = SSLContext.getInstance("TLS");
-                String trusted = options.disableSslVerification ? "" : options.sslFingerprints;
+                String trusted = clientOptions.disableSslVerification ? "" : clientOptions.sslFingerprints;
                 ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager(trusted)}, new SecureRandom());
                 SSLContext.setDefault(ctx);
             } catch (KeyManagementException e) {
@@ -251,24 +251,24 @@ public class SwarmClient {
 
         HttpClientBuilder builder = HttpClientBuilder.create();
         builder.useSystemProperties();
-        if (options.disableSslVerification) {
+        if (clientOptions.disableSslVerification) {
             builder.setSSLHostnameVerifier(new NoopHostnameVerifier());
         }
         return builder.build();
     }
 
-    private HttpClientContext createHttpClientContext(URL urlForAuth) {
+    static HttpClientContext createHttpClientContext(Options clientOptions, URL urlForAuth) {
         logger.fine("createHttpClientContext() invoked");
 
         HttpClientContext context = HttpClientContext.create();
 
-        if (options.username != null && options.password != null) {
+        if (clientOptions.username != null && clientOptions.password != null) {
             logger.fine("Setting HttpClient credentials based on options passed");
 
             CredentialsProvider credsProvider = new BasicCredentialsProvider();
             credsProvider.setCredentials(
                     new AuthScope(urlForAuth.getHost(), urlForAuth.getPort()),
-                    new UsernamePasswordCredentials(options.username, options.password));
+                    new UsernamePasswordCredentials(clientOptions.username, clientOptions.password));
             context.setCredentialsProvider(credsProvider);
 
             AuthCache authCache = new BasicAuthCache();
@@ -326,8 +326,8 @@ public class SwarmClient {
         logger.fine("createSwarmSlave() invoked");
 
         URL urlForAuth = new URL(target.url);
-        CloseableHttpClient client = createHttpClient();
-        HttpClientContext context = createHttpClientContext(urlForAuth);
+        CloseableHttpClient client = createHttpClient(options);
+        HttpClientContext context = createHttpClientContext(options, urlForAuth);
 
         // Jenkins does not do any authentication negotiation,
         // ie. it does not return a 401 (Unauthorized)

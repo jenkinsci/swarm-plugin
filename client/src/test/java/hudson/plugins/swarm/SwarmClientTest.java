@@ -19,14 +19,13 @@ public class SwarmClientTest {
     @Test
     public void should_try_to_create_http_connection_on_default_options() {
         Options options = new Options();
-        SwarmClient swc = new SwarmClient(options);
         URL url = null;
         try {
             url = new URL("http://jenkins:8080");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
-        CloseableHttpClient hc = swc.createHttpClient();
+        CloseableHttpClient hc = SwarmClient.createHttpClient(options);
         assertNotNull(hc);
     }
 
