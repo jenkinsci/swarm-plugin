@@ -217,17 +217,17 @@ public class Client {
         CmdLineParser defaultParser = new CmdLineParser(defaultOptions);
 
         StringBuilder sb = new StringBuilder("Client invoked with: ");
-        for (OptionHandler argument : parser.getArguments()) {
+        for (OptionHandler<?> argument : parser.getArguments()) {
             logValue(sb, argument, null);
         }
-        for (OptionHandler option : parser.getOptions()) {
+        for (OptionHandler<?> option : parser.getOptions()) {
             logValue(sb, option, defaultParser);
         }
         logger.info(sb.toString());
     }
 
     private static void logValue(
-            StringBuilder sb, OptionHandler handler, CmdLineParser defaultParser) {
+            StringBuilder sb, OptionHandler<?> handler, CmdLineParser defaultParser) {
         String key = getKey(handler);
         Object value = getValue(handler);
 
@@ -249,7 +249,7 @@ public class Client {
         sb.append(' ');
     }
 
-    private static String getKey(OptionHandler optionHandler) {
+    private static String getKey(OptionHandler<?> optionHandler) {
         if (optionHandler.option instanceof NamedOptionDef) {
             NamedOptionDef namedOptionDef = (NamedOptionDef) optionHandler.option;
             return namedOptionDef.name();
@@ -258,13 +258,13 @@ public class Client {
         }
     }
 
-    private static Object getValue(OptionHandler optionHandler) {
+    private static Object getValue(OptionHandler<?> optionHandler) {
         FieldSetter setter = optionHandler.setter.asFieldSetter();
         return setter == null ? null : setter.getValue();
     }
 
     private static boolean isDefaultOption(String key, Object value, CmdLineParser defaultParser) {
-        for (OptionHandler defaultOption : defaultParser.getOptions()) {
+        for (OptionHandler<?> defaultOption : defaultParser.getOptions()) {
             String defaultKey = getKey(defaultOption);
             if (defaultKey.equals(key)) {
                 Object defaultValue = getValue(defaultOption);
