@@ -1,5 +1,15 @@
 package hudson.plugins.swarm;
 
+import org.apache.commons.lang.math.NumberUtils;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.NamedOptionDef;
+import org.kohsuke.args4j.spi.FieldSetter;
+import org.kohsuke.args4j.spi.OptionHandler;
+
+import oshi.SystemInfo;
+import oshi.software.os.OSProcess;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -9,14 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.math.NumberUtils;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.NamedOptionDef;
-import org.kohsuke.args4j.spi.FieldSetter;
-import org.kohsuke.args4j.spi.OptionHandler;
-import oshi.SystemInfo;
-import oshi.software.os.OSProcess;
 
 public class Client {
 
@@ -134,8 +136,8 @@ public class Client {
 
     /**
      * Finds a Jenkins master that supports swarming, and join it.
-     * <p>
-     * This method never returns.
+     *
+     * <p>This method never returns.
      */
     public void run(SwarmClient swarmClient, String... args) throws InterruptedException {
         logger.info("Discovering Jenkins master");

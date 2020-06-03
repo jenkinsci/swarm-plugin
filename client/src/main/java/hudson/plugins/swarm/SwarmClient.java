@@ -1,8 +1,33 @@
 package hudson.plugins.swarm;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.Text;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,32 +60,11 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpStatus;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.Text;
 
 public class SwarmClient {
 
@@ -130,8 +134,8 @@ public class SwarmClient {
 
     /**
      * This method blocks while the swarm slave is serving as a slave.
-     * <p>
-     * Interrupt the thread to abort it and return.
+     *
+     * <p>Interrupt the thread to abort it and return.
      */
     protected void connect(String targetUrl) throws InterruptedException {
         logger.fine("connect() invoked");
@@ -235,8 +239,12 @@ public class SwarmClient {
         if (clientOptions.disableSslVerification || !clientOptions.sslFingerprints.isEmpty()) {
             try {
                 SSLContext ctx = SSLContext.getInstance("TLS");
-                String trusted = clientOptions.disableSslVerification ? "" : clientOptions.sslFingerprints;
-                ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager(trusted)}, new SecureRandom());
+                String trusted =
+                        clientOptions.disableSslVerification ? "" : clientOptions.sslFingerprints;
+                ctx.init(
+                        new KeyManager[0],
+                        new TrustManager[] {new DefaultTrustManager(trusted)},
+                        new SecureRandom());
                 SSLContext.setDefault(ctx);
             } catch (KeyManagementException e) {
                 logger.log(Level.SEVERE, "KeyManagementException occurred", e);
@@ -266,7 +274,8 @@ public class SwarmClient {
             CredentialsProvider credsProvider = new BasicCredentialsProvider();
             credsProvider.setCredentials(
                     new AuthScope(urlForAuth.getHost(), urlForAuth.getPort()),
-                    new UsernamePasswordCredentials(clientOptions.username, clientOptions.password));
+                    new UsernamePasswordCredentials(
+                            clientOptions.username, clientOptions.password));
             context.setCredentialsProvider(credsProvider);
 
             AuthCache authCache = new BasicAuthCache();
@@ -567,11 +576,11 @@ public class SwarmClient {
     }
 
     /**
-     * Returns a hash that should be consistent for any individual swarm client (as long as it has a persistent IP)
-     * and should be unique to that client.
+     * Returns a hash that should be consistent for any individual swarm client (as long as it has a
+     * persistent IP) and should be unique to that client.
      *
-     * @param remoteFsRoot the file system root should be part of the hash (to support multiple swarm clients from
-     *                     the same machine)
+     * @param remoteFsRoot the file system root should be part of the hash (to support multiple
+     *     swarm clients from the same machine)
      * @return our best effort at a consistent hash
      */
     private static String hash(File remoteFsRoot) {
@@ -623,7 +632,8 @@ public class SwarmClient {
         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {}
 
         @Override
-        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
+                throws CertificateException {
             if (allowedFingerprints.isEmpty()) {
                 return;
             }
@@ -673,5 +683,4 @@ public class SwarmClient {
             this.crumb = crumb;
         }
     }
-
 }

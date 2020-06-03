@@ -1,6 +1,16 @@
 package hudson.plugins.swarm;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -15,15 +25,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
 public class LabelFileWatcher implements Runnable {
 
@@ -225,5 +226,4 @@ public class LabelFileWatcher implements Runnable {
         logger.warning("LabelFileWatcher no longer running. Shutting down this instance of Swarm Client.");
         System.exit(0);
     }
-
 }
