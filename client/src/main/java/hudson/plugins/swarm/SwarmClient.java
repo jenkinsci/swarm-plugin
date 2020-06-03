@@ -113,7 +113,7 @@ public class SwarmClient {
         return name;
     }
 
-    public Candidate discoverFromMasterUrl() throws IOException, RetryException {
+    public Candidate discoverFromMasterUrl() throws IOException {
         logger.config("discoverFromMasterUrl() invoked");
 
         if (!options.master.endsWith("/")) {
