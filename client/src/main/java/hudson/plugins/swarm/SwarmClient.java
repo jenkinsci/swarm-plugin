@@ -628,9 +628,9 @@ public class SwarmClient {
 
     protected static class DefaultTrustManager implements X509TrustManager {
 
-        List<String> allowedFingerprints = new ArrayList<>();
+        final List<String> allowedFingerprints = new ArrayList<>();
 
-        List<X509Certificate> acceptedIssuers = new ArrayList<>();
+        final List<X509Certificate> acceptedIssuers = new ArrayList<>();
 
         @Override
         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {}

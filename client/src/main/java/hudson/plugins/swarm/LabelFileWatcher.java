@@ -44,13 +44,13 @@ public class LabelFileWatcher implements Runnable {
 
     private final Logger logger = Logger.getLogger(LabelFileWatcher.class.getPackage().getName());
 
-    private String sFileName;
+    private final String sFileName;
     private boolean bRunning = false;
-    private Options opts;
+    private final Options opts;
     private final String name;
     private String sLabels;
     private String[] sArgs;
-    private Candidate targ;
+    private final Candidate targ;
 
     public LabelFileWatcher(Candidate target, Options options, String name, String... args)
             throws IOException {
