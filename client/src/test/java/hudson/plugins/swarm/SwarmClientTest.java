@@ -5,6 +5,8 @@ import static org.junit.Assert.assertNotNull;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Test;
 
+import java.io.IOException;
+
 public class SwarmClientTest {
 
     @Test
@@ -15,9 +17,10 @@ public class SwarmClientTest {
     }
 
     @Test
-    public void should_try_to_create_http_connection_on_default_options() {
+    public void should_try_to_create_http_connection_on_default_options() throws IOException {
         Options options = new Options();
-        CloseableHttpClient hc = SwarmClient.createHttpClient(options);
-        assertNotNull(hc);
+        try (CloseableHttpClient client = SwarmClient.createHttpClient(options)) {
+            assertNotNull(client);
+        }
     }
 }
