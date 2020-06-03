@@ -669,9 +669,9 @@ public class SwarmClient {
         }
     }
 
-    protected static class Crumb {
-        protected final String crumb;
-        protected final String crumbRequestField;
+    private static class Crumb {
+        final String crumb;
+        final String crumbRequestField;
 
         Crumb(String crumbRequestField, String crumb) {
             this.crumbRequestField = crumbRequestField;
