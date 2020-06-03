@@ -35,12 +35,12 @@ public class LabelFileWatcher implements Runnable {
     private final String name;
     private String sLabels;
     private String[] sArgs;
-    private final Candidate targ;
+    private final String targetUrl;
 
-    public LabelFileWatcher(Candidate target, Options options, String name, String... args)
+    public LabelFileWatcher(String targetUrl, Options options, String name, String... args)
             throws IOException {
         logger.config("LabelFileWatcher() constructed with: " + options.labelsFile + ", and " + StringUtils.join(args));
-        targ = target;
+        this.targetUrl = targetUrl;
         opts = options;
         this.name = name;
         sFileName = options.labelsFile;
@@ -57,7 +57,7 @@ public class LabelFileWatcher implements Runnable {
         // 2. issue remove command for all old labels
         // 3. issue update commands for new labels
         logger.log(Level.CONFIG, "NOTICE: " + sFileName + " has changed.  Attempting soft label update (no node restart)");
-        URL urlForAuth = new URL(targ.getURL());
+        URL urlForAuth = new URL(targetUrl);
         CloseableHttpClient h = SwarmClient.createHttpClient(opts);
         HttpClientContext context = SwarmClient.createHttpClientContext(opts, urlForAuth);
 
@@ -65,7 +65,7 @@ public class LabelFileWatcher implements Runnable {
 
         Document xml;
 
-        HttpGet get = new HttpGet(targ.getURL() + "/plugin/swarm/getSlaveLabels?name=" + name);
+        HttpGet get = new HttpGet(targetUrl + "/plugin/swarm/getSlaveLabels?name=" + name);
         try (CloseableHttpResponse response = h.execute(get, context)) {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 logger.log(
@@ -78,12 +78,12 @@ public class LabelFileWatcher implements Runnable {
             try {
                 xml = XmlUtils.parse(response.getEntity().getContent());
             } catch (SAXException e) {
-                String msg = "Invalid XML received from " + targ.getURL();
+                String msg = "Invalid XML received from " + targetUrl;
                 logger.log(Level.SEVERE, msg, e);
                 throw new SoftLabelUpdateException(msg);
             }
         } catch (IOException e) {
-            String msg = "IOException when reading from " + targ.getURL();
+            String msg = "IOException when reading from " + targetUrl;
             logger.log(Level.SEVERE, msg, e);
             throw new SoftLabelUpdateException(msg);
         }
@@ -101,9 +101,9 @@ public class LabelFileWatcher implements Runnable {
             sb.append(" ");
             if (sb.length() > 1000) {
                 try {
-                    SwarmClient.postLabelRemove(name, sb.toString(), h, context, targ);
+                    SwarmClient.postLabelRemove(name, sb.toString(), h, context, targetUrl);
                 } catch (IOException | RetryException e) {
-                    String msg = "Exception when removing label from " + targ.getURL();
+                    String msg = "Exception when removing label from " + targetUrl;
                     logger.log(Level.SEVERE, msg, e);
                     throw new SoftLabelUpdateException(msg);
                 }
@@ -112,9 +112,9 @@ public class LabelFileWatcher implements Runnable {
         }
         if (sb.length() > 0) {
             try {
-                SwarmClient.postLabelRemove(name, sb.toString(), h, context, targ);
+                SwarmClient.postLabelRemove(name, sb.toString(), h, context, targetUrl);
             } catch (IOException | RetryException e) {
-                String msg = "Exception when removing label from " + targ.getURL();
+                String msg = "Exception when removing label from " + targetUrl;
                 logger.log(Level.SEVERE, msg, e);
                 throw new SoftLabelUpdateException(msg);
             }
@@ -129,9 +129,9 @@ public class LabelFileWatcher implements Runnable {
             sb.append(" ");
             if (sb.length() > 1000) {
                 try {
-                    SwarmClient.postLabelAppend(name, sb.toString(), h, context, targ);
+                    SwarmClient.postLabelAppend(name, sb.toString(), h, context, targetUrl);
                 } catch (IOException | RetryException e) {
-                    String msg = "Exception when appending label to " + targ.getURL();
+                    String msg = "Exception when appending label to " + targetUrl;
                     logger.log(Level.SEVERE, msg, e);
                     throw new SoftLabelUpdateException(msg);
                 }
@@ -141,9 +141,9 @@ public class LabelFileWatcher implements Runnable {
 
         if (sb.length() > 0) {
             try {
-                SwarmClient.postLabelAppend(name, sb.toString(), h, context, targ);
+                SwarmClient.postLabelAppend(name, sb.toString(), h, context, targetUrl);
             } catch (IOException | RetryException e) {
-                String msg = "Exception when appending label to " + targ.getURL();
+                String msg = "Exception when appending label to " + targetUrl;
                 logger.log(Level.SEVERE, msg, e);
                 throw new SoftLabelUpdateException(msg);
             }

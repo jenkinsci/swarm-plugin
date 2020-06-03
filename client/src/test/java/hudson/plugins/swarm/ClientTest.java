@@ -79,7 +79,7 @@ public class ClientTest {
         }
 
         @Override
-        public Candidate discoverFromMasterUrl() throws IOException {
+        public String discoverFromMasterUrl() throws IOException {
             throw new IOException("Unable to connect at the moment");
         }
 

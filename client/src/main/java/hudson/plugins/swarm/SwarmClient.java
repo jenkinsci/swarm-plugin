@@ -110,7 +110,7 @@ public class SwarmClient {
         return name;
     }
 
-    public Candidate discoverFromMasterUrl() throws IOException {
+    public String discoverFromMasterUrl() throws IOException {
         logger.config("discoverFromMasterUrl() invoked");
 
         if (!options.master.endsWith("/")) {
@@ -125,17 +125,15 @@ public class SwarmClient {
             throw new RuntimeException(msg, e);
         }
 
-        return new Candidate(masterURL.toExternalForm());
+        return masterURL.toExternalForm();
     }
 
     /**
      * This method blocks while the swarm slave is serving as a slave.
      * <p>
      * Interrupt the thread to abort it and return.
-     *
-     * @param target candidate
      */
-    protected void connect(Candidate target) throws InterruptedException {
+    protected void connect(String targetUrl) throws InterruptedException {
         logger.fine("connect() invoked");
 
         Launcher launcher = new Launcher();
@@ -145,10 +143,10 @@ public class SwarmClient {
         List<String> jnlpArgs = Collections.emptyList();
 
         try {
-            launcher.agentJnlpURL = new URL(target.url + "computer/" + name + "/slave-agent.jnlp");
+            launcher.agentJnlpURL = new URL(targetUrl + "computer/" + name + "/slave-agent.jnlp");
         } catch (MalformedURLException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + target.url, e);
+            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + targetUrl, e);
             Thread.sleep(10 * 1000);
         }
 
@@ -169,7 +167,7 @@ public class SwarmClient {
             jnlpArgs = launcher.parseJnlpArguments();
         } catch (Exception e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + target.url, e);
+            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + targetUrl, e);
             Thread.sleep(10 * 1000);
         }
 
@@ -178,7 +176,7 @@ public class SwarmClient {
         args.add(jnlpArgs.get(1));
 
         args.add("-url");
-        args.add(target.url);
+        args.add(targetUrl);
 
         if (options.disableSslVerification) {
             args.add("-disableHttpsCertValidation");
@@ -226,7 +224,7 @@ public class SwarmClient {
             Main.main(args.toArray(new String[0]));
         } catch (Exception e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + target.url, e);
+            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + targetUrl, e);
             Thread.sleep(10 * 1000);
         }
     }
@@ -286,7 +284,7 @@ public class SwarmClient {
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
     private static synchronized Crumb getCsrfCrumb(
-            CloseableHttpClient client, HttpClientContext context, Candidate target)
+            CloseableHttpClient client, HttpClientContext context, String targetUrl)
             throws IOException {
         logger.finer("getCsrfCrumb() invoked");
 
@@ -294,7 +292,7 @@ public class SwarmClient {
 
         HttpGet httpGet =
                 new HttpGet(
-                        target.url
+                        targetUrl
                                 + "crumbIssuer/api/xml?xpath="
                                 + URLEncoder.encode(
                                         "concat(//crumbRequestField,\":\",//crumb)", "UTF-8"));
@@ -322,10 +320,10 @@ public class SwarmClient {
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
-    protected void createSwarmSlave(Candidate target) throws IOException, RetryException {
+    protected void createSwarmSlave(String targetUrl) throws IOException, RetryException {
         logger.fine("createSwarmSlave() invoked");
 
-        URL urlForAuth = new URL(target.url);
+        URL urlForAuth = new URL(targetUrl);
         CloseableHttpClient client = createHttpClient(options);
         HttpClientContext context = createHttpClientContext(options, urlForAuth);
 
@@ -363,7 +361,7 @@ public class SwarmClient {
 
         HttpPost post =
                 new HttpPost(
-                        target.url
+                        targetUrl
                                 + "plugin/swarm/createSlave?name="
                                 + options.name
                                 + "&executors="
@@ -381,7 +379,7 @@ public class SwarmClient {
 
         post.addHeader("Connection", "close");
 
-        Crumb csrfCrumb = getCsrfCrumb(client, context, target);
+        Crumb csrfCrumb = getCsrfCrumb(client, context, targetUrl);
         if (csrfCrumb != null) {
             post.addHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
         }
@@ -422,12 +420,12 @@ public class SwarmClient {
                 sb.append(s);
                 sb.append(" ");
                 if (sb.length() > 1000) {
-                    postLabelAppend(name, sb.toString(), client, context, target);
+                    postLabelAppend(name, sb.toString(), client, context, targetUrl);
                     sb = new StringBuilder();
                 }
             }
             if (sb.length() > 0) {
-                postLabelAppend(name, sb.toString(), client, context, target);
+                postLabelAppend(name, sb.toString(), client, context, targetUrl);
             }
         }
     }
@@ -440,18 +438,18 @@ public class SwarmClient {
             String labels,
             CloseableHttpClient client,
             HttpClientContext context,
-            Candidate target)
+            String targetUrl)
             throws IOException, RetryException {
         HttpPost post =
                 new HttpPost(
-                        target.url
+                        targetUrl
                                 + "plugin/swarm/removeSlaveLabels?name="
                                 + name
                                 + SwarmClient.param("labels", labels));
 
         post.addHeader("Connection", "close");
 
-        Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, context, target);
+        Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, context, targetUrl);
         if (csrfCrumb != null) {
             post.addHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
         }
@@ -477,18 +475,18 @@ public class SwarmClient {
             String labels,
             CloseableHttpClient client,
             HttpClientContext context,
-            Candidate target)
+            String targetUrl)
             throws IOException, RetryException {
         HttpPost post =
                 new HttpPost(
-                        target.url
+                        targetUrl
                                 + "plugin/swarm/addSlaveLabels?name="
                                 + name
                                 + param("labels", labels));
 
         post.addHeader("Connection", "close");
 
-        Crumb csrfCrumb = getCsrfCrumb(client, context, target);
+        Crumb csrfCrumb = getCsrfCrumb(client, context, targetUrl);
         if (csrfCrumb != null) {
             post.addHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
         }
@@ -521,12 +519,12 @@ public class SwarmClient {
         return "&" + name + "=" + encode(value);
     }
 
-    protected void verifyThatUrlIsHudson(Candidate target) throws RetryException {
+    protected void verifyThatUrlIsHudson(String targetUrl) throws RetryException {
         logger.fine("verifyThatUrlIsHudson() invoked");
 
         try {
-            logger.fine("Connecting to " + target.url);
-            HttpURLConnection con = (HttpURLConnection) new URL(target.url).openConnection();
+            logger.fine("Connecting to " + targetUrl);
+            HttpURLConnection con = (HttpURLConnection) new URL(targetUrl).openConnection();
             con.connect();
 
             if (con.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN) {
@@ -542,7 +540,7 @@ public class SwarmClient {
                 throw new RetryException(msg);
             }
         } catch (IOException e) {
-            String msg = "Failed to connect to " + target.url;
+            String msg = "Failed to connect to " + targetUrl;
             logger.log(Level.SEVERE, msg, e);
             throw new RetryException(msg, e);
         }

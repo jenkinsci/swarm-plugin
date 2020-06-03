@@ -140,22 +140,19 @@ public class Client {
     public void run(SwarmClient swarmClient, String... args) throws InterruptedException {
         logger.info("Discovering Jenkins master");
 
-        // The Jenkins that we are trying to connect to.
-        Candidate target;
-
         // wait until we get the ACK back
         int retry = 0;
         while (true) {
             try {
-                target = swarmClient.discoverFromMasterUrl();
+                String targetUrl = swarmClient.discoverFromMasterUrl();
 
                 if (options.password == null && options.username == null) {
-                    swarmClient.verifyThatUrlIsHudson(target);
+                    swarmClient.verifyThatUrlIsHudson(targetUrl);
                 }
 
                 logger.info(
                         "Attempting to connect to "
-                                + target.url
+                                + targetUrl
                                 + " with ID "
                                 + swarmClient.getHash());
 
@@ -164,7 +161,7 @@ public class Client {
                  * has been set to the name returned by the server, which may or may not be the name
                  * we originally requested.
                  */
-                swarmClient.createSwarmSlave(target);
+                swarmClient.createSwarmSlave(targetUrl);
 
                 /*
                  * Set up the label file watcher thread. If the label file changes, this thread
@@ -175,13 +172,13 @@ public class Client {
                 if (options.labelsFile != null) {
                     logger.info("Setting up LabelFileWatcher");
                     LabelFileWatcher l =
-                            new LabelFileWatcher(target, options, swarmClient.getName(), args);
+                            new LabelFileWatcher(targetUrl, options, swarmClient.getName(), args);
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
                     labelFileWatcherThread.setDaemon(true);
                     labelFileWatcherThread.start();
                 }
 
-                swarmClient.connect(target);
+                swarmClient.connect(targetUrl);
                 if (options.noRetryAfterConnected) {
                     logger.warning("Connection closed, exiting...");
                     swarmClient.exitWithStatus(0);
