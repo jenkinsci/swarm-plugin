@@ -180,18 +180,16 @@ public class PluginImpl extends Plugin {
                 name = name + '-' + hash;
             }
             // check for existing connections
-            {
-                Node n = jenkins.getNode(name);
-                if (n != null && !deleteExistingClients) {
-                    Computer c = n.toComputer();
-                    if (c != null && c.isOnline()) {
-                        // this is an existing connection, we'll only cause issues
-                        // if we trample over an online connection
-                        rsp.setStatus(SC_CONFLICT);
-                        rsp.setContentType("text/plain; UTF-8");
-                        rsp.getWriter().printf("A slave called '%s' is already created and on-line%n", name);
-                        return;
-                    }
+            Node n = jenkins.getNode(name);
+            if (n != null && !deleteExistingClients) {
+                Computer c = n.toComputer();
+                if (c != null && c.isOnline()) {
+                    // this is an existing connection, we'll only cause issues
+                    // if we trample over an online connection
+                    rsp.setStatus(SC_CONFLICT);
+                    rsp.setContentType("text/plain; UTF-8");
+                    rsp.getWriter().printf("A slave called '%s' is already created and on-line%n", name);
+                    return;
                 }
             }
 
