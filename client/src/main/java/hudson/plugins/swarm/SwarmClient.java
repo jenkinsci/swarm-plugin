@@ -77,11 +77,7 @@ public class SwarmClient {
     @SuppressFBWarnings("DM_EXIT")
     public SwarmClient(Options options) {
         this.options = options;
-        Map<String, String> env = System.getenv();
-        if (env.containsKey("MESOS_TASK_ID") && StringUtils.isNotEmpty(env.get("MESOS_TASK_ID"))) {
-            this.hash = env.get("MESOS_TASK_ID");
-            logger.info("Using MESOS_TASK_ID: " + this.hash);
-        } else if (!options.disableClientsUniqueId) {
+        if (!options.disableClientsUniqueId) {
             this.hash = hash(options.remoteFsRoot);
         } else {
             this.hash = "";
