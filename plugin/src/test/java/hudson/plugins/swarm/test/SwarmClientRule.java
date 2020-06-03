@@ -365,6 +365,7 @@ public class SwarmClientRule extends ExternalResource {
             this.prefix = prefix;
         }
 
+        @Override
         public void handle(String line) {
             LOGGER.log(Level.INFO, prefix + ": {0}", line);
         }
