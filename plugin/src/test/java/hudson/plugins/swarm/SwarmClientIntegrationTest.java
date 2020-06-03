@@ -312,7 +312,7 @@ public class SwarmClientIntegrationTest {
         Node node = swarmClientRule.createSwarmClient();
         assertTrue(
                 node.getNodeDescription(),
-                Pattern.matches("Swarm slave from ([a-zA-Z_0-9-\\.]+)", node.getNodeDescription()));
+                Pattern.matches("Swarm slave from ([a-zA-Z_0-9-.]+)", node.getNodeDescription()));
     }
 
     @Test
@@ -321,7 +321,7 @@ public class SwarmClientIntegrationTest {
         assertTrue(
                 node.getNodeDescription(),
                 Pattern.matches(
-                        "Swarm slave from ([a-zA-Z_0-9-\\.]+): foobar", node.getNodeDescription()));
+                        "Swarm slave from ([a-zA-Z_0-9-.]+): foobar", node.getNodeDescription()));
     }
 
     @Test
