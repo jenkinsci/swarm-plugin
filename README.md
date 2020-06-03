@@ -42,7 +42,6 @@ settings unexpectedly.
 
 ```
 $ java -jar swarm-client.jar --help
- -candidateTag VAL                      : Show swarm candidate with tag only
  -deleteExistingClients                 : Deletes any existing slave with the
                                           same name. (default: false)
  -description VAL                       : Description to be put on the slave

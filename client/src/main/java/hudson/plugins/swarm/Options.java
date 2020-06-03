@@ -113,9 +113,6 @@ public class Options {
     @Option(name = "-showHostName", aliases = "--showHostName", usage = "Show hostname instead of IP address")
     public boolean showHostName;
 
-    @Option(name = "-candidateTag", usage = "Show swarm candidate with tag only")
-    public String candidateTag;
-
     @Option(name = "-labelsFile", usage = "File location with space delimited list of labels.  If the file changes, the client is restarted.")
     public String labelsFile;
 
