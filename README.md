@@ -42,7 +42,6 @@ settings unexpectedly.
 
 ```
 $ java -jar swarm-client.jar --help
- -candidateTag VAL                      : Show swarm candidate with tag only
  -deleteExistingClients                 : Deletes any existing slave with the
                                           same name. (default: false)
  -description VAL                       : Description to be put on the slave
@@ -57,7 +56,8 @@ $ java -jar swarm-client.jar --help
                                           on this slave. It is specified as
                                           'key=value'. Multiple variables are
                                           allowed.
- -executors N                           : Number of executors (default: 16)
+ -executors N                           : Number of executors (default: number
+                                          of CPUs)
  -failIfWorkDirIsMissing                : Fail if the requested Remoting
                                           working directory or internal
                                           directory is missing. (default: false)
@@ -114,8 +114,6 @@ $ java -jar swarm-client.jar --help
                                           Default is 'none'. (default: NONE)
  -retryInterval N                       : Time to wait before retry in seconds.
                                           Default is 10 seconds. (default: 10)
- -showHostName (--showHostName)         : Show hostname instead of IP address
-                                          (default: false)
  -sslFingerprints VAL                   : Whitespace-separated list of accepted
                                           certificate fingerprints
                                           (SHA-256/Hex), otherwise system

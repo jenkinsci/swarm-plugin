@@ -45,15 +45,15 @@ public class PluginImpl extends Plugin {
         Jenkins jenkins = Jenkins.get();
 
         try {
-            Node n = jenkins.getNode(name);
+            Node node = jenkins.getNode(name);
 
-            if (n == null) {
+            if (node == null) {
                 rsp.setStatus(SC_NOT_FOUND);
                 rsp.setContentType("text/plain; UTF-8");
                 rsp.getWriter().printf("A slave called '%s' does not exist.%n", name);
                 return null;
             }
-            return n;
+            return node;
         } catch (NullPointerException ignored) {}
 
         return null;
@@ -64,12 +64,12 @@ public class PluginImpl extends Plugin {
      */
     public void doGetSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name)
                                  throws IOException {
-        Node nn = getNodeByName(name, rsp);
-        if (nn == null) {
+        Node node = getNodeByName(name, rsp);
+        if (node == null) {
             return;
         }
 
-        normalResponse(req, rsp, nn.getLabelString());
+        normalResponse(req, rsp, node.getLabelString());
     }
 
     @SuppressFBWarnings(
@@ -78,8 +78,8 @@ public class PluginImpl extends Plugin {
     private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
         rsp.setContentType("text/xml");
 
-        try (Writer w = rsp.getCompressedWriter(req)) {
-            w.write("<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
+        try (Writer writer = rsp.getCompressedWriter(req)) {
+            writer.write("<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
         }
     }
 
@@ -89,22 +89,22 @@ public class PluginImpl extends Plugin {
     @POST
     public void doAddSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                             @QueryParameter String labels)  throws IOException{
-        Node nn = getNodeByName(name, rsp);
-        if (nn == null) {
+        Node node = getNodeByName(name, rsp);
+        if (node == null) {
             return;
         }
 
-        nn.checkPermission(Computer.CONFIGURE);
+        node.checkPermission(Computer.CONFIGURE);
 
-        String sCurrentLabels = nn.getLabelString();
+        String sCurrentLabels = node.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
         Set<String> hs = new HashSet<>(lCurrentLabels);
         List<String> lNewLabels = Arrays.asList(labels.split("\\s+"));
         hs.addAll(lNewLabels);
-        nn.setLabelString(setToString(hs));
-        nn.getAssignedLabels();
+        node.setLabelString(setToString(hs));
+        node.getAssignedLabels();
 
-        normalResponse(req, rsp, nn.getLabelString());
+        normalResponse(req, rsp, node.getLabelString());
     }
 
     private static String setToString(Set<String> labels) {
@@ -117,21 +117,21 @@ public class PluginImpl extends Plugin {
     @POST
     public void doRemoveSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name,
                             @QueryParameter String labels) throws IOException {
-        Node nn = getNodeByName(name, rsp);
-        if (nn == null) {
+        Node node = getNodeByName(name, rsp);
+        if (node == null) {
             return;
         }
 
-        nn.checkPermission(Computer.CONFIGURE);
+        node.checkPermission(Computer.CONFIGURE);
 
-        String sCurrentLabels = nn.getLabelString();
+        String sCurrentLabels = node.getLabelString();
         List<String> lCurrentLabels = Arrays.asList(sCurrentLabels.split("\\s+"));
         Set<String> hs = new HashSet<>(lCurrentLabels);
         List<String> lBadLabels = Arrays.asList(labels.split("\\s+"));
         hs.removeAll(lBadLabels);
-        nn.setLabelString(setToString(hs));
-        nn.getAssignedLabels();
-        normalResponse(req, rsp, nn.getLabelString());
+        node.setLabelString(setToString(hs));
+        node.getAssignedLabels();
+        normalResponse(req, rsp, node.getLabelString());
     }
 
     /**
@@ -180,18 +180,16 @@ public class PluginImpl extends Plugin {
                 name = name + '-' + hash;
             }
             // check for existing connections
-            {
-                Node n = jenkins.getNode(name);
-                if (n != null && !deleteExistingClients) {
-                    Computer c = n.toComputer();
-                    if (c != null && c.isOnline()) {
-                        // this is an existing connection, we'll only cause issues
-                        // if we trample over an online connection
-                        rsp.setStatus(SC_CONFLICT);
-                        rsp.setContentType("text/plain; UTF-8");
-                        rsp.getWriter().printf("A slave called '%s' is already created and on-line%n", name);
-                        return;
-                    }
+            Node node = jenkins.getNode(name);
+            if (node != null && !deleteExistingClients) {
+                Computer computer = node.toComputer();
+                if (computer != null && computer.isOnline()) {
+                    // this is an existing connection, we'll only cause issues
+                    // if we trample over an online connection
+                    rsp.setStatus(SC_CONFLICT);
+                    rsp.setContentType("text/plain; UTF-8");
+                    rsp.getWriter().printf("A slave called '%s' is already created and on-line%n", name);
+                    return;
                 }
             }
 
@@ -291,8 +289,8 @@ public class PluginImpl extends Plugin {
         jenkins.checkPermission(SlaveComputer.CREATE);
 
         rsp.setContentType("text/xml");
-        try (Writer w = rsp.getCompressedWriter(req)) {
-            w.write("<slaveInfo><swarmSecret>" + UUID.randomUUID().toString() + "</swarmSecret></slaveInfo>");
+        try (Writer writer = rsp.getCompressedWriter(req)) {
+            writer.write("<slaveInfo><swarmSecret>" + UUID.randomUUID().toString() + "</swarmSecret></slaveInfo>");
         }
     }
 }

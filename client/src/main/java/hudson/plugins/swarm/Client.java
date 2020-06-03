@@ -1,5 +1,15 @@
 package hudson.plugins.swarm;
 
+import org.apache.commons.lang.math.NumberUtils;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.NamedOptionDef;
+import org.kohsuke.args4j.spi.FieldSetter;
+import org.kohsuke.args4j.spi.OptionHandler;
+
+import oshi.SystemInfo;
+import oshi.software.os.OSProcess;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -9,18 +19,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.math.NumberUtils;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.NamedOptionDef;
-import org.kohsuke.args4j.spi.FieldSetter;
-import org.kohsuke.args4j.spi.OptionHandler;
-import oshi.SystemInfo;
-import oshi.software.os.OSProcess;
 
 public class Client {
 
-    private static final Logger logger = Logger.getLogger(Client.class.getPackage().getName());
+    private static final Logger logger = Logger.getLogger(Client.class.getName());
 
     private final Options options;
 
@@ -28,19 +30,19 @@ public class Client {
     public static void main(String... args) throws InterruptedException, IOException {
         Options options = new Options();
         Client client = new Client(options);
-        CmdLineParser p = new CmdLineParser(options);
+        CmdLineParser parser = new CmdLineParser(options);
         try {
-            p.parseArgument(args);
+            parser.parseArgument(args);
         } catch (CmdLineException e) {
             logger.log(Level.SEVERE, "CmdLineException occurred during parseArgument", e);
-            p.printUsage(System.out);
+            parser.printUsage(System.out);
             System.exit(1);
         }
 
-        logArguments(p);
+        logArguments(parser);
 
         if (options.help) {
-            p.printUsage(System.out);
+            parser.printUsage(System.out);
             System.exit(0);
         }
 
@@ -134,28 +136,25 @@ public class Client {
 
     /**
      * Finds a Jenkins master that supports swarming, and join it.
-     * <p>
-     * This method never returns.
+     *
+     * <p>This method never returns.
      */
     public void run(SwarmClient swarmClient, String... args) throws InterruptedException {
         logger.info("Discovering Jenkins master");
-
-        // The Jenkins that we are trying to connect to.
-        Candidate target;
 
         // wait until we get the ACK back
         int retry = 0;
         while (true) {
             try {
-                target = swarmClient.discoverFromMasterUrl();
+                String targetUrl = swarmClient.discoverFromMasterUrl();
 
                 if (options.password == null && options.username == null) {
-                    swarmClient.verifyThatUrlIsHudson(target);
+                    swarmClient.verifyThatUrlIsHudson(targetUrl);
                 }
 
                 logger.info(
                         "Attempting to connect to "
-                                + target.url
+                                + targetUrl
                                 + " with ID "
                                 + swarmClient.getHash());
 
@@ -164,7 +163,7 @@ public class Client {
                  * has been set to the name returned by the server, which may or may not be the name
                  * we originally requested.
                  */
-                swarmClient.createSwarmSlave(target);
+                swarmClient.createSwarmSlave(targetUrl);
 
                 /*
                  * Set up the label file watcher thread. If the label file changes, this thread
@@ -175,13 +174,13 @@ public class Client {
                 if (options.labelsFile != null) {
                     logger.info("Setting up LabelFileWatcher");
                     LabelFileWatcher l =
-                            new LabelFileWatcher(target, options, swarmClient.getName(), args);
+                            new LabelFileWatcher(targetUrl, options, swarmClient.getName(), args);
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
                     labelFileWatcherThread.setDaemon(true);
                     labelFileWatcherThread.start();
                 }
 
-                swarmClient.connect(target);
+                swarmClient.connect(targetUrl);
                 if (options.noRetryAfterConnected) {
                     logger.warning("Connection closed, exiting...");
                     swarmClient.exitWithStatus(0);
@@ -217,17 +216,17 @@ public class Client {
         CmdLineParser defaultParser = new CmdLineParser(defaultOptions);
 
         StringBuilder sb = new StringBuilder("Client invoked with: ");
-        for (OptionHandler argument : parser.getArguments()) {
+        for (OptionHandler<?> argument : parser.getArguments()) {
             logValue(sb, argument, null);
         }
-        for (OptionHandler option : parser.getOptions()) {
+        for (OptionHandler<?> option : parser.getOptions()) {
             logValue(sb, option, defaultParser);
         }
         logger.info(sb.toString());
     }
 
     private static void logValue(
-            StringBuilder sb, OptionHandler handler, CmdLineParser defaultParser) {
+            StringBuilder sb, OptionHandler<?> handler, CmdLineParser defaultParser) {
         String key = getKey(handler);
         Object value = getValue(handler);
 
@@ -249,7 +248,7 @@ public class Client {
         sb.append(' ');
     }
 
-    private static String getKey(OptionHandler optionHandler) {
+    private static String getKey(OptionHandler<?> optionHandler) {
         if (optionHandler.option instanceof NamedOptionDef) {
             NamedOptionDef namedOptionDef = (NamedOptionDef) optionHandler.option;
             return namedOptionDef.name();
@@ -258,13 +257,13 @@ public class Client {
         }
     }
 
-    private static Object getValue(OptionHandler optionHandler) {
+    private static Object getValue(OptionHandler<?> optionHandler) {
         FieldSetter setter = optionHandler.setter.asFieldSetter();
         return setter == null ? null : setter.getValue();
     }
 
     private static boolean isDefaultOption(String key, Object value, CmdLineParser defaultParser) {
-        for (OptionHandler defaultOption : defaultParser.getOptions()) {
+        for (OptionHandler<?> defaultOption : defaultParser.getOptions()) {
             String defaultKey = getKey(defaultOption);
             if (defaultKey.equals(key)) {
                 Object defaultValue = getValue(defaultOption);
