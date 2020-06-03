@@ -40,7 +40,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -198,7 +197,7 @@ public class SwarmClientIntegrationTest {
 
         // Try to start a second and ensure it fails to run.
         startFailingSwarmClient(
-                Optional.of(j.getURL()),
+                j.getURL(),
                 "agent_fail",
                 "-pidFile",
                 pidFile.toAbsolutePath().toString());
@@ -327,7 +326,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void missingMasterOption() throws Exception {
-        startFailingSwarmClient(Optional.empty(), "test");
+        startFailingSwarmClient(null, "test");
     }
 
     @Test
@@ -390,7 +389,7 @@ public class SwarmClientIntegrationTest {
         final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
         final File workDirPath = new File(temporaryRemotingFolder.getRoot(), "customworkdir");
         startFailingSwarmClient(
-                Optional.of(j.getURL()),
+                j.getURL(),
                 "should_fail",
                 "-fsroot",
                 fsRootPath.getAbsolutePath(),
@@ -471,7 +470,7 @@ public class SwarmClientIntegrationTest {
      * a Swarm client is already running. Clients started with this method are expected to fail to
      * start.
      */
-    private void startFailingSwarmClient(Optional<URL> url, String agentName, String... args)
+    private void startFailingSwarmClient(URL url, String agentName, String... args)
             throws IOException, InterruptedException {
         // Download the Swarm client JAR from the Jenkins master.
         Path swarmClientJar =

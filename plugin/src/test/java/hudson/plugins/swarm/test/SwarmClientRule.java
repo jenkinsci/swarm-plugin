@@ -28,7 +28,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -131,7 +130,7 @@ public class SwarmClientRule extends ExternalResource {
 
         // Form the list of command-line arguments.
         List<String> command =
-                getCommand(swarmClientJar, Optional.of(j.get().getURL()), agentName, args);
+                getCommand(swarmClientJar, j.get().getURL(), agentName, args);
 
         LOGGER.log(Level.INFO, "Starting client process.");
         try {
@@ -187,7 +186,7 @@ public class SwarmClientRule extends ExternalResource {
      * @param args Any other desired arguments.
      */
     public static List<String> getCommand(
-            Path swarmClientJar, Optional<URL> url, String agentName, String... args) {
+            Path swarmClientJar, URL url, String agentName, String... args) {
         List<String> command = new ArrayList<>();
         command.add(
                 System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
@@ -196,9 +195,9 @@ public class SwarmClientRule extends ExternalResource {
         command.add(swarmClientJar.toString());
         command.add("-name");
         command.add(agentName);
-        if (url.isPresent()) {
+        if (url != null) {
             command.add("-master");
-            command.add(url.get().toString());
+            command.add(url.toString());
         }
         Collections.addAll(command, args);
         return command;
