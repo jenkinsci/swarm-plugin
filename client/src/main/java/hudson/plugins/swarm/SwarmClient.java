@@ -569,16 +569,6 @@ public class SwarmClient {
         return null;
     }
 
-    private String printable(InetAddress ia) {
-        logger.finer("printable() invoked");
-
-        if (options.showHostName) {
-            return ia.getHostName();
-        } else {
-            return ia.toString();
-        }
-    }
-
     /**
      * Returns a hash that should be consistent for any individual swarm client (as long as it has a persistent IP)
      * and should be unique to that client.
