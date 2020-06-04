@@ -13,6 +13,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,6 +23,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class PipelineJobTest {
 
@@ -35,6 +37,11 @@ public class PipelineJobTest {
 
     @Rule(order = 30)
     public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder);
+
+    @Before
+    public void configureGlobalSecurity() throws IOException {
+        swarmClientRule.globalSecurityConfigurationBuilder().build();
+    }
 
     /** Executes a shell script build on a Swarm agent. */
     @Test

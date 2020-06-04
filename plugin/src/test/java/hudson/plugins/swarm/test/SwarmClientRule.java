@@ -8,10 +8,12 @@ import static org.junit.Assert.assertTrue;
 
 import hudson.model.Computer;
 import hudson.model.Node;
+import hudson.security.ProjectMatrixAuthorizationStrategy;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListenerAdapter;
+import org.jenkinsci.plugins.matrixauth.AuthorizationMatrixNodeProperty;
 import org.jenkinsci.plugins.workflow.support.concurrent.Timeout;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -48,7 +51,7 @@ public class SwarmClientRule extends ExternalResource {
     private static final Logger logger = Logger.getLogger(SwarmClientRule.class.getName());
 
     /** A {@link Supplier} for compatibility with {@link RestartableJenkinsRule}. */
-    private final Supplier<JenkinsRule> j;
+    final Supplier<JenkinsRule> j;
 
     /**
      * Used for storing the Swarm Client JAR file as well as for the client's Remoting working
@@ -58,6 +61,12 @@ public class SwarmClientRule extends ExternalResource {
 
     /** Whether or not the client is currently active. */
     private boolean isActive = false;
+
+    /** The username to use when connecting to the Jenkins master. */
+    String swarmUsername;
+
+    /** The password or API token to use when connecting to the Jenkins master. */
+    String swarmPassword;
 
     /**
      * The {@link Computer} object corresponding to the agent within Jenkins, if the client is
@@ -91,6 +100,10 @@ public class SwarmClientRule extends ExternalResource {
     public SwarmClientRule(Supplier<JenkinsRule> j, TemporaryFolder temporaryFolder) {
         this.j = j;
         this.temporaryFolder = temporaryFolder;
+    }
+
+    public GlobalSecurityConfigurationBuilder globalSecurityConfigurationBuilder() {
+        return new GlobalSecurityConfigurationBuilder(this);
     }
 
     /**
@@ -128,9 +141,23 @@ public class SwarmClientRule extends ExternalResource {
                 Files.createTempFile(temporaryFolder.getRoot().toPath(), "swarm-client", ".jar");
         download(swarmClientJar);
 
+        // Create the password file.
+        Path passwordFile = null;
+        if (swarmPassword != null) {
+            passwordFile =
+                    Files.createTempFile(temporaryFolder.getRoot().toPath(), "password", null);
+            Files.write(passwordFile, swarmPassword.getBytes(StandardCharsets.UTF_8));
+        }
+
         // Form the list of command-line arguments.
         List<String> command =
-                getCommand(swarmClientJar, j.get().getURL(), agentName, args);
+                getCommand(
+                        swarmClientJar,
+                        j.get().getURL(),
+                        agentName,
+                        swarmUsername,
+                        passwordFile != null ? passwordFile.toString() : null,
+                        args);
 
         logger.log(Level.INFO, "Starting client process.");
         try {
@@ -171,6 +198,10 @@ public class SwarmClientRule extends ExternalResource {
         assertNotNull(computer);
         assertTrue(computer.isOnline());
         Node node = computer.getNode();
+        if (j.get().jenkins.getAuthorizationStrategy()
+                instanceof ProjectMatrixAuthorizationStrategy) {
+            assertNotNull(node.getNodeProperty(AuthorizationMatrixNodeProperty.class));
+        }
         assertNotNull(node);
 
         logger.log(Level.INFO, "\"{0}\" is now online.", node.getNodeName());
@@ -186,18 +217,32 @@ public class SwarmClientRule extends ExternalResource {
      * @param args Any other desired arguments.
      */
     public static List<String> getCommand(
-            Path swarmClientJar, URL url, String agentName, String... args) {
+            Path swarmClientJar,
+            URL url,
+            String agentName,
+            String username,
+            String passwordFile,
+            String... args) {
         List<String> command = new ArrayList<>();
         command.add(
                 System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
         command.add("-Djava.awt.headless=true");
+        command.add("-Dhudson.plugins.swarm.LabelFileWatcher.labelFileWatcherIntervalMillis=100");
         command.add("-jar");
         command.add(swarmClientJar.toString());
-        command.add("-name");
-        command.add(agentName);
         if (url != null) {
             command.add("-master");
             command.add(url.toString());
+        }
+        command.add("-name");
+        command.add(agentName);
+        if (username != null) {
+            command.add("-username");
+            command.add(username);
+        }
+        if (passwordFile != null) {
+            command.add("-passwordFile");
+            command.add(passwordFile);
         }
         Collections.addAll(command, args);
         return command;

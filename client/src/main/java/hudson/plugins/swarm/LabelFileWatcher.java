@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,17 +31,22 @@ public class LabelFileWatcher implements Runnable {
 
     private static final Logger logger = Logger.getLogger(LabelFileWatcher.class.getName());
 
+    private static final long LABEL_FILE_WATCHER_INTERVAL_MILLIS =
+            Long.getLong(
+                    LabelFileWatcher.class.getName() + ".labelFileWatcherIntervalMillis",
+                    TimeUnit.SECONDS.toMillis(30));
+
     private boolean isRunning = false;
     private final Options options;
     private final String name;
     private String labels;
     private String[] args;
-    private final String targetUrl;
+    private final URL masterUrl;
 
-    public LabelFileWatcher(String targetUrl, Options options, String name, String... args)
+    public LabelFileWatcher(URL masterUrl, Options options, String name, String... args)
             throws IOException {
         logger.config("LabelFileWatcher() constructed with: " + options.labelsFile + " and " + StringUtils.join(args));
-        this.targetUrl = targetUrl;
+        this.masterUrl = masterUrl;
         this.options = options;
         this.name = name;
         this.labels = new String(Files.readAllBytes(Paths.get(options.labelsFile)), StandardCharsets.UTF_8);
@@ -57,13 +63,13 @@ public class LabelFileWatcher implements Runnable {
         // 3. issue update commands for new labels
         logger.log(Level.CONFIG, "NOTICE: " + options.labelsFile + " has changed.  Attempting soft label update (no node restart)");
         CloseableHttpClient client = SwarmClient.createHttpClient(options);
-        HttpClientContext context = SwarmClient.createHttpClientContext(options, new URL(targetUrl));
+        HttpClientContext context = SwarmClient.createHttpClientContext(options, masterUrl);
 
         logger.log(Level.CONFIG, "Getting current labels from master");
 
         Document xml;
 
-        HttpGet get = new HttpGet(targetUrl + "/plugin/swarm/getSlaveLabels?name=" + name);
+        HttpGet get = new HttpGet(masterUrl + "/plugin/swarm/getSlaveLabels?name=" + name);
         try (CloseableHttpResponse response = client.execute(get, context)) {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 logger.log(
@@ -76,12 +82,12 @@ public class LabelFileWatcher implements Runnable {
             try {
                 xml = XmlUtils.parse(response.getEntity().getContent());
             } catch (SAXException e) {
-                String msg = "Invalid XML received from " + targetUrl;
+                String msg = "Invalid XML received from " + masterUrl;
                 logger.log(Level.SEVERE, msg, e);
                 throw new SoftLabelUpdateException(msg);
             }
         } catch (IOException e) {
-            String msg = "IOException when reading from " + targetUrl;
+            String msg = "IOException when reading from " + masterUrl;
             logger.log(Level.SEVERE, msg, e);
             throw new SoftLabelUpdateException(msg);
         }
@@ -99,9 +105,9 @@ public class LabelFileWatcher implements Runnable {
             sb.append(" ");
             if (sb.length() > 1000) {
                 try {
-                    SwarmClient.postLabelRemove(name, sb.toString(), client, context, targetUrl);
+                    SwarmClient.postLabelRemove(name, sb.toString(), client, context, masterUrl);
                 } catch (IOException | RetryException e) {
-                    String msg = "Exception when removing label from " + targetUrl;
+                    String msg = "Exception when removing label from " + masterUrl;
                     logger.log(Level.SEVERE, msg, e);
                     throw new SoftLabelUpdateException(msg);
                 }
@@ -110,9 +116,9 @@ public class LabelFileWatcher implements Runnable {
         }
         if (sb.length() > 0) {
             try {
-                SwarmClient.postLabelRemove(name, sb.toString(), client, context, targetUrl);
+                SwarmClient.postLabelRemove(name, sb.toString(), client, context, masterUrl);
             } catch (IOException | RetryException e) {
-                String msg = "Exception when removing label from " + targetUrl;
+                String msg = "Exception when removing label from " + masterUrl;
                 logger.log(Level.SEVERE, msg, e);
                 throw new SoftLabelUpdateException(msg);
             }
@@ -127,9 +133,9 @@ public class LabelFileWatcher implements Runnable {
             sb.append(" ");
             if (sb.length() > 1000) {
                 try {
-                    SwarmClient.postLabelAppend(name, sb.toString(), client, context, targetUrl);
+                    SwarmClient.postLabelAppend(name, sb.toString(), client, context, masterUrl);
                 } catch (IOException | RetryException e) {
-                    String msg = "Exception when appending label to " + targetUrl;
+                    String msg = "Exception when appending label to " + masterUrl;
                     logger.log(Level.SEVERE, msg, e);
                     throw new SoftLabelUpdateException(msg);
                 }
@@ -139,9 +145,9 @@ public class LabelFileWatcher implements Runnable {
 
         if (sb.length() > 0) {
             try {
-                SwarmClient.postLabelAppend(name, sb.toString(), client, context, targetUrl);
+                SwarmClient.postLabelAppend(name, sb.toString(), client, context, masterUrl);
             } catch (IOException | RetryException e) {
-                String msg = "Exception when appending label to " + targetUrl;
+                String msg = "Exception when appending label to " + masterUrl;
                 logger.log(Level.SEVERE, msg, e);
                 throw new SoftLabelUpdateException(msg);
             }
@@ -190,8 +196,12 @@ public class LabelFileWatcher implements Runnable {
 
         while (isRunning) {
             try {
-                logger.log(Level.FINE, "LabelFileWatcher sleeping 10 secs");
-                Thread.sleep(10 * 1000);
+                logger.log(
+                        Level.FINE,
+                        String.format(
+                                "LabelFileWatcher sleeping %d milliseconds",
+                                LABEL_FILE_WATCHER_INTERVAL_MILLIS));
+                Thread.sleep(LABEL_FILE_WATCHER_INTERVAL_MILLIS);
             } catch (InterruptedException e) {
                 logger.log(Level.WARNING, "LabelFileWatcher InterruptedException occurred.", e);
             }

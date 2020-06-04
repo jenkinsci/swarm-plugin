@@ -18,6 +18,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,6 +63,11 @@ public class SwarmClientIntegrationTest {
     public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder);
 
     private final OperatingSystem os = new SystemInfo().getOperatingSystem();
+
+    @Before
+    public void configureGlobalSecurity() throws IOException {
+        swarmClientRule.globalSecurityConfigurationBuilder().build();
+    }
 
     /** Executes a shell script build on a Swarm agent. */
     @Test
@@ -475,7 +481,8 @@ public class SwarmClientIntegrationTest {
         swarmClientRule.download(swarmClientJar);
 
         // Form the list of command-line arguments.
-        List<String> command = SwarmClientRule.getCommand(swarmClientJar, url, agentName, args);
+        List<String> command =
+                SwarmClientRule.getCommand(swarmClientJar, url, agentName, null, null, args);
 
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.directory(temporaryFolder.newFolder());
