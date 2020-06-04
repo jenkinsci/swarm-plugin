@@ -138,6 +138,9 @@ public class PluginImpl extends Plugin {
 
     /** Add a new Swarm agent. */
     @POST
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "False positive for try-with-resources in Java 11")
     public void doCreateSlave(
             StaplerRequest req,
             StaplerResponse rsp,
