@@ -227,6 +227,8 @@ public class SwarmClientRule extends ExternalResource {
         command.add(
                 System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
         command.add("-Djava.awt.headless=true");
+        command.add("-Xmx64m");
+        command.add("-Xms64m");
         command.add("-Dhudson.plugins.swarm.LabelFileWatcher.labelFileWatcherIntervalMillis=100");
         command.add("-jar");
         command.add(swarmClientJar.toString());
