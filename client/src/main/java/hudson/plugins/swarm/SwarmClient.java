@@ -55,7 +55,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -129,7 +128,7 @@ public class SwarmClient {
     }
 
     /**
-     * This method blocks while the swarm slave is serving as a slave.
+     * This method blocks while the Swarm agent is connected.
      *
      * <p>Interrupt the thread to abort it and return.
      */
@@ -305,8 +304,11 @@ public class SwarmClient {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 logger.log(
                         Level.SEVERE,
-                        "Could not obtain CSRF crumb. Response code: "
-                                + response.getStatusLine().getStatusCode());
+                        String.format(
+                                "Could not obtain CSRF crumb. Response code: %s%n%s",
+                                response.getStatusLine().getStatusCode(),
+                                EntityUtils.toString(
+                                        response.getEntity(), StandardCharsets.UTF_8)));
                 return null;
             }
 
@@ -325,8 +327,8 @@ public class SwarmClient {
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
-    protected void createSwarmSlave(String targetUrl) throws IOException, RetryException {
-        logger.fine("createSwarmSlave() invoked");
+    protected void createSwarmAgent(String targetUrl) throws IOException, RetryException {
+        logger.fine("createSwarmAgent() invoked");
 
         CloseableHttpClient client = createHttpClient(options);
         HttpClientContext context = createHttpClientContext(options, new URL(targetUrl));
@@ -392,7 +394,7 @@ public class SwarmClient {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 String msg =
                         String.format(
-                                "Failed to create a slave on Jenkins, response code: %s%n%s",
+                                "Failed to create a Swarm agent on Jenkins. Response code: %s%n%s",
                                 response.getStatusLine().getStatusCode(),
                                 EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
                 logger.log(Level.SEVERE, msg);
@@ -462,7 +464,7 @@ public class SwarmClient {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 String msg =
                         String.format(
-                                "Failed to remove slave labels. %s - %s",
+                                "Failed to remove agent labels. Response code: %s%n%s",
                                 response.getStatusLine().getStatusCode(),
                                 EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
                 logger.log(Level.SEVERE, msg);
@@ -499,7 +501,7 @@ public class SwarmClient {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 String msg =
                         String.format(
-                                "Failed to update slave labels. Slave is probably messed up. %s - %s",
+                                "Failed to update agent labels. Response code: %s%n%s",
                                 response.getStatusLine().getStatusCode(),
                                 EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
                 logger.log(Level.SEVERE, msg);
@@ -558,7 +560,9 @@ public class SwarmClient {
                 Element element = (Element) node;
                 if (element.getTagName().equals(tagName)) {
                     StringBuilder buf = new StringBuilder();
-                    for (node = element.getFirstChild(); node != null; node = node.getNextSibling()) {
+                    for (node = element.getFirstChild();
+                            node != null;
+                            node = node.getNextSibling()) {
                         if (node instanceof Text) {
                             buf.append(node.getTextContent());
                         }

@@ -20,7 +20,7 @@
 
     <artifactId>swarm-plugin</artifactId>
     <packaging>pom</packaging>
-    <name>Jenkins Self-Organizing Swarm Plug-in</name>
+    <name>Swarm Plugin Parent POM</name>
     <version>3.22-SNAPSHOT</version>
 
     <properties>
