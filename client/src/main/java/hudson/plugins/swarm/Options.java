@@ -1,24 +1,29 @@
 package hudson.plugins.swarm;
 
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.MapOptionHandler;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.spi.MapOptionHandler;
 
 public class Options {
 
-    @Option(name = "-name", usage = "Name of the slave")
+    @Option(name = "-name", usage = "Name of the agent.")
     public String name;
 
-    @Option(name = "-description", usage = "Description to be put on the slave")
+    @Option(name = "-description", usage = "Description to be put on the agent.")
     public String description;
 
-    @Option(name = "-labels", usage = "Whitespace-separated list of labels to be assigned for this slave. Multiple options are allowed.")
+    @Option(
+            name = "-labels",
+            usage =
+                    "Whitespace-separated list of labels to be assigned for this agent. Multiple"
+                            + " options are allowed.")
     public List<String> labels = new ArrayList<>();
 
-    @Option(name = "-fsroot", usage = "Directory where Jenkins places files")
+    @Option(name = "-fsroot", usage = "Remote root directory.")
     public File remoteFsRoot = new File(".");
 
     @Option(name = "-executors", usage = "Number of executors")
@@ -60,7 +65,9 @@ public class Options {
                                                    "Default is 0 seconds")
     public int retryIntervalJitter = 0;
 
-    @Option(name = "-disableSslVerification", usage = "Disables SSL verification in the HttpClient.")
+    @Option(
+            name = "-disableSslVerification",
+            usage = "Disable SSL verification in the HTTP client.")
     public boolean disableSslVerification;
 
     @Option(name = "-sslFingerprints", usage = "Whitespace-separated list of accepted certificate fingerprints (SHA-256/Hex), "+
@@ -69,34 +76,43 @@ public class Options {
                                                "for custom fingerprints! Multiple options are allowed.")
     public String sslFingerprints = "";
 
-    @Option(name = "-disableClientsUniqueId", usage = "Disables client's unique ID.")
+    @Option(name = "-disableClientsUniqueId", usage = "Disable client's unique ID.")
     public boolean disableClientsUniqueId;
 
-    @Option(name = "-deleteExistingClients", usage = "Deletes any existing slave with the same name.")
+    @Option(
+            name = "-deleteExistingClients",
+            usage = "Delete any existing agent with the same name.")
     public boolean deleteExistingClients;
 
     @Option(
             name = "-mode",
-            usage = "The mode controlling how Jenkins allocates jobs to slaves. Can be either '" + ModeOptionHandler.NORMAL + "' " +
-                    "(utilize this slave as much as possible) or '" + ModeOptionHandler.EXCLUSIVE + "' (leave this machine for tied " +
-                    "jobs only). Default is '" + ModeOptionHandler.NORMAL + "'.",
-            handler = ModeOptionHandler.class
-    )
+            usage =
+                    "The mode controlling how Jenkins allocates jobs to agents. Can be either '"
+                            + ModeOptionHandler.NORMAL
+                            + "' (use this node as much as possible) or '"
+                            + ModeOptionHandler.EXCLUSIVE
+                            + "' (only build jobs with label expressions matching this node)."
+                            + " Default is '"
+                            + ModeOptionHandler.NORMAL
+                            + "'.",
+            handler = ModeOptionHandler.class)
     public String mode = ModeOptionHandler.NORMAL;
 
     @Option(
-            name = "-t", aliases = "--toolLocation",
-            usage = "A tool location to be defined on this slave. It is specified as 'toolName=location'",
-            handler = MapOptionHandler.class
-    )
+            name = "-t",
+            aliases = "--toolLocation",
+            usage =
+                    "A tool location to be defined on this agent. It is specified as"
+                            + " 'toolName=location'.",
+            handler = MapOptionHandler.class)
     public Map<String, String> toolLocations;
 
     @Option(
             name = "-e",
             aliases = "--env",
             usage =
-                    "An environment variable to be defined on this slave. "
-                            + "It is specified as 'key=value'. Multiple variables are allowed.",
+                    "An environment variable to be defined on this agent. It is specified as"
+                            + " 'key=value'. Multiple variables are allowed.",
             handler = MapOptionHandler.class)
     public Map<String, String> environmentVariables;
 
@@ -114,12 +130,6 @@ public class Options {
 
     @Option(name = "-passwordFile", usage = "File containing the Jenkins user password")
     public String passwordFile;
-
-    @Option(name = "-showHostName", aliases = "--showHostName", usage = "Show hostname instead of IP address")
-    public boolean showHostName;
-
-    @Option(name = "-candidateTag", usage = "Show swarm candidate with tag only")
-    public String candidateTag;
 
     @Option(name = "-labelsFile", usage = "File location with space delimited list of labels.  If the file changes, the client is restarted.")
     public String labelsFile;

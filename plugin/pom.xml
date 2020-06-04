@@ -10,13 +10,13 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>swarm-plugin</artifactId>
-        <version>3.20-SNAPSHOT</version>
+        <version>3.22-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>swarm</artifactId>
     <packaging>hpi</packaging>
-    <name>Jenkins Self-Organizing Swarm Plug-in Modules</name>
+    <name>Swarm Plugin</name>
     <url>https://github.com/jenkinsci/swarm-plugin</url>
 
     <developers>
@@ -152,7 +152,7 @@
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core</artifactId>
-            <version>5.0.2</version>
+            <version>5.1.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

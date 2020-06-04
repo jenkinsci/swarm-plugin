@@ -14,14 +14,14 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.1</version>
+        <version>4.2</version>
         <relativePath />
     </parent>
 
     <artifactId>swarm-plugin</artifactId>
     <packaging>pom</packaging>
-    <name>Jenkins Self-Organizing Swarm Plug-in</name>
-    <version>3.20-SNAPSHOT</version>
+    <name>Swarm Plugin Parent POM</name>
+    <version>3.22-SNAPSHOT</version>
 
     <properties>
         <jenkins.version>2.164.3</jenkins.version>
