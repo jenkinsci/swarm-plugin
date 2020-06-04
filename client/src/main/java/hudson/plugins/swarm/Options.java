@@ -111,19 +111,23 @@ public class Options {
             handler = MapOptionHandler.class)
     public Map<String, String> environmentVariables;
 
-    @Option(name = "-username", usage = "The Jenkins username for authentication")
+    @Option(name = "-username", usage = "The Jenkins username for authentication.")
     public String username;
 
-    @Option(name = "-password", usage = "The Jenkins user password")
+    @Option(name = "-password", usage = "The Jenkins user API token or password.")
     public String password;
 
     @Option(name = "-help", aliases = "--help", usage = "Show the help screen")
     public boolean help;
 
-    @Option(name = "-passwordEnvVariable", usage = "Environment variable that the password is stored in")
+    @Option(
+            name = "-passwordEnvVariable",
+            usage = "Environment variable containing the Jenkins user API token or password.")
     public String passwordEnvVariable;
 
-    @Option(name = "-passwordFile", usage = "File containing the Jenkins user password")
+    @Option(
+            name = "-passwordFile",
+            usage = "File containing the Jenkins user API token or password.")
     public String passwordFile;
 
     @Option(name = "-labelsFile", usage = "File location with space delimited list of labels.  If the file changes, the client is restarted.")

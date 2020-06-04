@@ -44,6 +44,8 @@ public class PipelineJobRestartTest {
     public void buildShellScriptAfterRestart() {
         story.then(
                 s -> {
+                    swarmClientRule.globalSecurityConfigurationBuilder().build();
+
                     // "-deleteExistingClients" is needed so that the Swarm Client can connect
                     // after the restart.
                     Node node = swarmClientRule.createSwarmClient("-deleteExistingClients");

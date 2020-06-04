@@ -4,12 +4,16 @@ import static hudson.plugins.swarm.RetryBackOffStrategy.EXPONENTIAL;
 import static hudson.plugins.swarm.RetryBackOffStrategy.LINEAR;
 import static hudson.plugins.swarm.RetryBackOffStrategy.NONE;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertThrows;
 
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.jenkinsci.remoting.util.VersionNumber;
 import org.junit.Test;
 
-import java.io.IOException;
+import java.net.URL;
 
 public class ClientTest {
 
@@ -60,16 +64,11 @@ public class ClientTest {
     }
 
     private void runAndVerify(Options options, String expectedResult) {
-        try {
-            SwarmClient swarmClient = new DummySwarmClient(options);
-            Client client = new Client(options);
-            client.run(swarmClient);
-            fail();
-        } catch (IllegalStateException e) {
-            assertEquals(expectedResult, e.getMessage());
-        } catch (Exception e) {
-            fail();
-        }
+        SwarmClient swarmClient = new DummySwarmClient(options);
+        Client client = new Client(options);
+        IllegalStateException thrown =
+                assertThrows(IllegalStateException.class, () -> client.run(swarmClient));
+        assertThat(thrown.getMessage(), containsString(expectedResult));
     }
 
     private static class DummySwarmClient extends SwarmClient {
@@ -81,13 +80,15 @@ public class ClientTest {
         }
 
         @Override
-        public String discoverFromMasterUrl() throws IOException {
-            throw new IOException("Unable to connect at the moment");
+        protected VersionNumber getJenkinsVersion(
+                CloseableHttpClient client, HttpClientContext context, URL masterUrl) {
+            return null;
         }
 
         @Override
         public void exitWithStatus(int status) {
-            throw new IllegalStateException("Exited with status " + status + " after " + totalWaitTime + " seconds");
+            throw new IllegalStateException(
+                    "Exited with status " + status + " after " + totalWaitTime + " seconds");
         }
 
         @Override

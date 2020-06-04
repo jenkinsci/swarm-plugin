@@ -35,13 +35,14 @@ settings unexpectedly.
 ## Documentation
 
 * [Changelog](CHANGELOG.md)
+* [Global Security Configuration](docs/security.md)
 * [Logging](docs/logging.md)
 * [Proxy Configuration](docs/proxy.md)
 
 ## Available Options
 
 ```
-$ java -jar swarm-client.jar --help
+$ java -jar swarm-client.jar -help
  -deleteExistingClients                 : Delete any existing agent with the
                                           same name. (default: false)
  -description VAL                       : Description to be put on the agent.
@@ -62,7 +63,7 @@ $ java -jar swarm-client.jar --help
                                           working directory or internal
                                           directory is missing. (default: false)
  -fsroot FILE                           : Remote root directory. (default: .)
- -help (--help)                         : Show the help screen (default: true)
+ -help (--help)                         : Show the help screen (default: false)
  -internalDir FILE                      : The name of the directory within the
                                           Remoting working directory where
                                           files internal to Remoting will be
@@ -91,11 +92,12 @@ $ java -jar swarm-client.jar --help
  -noRetryAfterConnected                 : Do not retry if a successful
                                           connection gets closed. (default:
                                           false)
- -password VAL                          : The Jenkins user password
- -passwordEnvVariable VAL               : Environment variable that the
-                                          password is stored in
- -passwordFile VAL                      : File containing the Jenkins user
-                                          password
+ -password VAL                          : The Jenkins user API token or
+                                          password.
+ -passwordEnvVariable VAL               : Environment variable containing the
+                                          Jenkins user API token or password.
+ -passwordFile VAL                      : File containing the Jenkins user API
+                                          token or password.
  -pidFile VAL                           : File to write PID to. The client will
                                           refuse to start if this file exists
                                           and the previous process is still
@@ -133,7 +135,7 @@ $ java -jar swarm-client.jar --help
                                           auto-configured like the default
                                           behavior
  -username VAL                          : The Jenkins username for
-                                          authentication
+                                          authentication.
  -workDir FILE                          : The Remoting working directory where
                                           the JAR cache and logs will be stored.
 ```

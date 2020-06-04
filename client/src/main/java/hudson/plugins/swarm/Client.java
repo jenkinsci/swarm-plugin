@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -147,24 +148,16 @@ public class Client {
         int retry = 0;
         while (true) {
             try {
-                String targetUrl = swarmClient.discoverFromMasterUrl();
+                URL masterUrl = swarmClient.getMasterUrl();
 
-                if (options.password == null && options.username == null) {
-                    swarmClient.verifyThatUrlIsHudson(targetUrl);
-                }
-
-                logger.info(
-                        "Attempting to connect to "
-                                + targetUrl
-                                + " with ID "
-                                + swarmClient.getHash());
+                logger.info("Attempting to connect to " + masterUrl);
 
                 /*
                  * Create a new Swarm agent. After this method returns, the value of the name field
                  * has been set to the name returned by the server, which may or may not be the name
                  * we originally requested.
                  */
-                swarmClient.createSwarmAgent(targetUrl);
+                swarmClient.createSwarmAgent(masterUrl);
 
                 /*
                  * Set up the label file watcher thread. If the label file changes, this thread
@@ -175,13 +168,13 @@ public class Client {
                 if (options.labelsFile != null) {
                     logger.info("Setting up LabelFileWatcher");
                     LabelFileWatcher l =
-                            new LabelFileWatcher(targetUrl, options, swarmClient.getName(), args);
+                            new LabelFileWatcher(masterUrl, options, swarmClient.getName(), args);
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
                     labelFileWatcherThread.setDaemon(true);
                     labelFileWatcherThread.start();
                 }
 
-                swarmClient.connect(targetUrl);
+                swarmClient.connect(masterUrl);
                 if (options.noRetryAfterConnected) {
                     logger.warning("Connection closed, exiting...");
                     swarmClient.exitWithStatus(0);
