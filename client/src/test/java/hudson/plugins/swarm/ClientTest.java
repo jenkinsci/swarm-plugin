@@ -8,9 +8,6 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertThrows;
 
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.jenkinsci.remoting.util.VersionNumber;
 import org.junit.Test;
 
 import java.net.URL;
@@ -80,9 +77,8 @@ public class ClientTest {
         }
 
         @Override
-        protected VersionNumber getJenkinsVersion(
-                CloseableHttpClient client, HttpClientContext context, URL masterUrl) {
-            return null;
+        protected void createSwarmAgent(URL masterUrl) throws RetryException {
+            throw new RetryException("try again");
         }
 
         @Override
