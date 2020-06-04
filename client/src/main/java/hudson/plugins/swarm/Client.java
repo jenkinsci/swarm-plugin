@@ -103,25 +103,26 @@ public class Client {
                             .trim();
         }
 
-
-        // Only look up the hostname if we have not already specified
-        // name of the slave. Also in certain cases this lookup might fail.
-        // E.g.
-        // Querying a external DNS server which might not be informed
-        // of a newly created slave from a DHCP server.
-        //
-        // From https://docs.oracle.com/javase/8/docs/api/java/net/InetAddress.html#getCanonicalHostName--
-        //
-        // "Gets the fully qualified domain name for this IP
-        // address. Best effort method, meaning we may not be able to
-        // return the FQDN depending on the underlying system
-        // configuration."
+        /*
+         * Only look up the hostname if we have not already specified name of the agent. In certain
+         * cases this lookup might fail (e.g., querying an external DNS server which might not be
+         * informed of a newly created agent from a DHCP server).
+         *
+         * From https://docs.oracle.com/javase/8/docs/api/java/net/InetAddress.html#getCanonicalHostName--
+         *
+         * "Gets the fully qualified domain name for this IP address. Best effort method, meaning we
+         * may not be able to return the FQDN depending on the underlying system configuration."
+         */
         if (options.name == null) {
             try {
                 client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
             } catch (IOException e) {
-                logger.severe("Failed to lookup the canonical hostname of this slave, please check system settings.");
-                logger.severe("If not possible to resolve please specify a node name using the '-name' option");
+                logger.severe(
+                        "Failed to look up the canonical hostname of this agent. Check the system"
+                                + " DNS settings.");
+                logger.severe(
+                        "If it is not possible to resolve this host, specify a name using the"
+                                + " \"-name\" option.");
                 System.exit(1);
             }
         }
@@ -159,16 +160,16 @@ public class Client {
                                 + swarmClient.getHash());
 
                 /*
-                 * Create a new swarm slave. After this method returns, the value of the name field
+                 * Create a new Swarm agent. After this method returns, the value of the name field
                  * has been set to the name returned by the server, which may or may not be the name
                  * we originally requested.
                  */
-                swarmClient.createSwarmSlave(targetUrl);
+                swarmClient.createSwarmAgent(targetUrl);
 
                 /*
                  * Set up the label file watcher thread. If the label file changes, this thread
                  * takes action to restart the client. Note that this must be done after we create
-                 * the swarm slave, since only then has the server returned the name we must use
+                 * the Swarm agent, since only then has the server returned the name we must use
                  * when doing label operations.
                  */
                 if (options.labelsFile != null) {

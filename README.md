@@ -1,4 +1,4 @@
-# Swarm
+# Swarm Plugin
 
 [![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/swarm-plugin/master)](https://ci.jenkins.io/job/Plugins/job/swarm-plugin/job/master/)
 [![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/swarm.svg)](https://plugins.jenkins.io/swarm/)
@@ -6,9 +6,9 @@
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/swarm.svg?color=blue)](https://plugins.jenkins.io/swarm/)
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=jenkinsci/swarm-plugin)](https://dependabot.com)
 
-Swarm enables nodes to join a nearby Jenkins master, thereby forming an
-ad-hoc cluster. This plugin makes it easier to scale a Jenkins cluster
-by spinning up and tearing down new nodes.
+The Swarm plugin enables nodes to join a nearby Jenkins master, thereby
+forming an ad-hoc cluster. This plugin makes it easier to scale a Jenkins
+cluster by spinning up and tearing down new nodes.
 
 This plugin consists of two pieces:
 
@@ -42,18 +42,18 @@ settings unexpectedly.
 
 ```
 $ java -jar swarm-client.jar --help
- -deleteExistingClients                 : Deletes any existing slave with the
+ -deleteExistingClients                 : Delete any existing agent with the
                                           same name. (default: false)
- -description VAL                       : Description to be put on the slave
- -disableClientsUniqueId                : Disables client's unique ID.
-                                          (default: false)
- -disableSslVerification                : Disables SSL verification in the
-                                          HttpClient. (default: false)
+ -description VAL                       : Description to be put on the agent.
+ -disableClientsUniqueId                : Disable client's unique ID. (default:
+                                          false)
+ -disableSslVerification                : Disable SSL verification in the HTTP
+                                          client. (default: false)
  -disableWorkDir                        : Disable Remoting working directory
                                           support and run the agent in legacy
                                           mode. (default: false)
  -e (--env)                             : An environment variable to be defined
-                                          on this slave. It is specified as
+                                          on this agent. It is specified as
                                           'key=value'. Multiple variables are
                                           allowed.
  -executors N                           : Number of executors (default: number
@@ -61,8 +61,7 @@ $ java -jar swarm-client.jar --help
  -failIfWorkDirIsMissing                : Fail if the requested Remoting
                                           working directory or internal
                                           directory is missing. (default: false)
- -fsroot FILE                           : Directory where Jenkins places files
-                                          (default: .)
+ -fsroot FILE                           : Remote root directory. (default: .)
  -help (--help)                         : Show the help screen (default: true)
  -internalDir FILE                      : The name of the directory within the
                                           Remoting working directory where
@@ -71,7 +70,7 @@ $ java -jar swarm-client.jar --help
  -jar-cache FILE                        : Cache directory that stores JAR files
                                           sent from the master.
  -labels VAL                            : Whitespace-separated list of labels
-                                          to be assigned for this slave.
+                                          to be assigned for this agent.
                                           Multiple options are allowed.
  -labelsFile VAL                        : File location with space delimited
                                           list of labels.  If the file changes,
@@ -82,13 +81,13 @@ $ java -jar swarm-client.jar --help
                                           seconds. Default is 60 seconds.
                                           (default: 60)
  -mode MODE                             : The mode controlling how Jenkins
-                                          allocates jobs to slaves. Can be
-                                          either 'normal' (utilize this slave
-                                          as much as possible) or 'exclusive'
-                                          (leave this machine for tied jobs
-                                          only). Default is 'normal'. (default:
-                                          normal)
- -name VAL                              : Name of the slave
+                                          allocates jobs to agents. Can be
+                                          either 'normal' (use this node as
+                                          much as possible) or 'exclusive'
+                                          (only build jobs with label
+                                          expressions matching this node).
+                                          Default is 'normal'. (default: normal)
+ -name VAL                              : Name of the agent.
  -noRetryAfterConnected                 : Do not retry if a successful
                                           connection gets closed. (default:
                                           false)
@@ -123,8 +122,8 @@ $ java -jar swarm-client.jar --help
                                           custom fingerprints! Multiple options
                                           are allowed. (default: )
  -t (--toolLocation)                    : A tool location to be defined on this
-                                          slave. It is specified as
-                                          'toolName=location'
+                                          agent. It is specified as
+                                          'toolName=location'.
  -tunnel VAL                            : Connect to the specified host and
                                           port, instead of connecting directly
                                           to Jenkins. Useful when connection to

@@ -8,14 +8,17 @@ import hudson.slaves.ComputerLauncher;
 import hudson.slaves.EphemeralNode;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.RetentionStrategy;
+
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import java.io.IOException;
 import java.util.List;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * {@link Slave} created by ad-hoc local systems.
- * <p>
- * This acts like a JNLP slave, except when the client disconnects, the slave will be deleted.
+ *
+ * <p>This acts like an inbound agent, except when the client disconnects, the agent will be
+ * deleted.
  *
  * @author Kohsuke Kawaguchi
  */
@@ -46,7 +49,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
 
         @Override
         public String getDisplayName() {
-            return "Swarm Slave";
+            return "Swarm agent";
         }
 
         /**

@@ -197,10 +197,7 @@ public class SwarmClientIntegrationTest {
 
         // Try to start a second and ensure it fails to run.
         startFailingSwarmClient(
-                j.getURL(),
-                "agent_fail",
-                "-pidFile",
-                pidFile.toAbsolutePath().toString());
+                j.getURL(), "agent_fail", "-pidFile", pidFile.toAbsolutePath().toString());
 
         // Now ensure that the original process is still OK and so is its PID file.
         assertNotNull("Original client should still be running", os.getProcess(firstClientPid));
@@ -312,7 +309,7 @@ public class SwarmClientIntegrationTest {
         Node node = swarmClientRule.createSwarmClient();
         assertTrue(
                 node.getNodeDescription(),
-                Pattern.matches("Swarm slave from ([a-zA-Z_0-9-.]+)", node.getNodeDescription()));
+                Pattern.matches("Swarm agent from ([a-zA-Z_0-9-.]+)", node.getNodeDescription()));
     }
 
     @Test
@@ -321,7 +318,7 @@ public class SwarmClientIntegrationTest {
         assertTrue(
                 node.getNodeDescription(),
                 Pattern.matches(
-                        "Swarm slave from ([a-zA-Z_0-9-.]+): foobar", node.getNodeDescription()));
+                        "Swarm agent from ([a-zA-Z_0-9-.]+): foobar", node.getNodeDescription()));
     }
 
     @Test
