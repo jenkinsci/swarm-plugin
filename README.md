@@ -136,6 +136,8 @@ $ java -jar swarm-client.jar -help
                                           behavior
  -username VAL                          : The Jenkins username for
                                           authentication.
+ -webSocket                             : Connect using the WebSocket protocol.
+                                          (default: false)
  -workDir FILE                          : The Remoting working directory where
                                           the JAR cache and logs will be stored.
 ```

@@ -13,6 +13,7 @@ import hudson.plugins.swarm.test.SwarmClientRule;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
+import hudson.util.VersionNumber;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -227,6 +228,23 @@ public class SwarmClientIntegrationTest {
         assertTrue(
                 "PID in PID file must match our new PID",
                 childProcesses.stream().anyMatch(proc -> proc.getProcessID() == newPid));
+    }
+
+    /** Ensures that a node can be created with the WebSocket protocol. */
+    @Test
+    @Issue("JENKINS-61969")
+    public void webSocket() throws Exception {
+        Assume.assumeTrue(
+                j.jenkins.getVersion().isNewerThanOrEqualTo(new VersionNumber("2.222.4")));
+        Node node = swarmClientRule.createSwarmClient("-webSocket");
+
+        FreeStyleProject project = j.createFreeStyleProject();
+        project.setConcurrentBuild(false);
+        project.setAssignedNode(node);
+        project.getBuildersList().add(echoCommand("ON_SWARM_CLIENT"));
+
+        FreeStyleBuild build = j.buildAndAssertSuccess(project);
+        j.assertLogContains("ON_SWARM_CLIENT=true", build);
     }
 
     @Test
