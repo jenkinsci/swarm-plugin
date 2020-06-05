@@ -1,6 +1,5 @@
 package hudson.plugins.swarm;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import hudson.remoting.Launcher;
@@ -334,8 +333,7 @@ public class SwarmClient {
         HttpClientContext context = createHttpClientContext(options, masterUrl);
 
         VersionNumber jenkinsVersion = getJenkinsVersion(client, context, masterUrl);
-        if (jenkinsVersion != null
-                && options.webSocket
+        if (options.webSocket
                 && jenkinsVersion.isOlderThan(new VersionNumber("2.229"))
                 && !(jenkinsVersion.getDigitAt(0) == 2
                         && jenkinsVersion.getDigitAt(1) == 222
@@ -534,13 +532,13 @@ public class SwarmClient {
         return "&" + name + "=" + encode(value);
     }
 
-    /** Make a best-effort attempt to get the Jenkins version. */
-    @CheckForNull
+    /** Get the Jenkins version. */
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
     protected VersionNumber getJenkinsVersion(
-            CloseableHttpClient client, HttpClientContext context, URL masterUrl) {
+            CloseableHttpClient client, HttpClientContext context, URL masterUrl)
+            throws RetryException {
         logger.fine("getJenkinsVersion() invoked");
 
         HttpGet httpGet = new HttpGet(masterUrl + "api");
@@ -553,14 +551,14 @@ public class SwarmClient {
                                 response.getStatusLine().getStatusCode(),
                                 EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
                 logger.log(Level.SEVERE, msg);
-                return null;
+                throw new RetryException(msg);
             }
 
             Header[] headers = response.getHeaders("X-Jenkins");
             if (headers.length != 1) {
                 String msg = "This URL doesn't look like Jenkins.";
                 logger.log(Level.SEVERE, msg);
-                return null;
+                throw new RetryException(msg);
             }
 
             String versionStr = headers[0].getValue();
@@ -569,12 +567,12 @@ public class SwarmClient {
             } catch (RuntimeException e) {
                 String msg = "Unexpected Jenkins version: " + versionStr;
                 logger.log(Level.SEVERE, msg);
-                return null;
+                throw new RetryException(msg);
             }
         } catch (IOException e) {
             String msg = "Failed to connect to " + masterUrl;
             logger.log(Level.SEVERE, msg, e);
-            return null;
+            throw new RetryException(msg);
         }
     }
 
