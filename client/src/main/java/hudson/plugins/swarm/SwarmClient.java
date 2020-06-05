@@ -184,7 +184,7 @@ public class SwarmClient {
             logger.fine("Using tunnel through " + options.tunnel);
         }
 
-        if (options.username != null && options.password != null) {
+        if (options.username != null && options.password != null && !options.webSocket) {
             args.add("-credentials");
             args.add(options.username + ":" + options.password);
         }
@@ -214,6 +214,10 @@ public class SwarmClient {
 
         args.add("-headless");
         args.add("-noreconnect");
+
+        if (options.webSocket) {
+            args.add("-webSocket");
+        }
 
         try {
             Main.main(args.toArray(new String[0]));
@@ -329,7 +333,18 @@ public class SwarmClient {
         CloseableHttpClient client = createHttpClient(options);
         HttpClientContext context = createHttpClientContext(options, masterUrl);
 
-        getJenkinsVersion(client, context, masterUrl);
+        VersionNumber jenkinsVersion = getJenkinsVersion(client, context, masterUrl);
+        if (jenkinsVersion != null
+                && options.webSocket
+                && jenkinsVersion.isOlderThan(new VersionNumber("2.229"))
+                && !(jenkinsVersion.getDigitAt(0) == 2
+                        && jenkinsVersion.getDigitAt(1) == 222
+                        && jenkinsVersion.getDigitAt(2) >= 4)) {
+            throw new RetryException(
+                    String.format(
+                            "\"%s\" running Jenkins %s does not support the WebSocket protocol.",
+                            masterUrl, jenkinsVersion));
+        }
 
         String labelStr = StringUtils.join(options.labels, ' ');
         StringBuilder toolLocationBuilder = new StringBuilder();
