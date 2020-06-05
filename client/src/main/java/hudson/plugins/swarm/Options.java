@@ -123,7 +123,11 @@ public class Options {
     @Option(name = "-password", usage = "The Jenkins user API token or password.")
     public String password;
 
-    @Option(name = "-help", aliases = "--help", usage = "Show the help screen")
+    @Option(
+            name = "-help",
+            aliases = {"--help", "-h"},
+            help = true,
+            usage = "Show the help screen")
     public boolean help;
 
     @Option(
