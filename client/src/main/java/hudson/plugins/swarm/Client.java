@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -35,8 +36,7 @@ public class Client {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
-            logger.log(Level.SEVERE, "CmdLineException occurred during parseArgument", e);
-            parser.printUsage(System.out);
+            System.err.println(e.getMessage());
             System.exit(1);
         }
 
@@ -117,7 +117,7 @@ public class Client {
         if (options.name == null) {
             try {
                 client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
-            } catch (IOException e) {
+            } catch (UnknownHostException e) {
                 logger.severe(
                         "Failed to look up the canonical hostname of this agent. Check the system"
                                 + " DNS settings.");
@@ -179,14 +179,9 @@ public class Client {
                     logger.warning("Connection closed, exiting...");
                     swarmClient.exitWithStatus(0);
                 }
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "IOException occurred", e);
+            } catch (IOException | RetryException e) {
+                logger.log(Level.SEVERE, "An error occurred", e);
                 e.printStackTrace();
-            } catch (RetryException e) {
-                logger.log(Level.SEVERE, "RetryException occurred", e);
-                if (e.getCause() != null) {
-                    e.getCause().printStackTrace();
-                }
             }
 
             int waitTime = options.retryBackOffStrategy.waitForRetry(retry++, options.retryInterval, options.maxRetryInterval);
