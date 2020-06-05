@@ -227,6 +227,8 @@ public class SwarmClientRule extends ExternalResource {
         command.add(
                 System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
         command.add("-Djava.awt.headless=true");
+        command.add("-Xmx64m");
+        command.add("-Xms64m");
         command.add("-Dhudson.plugins.swarm.LabelFileWatcher.labelFileWatcherIntervalMillis=100");
         command.add("-jar");
         command.add(swarmClientJar.toString());
@@ -346,6 +348,7 @@ public class SwarmClientRule extends ExternalResource {
             }
             if (stdoutThread != null) {
                 try {
+                    logger.log(Level.INFO, "Joining standard out tailer thread.");
                     stdoutThread.join(30000L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -365,6 +368,7 @@ public class SwarmClientRule extends ExternalResource {
             }
             if (stderrThread != null) {
                 try {
+                    logger.log(Level.INFO, "Joining standard error tailer thread.");
                     stderrThread.join(30000L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -376,7 +380,9 @@ public class SwarmClientRule extends ExternalResource {
 
             // Wait for the agent to be disconnected from the master
             if (computer != null) {
+                logger.log(Level.INFO, "Waiting for the agent to be disconnected from the master.");
                 try (Timeout t = Timeout.limit(60, TimeUnit.SECONDS)) {
+                    computer.disconnect(null);
                     while (computer.isOnline()) {
                         Thread.sleep(500L);
                     }
