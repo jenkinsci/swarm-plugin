@@ -377,6 +377,7 @@ public class SwarmClientRule extends ExternalResource {
             // Wait for the agent to be disconnected from the master
             if (computer != null) {
                 try (Timeout t = Timeout.limit(60, TimeUnit.SECONDS)) {
+                    computer.disconnect(null);
                     while (computer.isOnline()) {
                         Thread.sleep(500L);
                     }
