@@ -142,14 +142,13 @@ public class Client {
      * <p>This method never returns.
      */
     public void run(SwarmClient swarmClient, String... args) throws InterruptedException {
-        logger.info("Discovering Jenkins master");
+        logger.info("Connecting to Jenkins master");
+        URL masterUrl = swarmClient.getMasterUrl();
 
         // wait until we get the ACK back
         int retry = 0;
         while (true) {
             try {
-                URL masterUrl = swarmClient.getMasterUrl();
-
                 logger.info("Attempting to connect to " + masterUrl);
 
                 /*
