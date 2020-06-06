@@ -15,6 +15,8 @@ import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 import hudson.util.VersionNumber;
 
+import jenkins.model.Jenkins;
+
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.junit.After;
@@ -234,8 +236,7 @@ public class SwarmClientIntegrationTest {
     @Test
     @Issue("JENKINS-61969")
     public void webSocket() throws Exception {
-        Assume.assumeTrue(
-                j.jenkins.getVersion().isNewerThanOrEqualTo(new VersionNumber("2.222.4")));
+        Assume.assumeTrue(Jenkins.getVersion().isNewerThanOrEqualTo(new VersionNumber("2.222.4")));
         Node node = swarmClientRule.createSwarmClient("-webSocket");
 
         FreeStyleProject project = j.createFreeStyleProject();

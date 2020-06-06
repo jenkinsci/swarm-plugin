@@ -33,6 +33,7 @@ import org.w3c.dom.Text;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -50,7 +51,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -116,9 +116,8 @@ public class SwarmClient {
         try {
             return new URL(options.master);
         } catch (MalformedURLException e) {
-            String msg = MessageFormat.format("The master URL \"{0}\" is invalid", options.master);
-            logger.log(Level.SEVERE, msg, e);
-            throw new RuntimeException(msg, e);
+            throw new UncheckedIOException(
+                    String.format("The master URL %s is invalid", options.master), e);
         }
     }
 
@@ -127,21 +126,18 @@ public class SwarmClient {
      *
      * <p>Interrupt the thread to abort it and return.
      */
-    protected void connect(URL masterUrl) throws InterruptedException {
+    protected void connect(URL masterUrl) throws InterruptedException, IOException, RetryException {
         logger.fine("connect() invoked");
 
         Launcher launcher = new Launcher();
+
         // prevent infinite retry in hudson.remoting.Launcher.parseJnlpArguments()
         launcher.noReconnect = true;
-
-        List<String> jnlpArgs = Collections.emptyList();
 
         try {
             launcher.agentJnlpURL = new URL(masterUrl + "computer/" + name + "/slave-agent.jnlp");
         } catch (MalformedURLException e) {
-            e.printStackTrace();
-            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + masterUrl, e);
-            Thread.sleep(10 * 1000);
+            throw new RetryException("Failed to establish JNLP connection to " + masterUrl, e);
         }
 
         if (options.username != null && options.password != null) {
@@ -157,12 +153,11 @@ public class SwarmClient {
             }
         }
 
+        List<String> jnlpArgs;
         try {
             jnlpArgs = launcher.parseJnlpArguments();
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + masterUrl, e);
-            Thread.sleep(10 * 1000);
+            throw new RetryException("Failed to establish JNLP connection to " + masterUrl, e);
         }
 
         List<String> args = new ArrayList<>();
@@ -189,7 +184,7 @@ public class SwarmClient {
         }
 
         if (!options.disableWorkDir) {
-            final String workDirPath =
+            String workDirPath =
                     options.workDir != null
                             ? options.workDir.getPath()
                             : options.remoteFsRoot.getPath();
@@ -221,9 +216,7 @@ public class SwarmClient {
         try {
             Main.main(args.toArray(new String[0]));
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.log(Level.SEVERE, "Failed to establish JNLP connection to " + masterUrl, e);
-            Thread.sleep(10 * 1000);
+            throw new RetryException("Failed to establish JNLP connection to " + masterUrl, e);
         }
     }
 
@@ -399,13 +392,12 @@ public class SwarmClient {
 
         try (CloseableHttpResponse response = client.execute(post, context)) {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                String msg =
+                throw new RetryException(
                         String.format(
                                 "Failed to create a Swarm agent on Jenkins. Response code: %s%n%s",
                                 response.getStatusLine().getStatusCode(),
-                                EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
-                logger.log(Level.SEVERE, msg);
-                throw new RetryException(msg);
+                                EntityUtils.toString(
+                                        response.getEntity(), StandardCharsets.UTF_8)));
             }
 
             try (InputStream stream = response.getEntity().getContent()) {
@@ -469,13 +461,12 @@ public class SwarmClient {
 
         try (CloseableHttpResponse response = client.execute(post, context)) {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                String msg =
+                throw new RetryException(
                         String.format(
                                 "Failed to remove agent labels. Response code: %s%n%s",
                                 response.getStatusLine().getStatusCode(),
-                                EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
-                logger.log(Level.SEVERE, msg);
-                throw new RetryException(msg);
+                                EntityUtils.toString(
+                                        response.getEntity(), StandardCharsets.UTF_8)));
             }
         }
     }
@@ -506,13 +497,12 @@ public class SwarmClient {
 
         try (CloseableHttpResponse response = client.execute(post, context)) {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                String msg =
+                throw new RetryException(
                         String.format(
                                 "Failed to update agent labels. Response code: %s%n%s",
                                 response.getStatusLine().getStatusCode(),
-                                EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
-                logger.log(Level.SEVERE, msg);
-                throw new RetryException(msg);
+                                EntityUtils.toString(
+                                        response.getEntity(), StandardCharsets.UTF_8)));
             }
         }
     }
@@ -538,41 +528,31 @@ public class SwarmClient {
             justification = "False positive for try-with-resources in Java 11")
     protected VersionNumber getJenkinsVersion(
             CloseableHttpClient client, HttpClientContext context, URL masterUrl)
-            throws RetryException {
+            throws IOException, RetryException {
         logger.fine("getJenkinsVersion() invoked");
 
         HttpGet httpGet = new HttpGet(masterUrl + "api");
         try (CloseableHttpResponse response = client.execute(httpGet, context)) {
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                String msg =
+                throw new RetryException(
                         String.format(
-                                "Could not get Jenkins version. Response code: Response code:"
-                                        + " %s%n%s",
+                                "Could not get Jenkins version. Response code: %s%n%s",
                                 response.getStatusLine().getStatusCode(),
-                                EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
-                logger.log(Level.SEVERE, msg);
-                throw new RetryException(msg);
+                                EntityUtils.toString(
+                                        response.getEntity(), StandardCharsets.UTF_8)));
             }
 
             Header[] headers = response.getHeaders("X-Jenkins");
             if (headers.length != 1) {
-                String msg = "This URL doesn't look like Jenkins.";
-                logger.log(Level.SEVERE, msg);
-                throw new RetryException(msg);
+                throw new RetryException("This URL doesn't look like Jenkins.");
             }
 
             String versionStr = headers[0].getValue();
             try {
                 return new VersionNumber(versionStr);
             } catch (RuntimeException e) {
-                String msg = "Unexpected Jenkins version: " + versionStr;
-                logger.log(Level.SEVERE, msg);
-                throw new RetryException(msg);
+                throw new RetryException("Unexpected Jenkins version: " + versionStr, e);
             }
-        } catch (IOException e) {
-            String msg = "Failed to connect to " + masterUrl;
-            logger.log(Level.SEVERE, msg, e);
-            throw new RetryException(msg);
         }
     }
 

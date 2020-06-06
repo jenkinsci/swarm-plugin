@@ -13,7 +13,6 @@ import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -57,7 +56,7 @@ public class LabelFileWatcher implements Runnable {
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
-    private void softLabelUpdate(String sNewLabels)  throws SoftLabelUpdateException, MalformedURLException {
+    private void softLabelUpdate(String sNewLabels) throws SoftLabelUpdateException {
         // 1. get labels from master
         // 2. issue remove command for all old labels
         // 3. issue update commands for new labels
