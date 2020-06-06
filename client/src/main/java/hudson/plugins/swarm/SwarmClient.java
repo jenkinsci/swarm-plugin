@@ -130,10 +130,9 @@ public class SwarmClient {
         logger.fine("connect() invoked");
 
         Launcher launcher = new Launcher();
+
         // prevent infinite retry in hudson.remoting.Launcher.parseJnlpArguments()
         launcher.noReconnect = true;
-
-        List<String> jnlpArgs = Collections.emptyList();
 
         try {
             launcher.agentJnlpURL = new URL(masterUrl + "computer/" + name + "/slave-agent.jnlp");
@@ -154,6 +153,7 @@ public class SwarmClient {
             }
         }
 
+        List<String> jnlpArgs;
         try {
             jnlpArgs = launcher.parseJnlpArguments();
         } catch (Exception e) {
@@ -184,7 +184,7 @@ public class SwarmClient {
         }
 
         if (!options.disableWorkDir) {
-            final String workDirPath =
+            String workDirPath =
                     options.workDir != null
                             ? options.workDir.getPath()
                             : options.remoteFsRoot.getPath();
