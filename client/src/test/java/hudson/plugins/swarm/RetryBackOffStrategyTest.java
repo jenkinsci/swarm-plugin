@@ -33,5 +33,4 @@ public class RetryBackOffStrategyTest {
         assertEquals(80, exponential.waitForRetry(3, 10, 100));
         assertEquals(100, exponential.waitForRetry(4, 10, 100));
     }
-
 }

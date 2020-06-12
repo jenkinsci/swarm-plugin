@@ -70,9 +70,8 @@ public class ClientTest {
 
     private void runAndVerify(Options options, String expectedResult) {
         SwarmClient swarmClient = new DummySwarmClient(options);
-        Client client = new Client(options);
         IllegalStateException thrown =
-                assertThrows(IllegalStateException.class, () -> client.run(swarmClient));
+                assertThrows(IllegalStateException.class, () -> Client.run(swarmClient, options));
         assertThat(thrown.getMessage(), containsString(expectedResult));
     }
 

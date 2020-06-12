@@ -10,15 +10,17 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,12 +28,9 @@ public class Client {
 
     private static final Logger logger = Logger.getLogger(Client.class.getName());
 
-    private final Options options;
-
-    //TODO: Cleanup the encoding issue
-    public static void main(String... args) throws InterruptedException, IOException {
+    // TODO: Cleanup the encoding issue
+    public static void main(String... args) throws InterruptedException {
         Options options = new Options();
-        Client client = new Client(options);
         CmdLineParser parser = new CmdLineParser(options);
         try {
             parser.parseArgument(args);
@@ -47,46 +46,59 @@ public class Client {
             System.exit(0);
         }
 
+        validateOptions(options);
+
+        // Pass the command line arguments along so that the LabelFileWatcher thread can have them.
+        run(new SwarmClient(options), options, args);
+    }
+
+    private static void validateOptions(Options options) {
         if (options.pidFile != null) {
-            // This will return a string like 12345@hostname, so we need to do some string manipulation
-            // to get the actual process identifier.
-            // In Java 9, this can be replaced with: ProcessHandle.current().getPid();
+            /*
+             * This will return a string like 12345@hostname, so we need to do some string
+             * manipulation to get the actual process identifier. In Java 9, this can be replaced
+             * with: ProcessHandle.current().getPid();
+             */
             String pidName = ManagementFactory.getRuntimeMXBean().getName();
             String[] pidNameParts = pidName.split("@");
             String pid = pidNameParts[0];
-            File pidFile = new File(options.pidFile);
-            if (pidFile.exists()) {
-                int oldPid =
-                        NumberUtils.toInt(
-                                new String(
-                                        Files.readAllBytes(pidFile.toPath()),
-                                        StandardCharsets.UTF_8),
-                                0);
+            Path pidFile = Paths.get(options.pidFile);
+            if (Files.exists(pidFile)) {
+                int oldPid;
+                try {
+                    oldPid =
+                            NumberUtils.toInt(
+                                    new String(Files.readAllBytes(pidFile), StandardCharsets.UTF_8),
+                                    0);
+                } catch (IOException e) {
+                    throw new UncheckedIOException("Failed to read PID file " + pidFile, e);
+                }
                 // check if this process is running
                 if (oldPid > 0) {
                     OSProcess oldProcess = new SystemInfo().getOperatingSystem().getProcess(oldPid);
                     if (oldProcess != null) {
-                        logger.severe(
+                        throw new RuntimeException(
                                 String.format(
-                                        "Refusing to start because PID file '%s' already exists and the previous process %d (%s) is still running.",
-                                        pidFile.getAbsolutePath(),
+                                        "Refusing to start because PID file '%s' already exists"
+                                                + " and the previous process %d (%s) is still"
+                                                + " running.",
+                                        pidFile.toAbsolutePath().toString(),
                                         oldPid,
                                         oldProcess.getCommandLine()));
-                        System.exit(1);
                     } else {
                         logger.fine(
                                 String.format(
-                                        "Ignoring PID file '%s' because the previous process %d is no longer running.",
-                                        pidFile.getAbsolutePath(), oldPid));
+                                        "Ignoring PID file '%s' because the previous process %d is"
+                                                + " no longer running.",
+                                        pidFile.toAbsolutePath().toString(), oldPid));
                     }
                 }
             }
-            pidFile.deleteOnExit();
+            pidFile.toFile().deleteOnExit();
             try {
-                Files.write(pidFile.toPath(), pid.getBytes(StandardCharsets.UTF_8));
-            } catch (IOException exception) {
-                logger.severe("Failed writing PID file: " + options.pidFile);
-                System.exit(1);
+                Files.write(pidFile, pid.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                throw new UncheckedIOException("Failed to write PID file " + options.pidFile, e);
             }
         }
 
@@ -97,11 +109,15 @@ public class Client {
         }
         // read pass from file if no other password was specified
         if (options.password == null && options.passwordFile != null) {
-            options.password =
-                    new String(
-                                    Files.readAllBytes(Paths.get(options.passwordFile)),
-                                    StandardCharsets.UTF_8)
-                            .trim();
+            try {
+                options.password =
+                        new String(
+                                        Files.readAllBytes(Paths.get(options.passwordFile)),
+                                        StandardCharsets.UTF_8)
+                                .trim();
+            } catch (IOException e) {
+                throw new UncheckedIOException("Failed to read password from file", e);
+            }
         }
 
         /*
@@ -116,7 +132,7 @@ public class Client {
          */
         if (options.name == null) {
             try {
-                client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
+                options.name = InetAddress.getLocalHost().getCanonicalHostName();
             } catch (UnknownHostException e) {
                 logger.severe(
                         "Failed to look up the canonical hostname of this agent. Check the system"
@@ -124,16 +140,9 @@ public class Client {
                 logger.severe(
                         "If it is not possible to resolve this host, specify a name using the"
                                 + " \"-name\" option.");
-                System.exit(1);
+                throw new UncheckedIOException("Failed to set hostname", e);
             }
         }
-
-        SwarmClient swarmClient = new SwarmClient(options);
-        client.run(swarmClient, args); // pass the command line arguments along so that the LabelFileWatcher thread can have them
-    }
-
-    public Client(Options options) {
-        this.options = options;
     }
 
     /**
@@ -141,7 +150,8 @@ public class Client {
      *
      * <p>This method never returns.
      */
-    public void run(SwarmClient swarmClient, String... args) throws InterruptedException {
+    static void run(SwarmClient swarmClient, Options options, String... args)
+            throws InterruptedException {
         logger.info("Connecting to Jenkins master");
         URL masterUrl = swarmClient.getMasterUrl();
 
@@ -173,17 +183,23 @@ public class Client {
                     labelFileWatcherThread.start();
                 }
 
-                swarmClient.connect(masterUrl);
+                /*
+                 * Note that any instances of InterruptedException or RuntimeException thrown
+                 * internally by the next two lines get wrapped in RetryException.
+                 */
+                List<String> jnlpArgs = swarmClient.getJnlpArgs(masterUrl);
+                swarmClient.connect(jnlpArgs, masterUrl);
                 if (options.noRetryAfterConnected) {
                     logger.warning("Connection closed, exiting...");
                     swarmClient.exitWithStatus(0);
                 }
             } catch (IOException | RetryException e) {
                 logger.log(Level.SEVERE, "An error occurred", e);
-                e.printStackTrace();
             }
 
-            int waitTime = options.retryBackOffStrategy.waitForRetry(retry++, options.retryInterval, options.maxRetryInterval);
+            int waitTime =
+                    options.retryBackOffStrategy.waitForRetry(
+                            retry++, options.retryInterval, options.maxRetryInterval);
             if (options.retry >= 0) {
                 if (retry >= options.retry) {
                     logger.severe("Retry limit reached, exiting...");

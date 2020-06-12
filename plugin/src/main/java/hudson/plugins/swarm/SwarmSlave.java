@@ -26,17 +26,49 @@ public class SwarmSlave extends Slave implements EphemeralNode {
 
     private static final long serialVersionUID = -1527777529814020243L;
 
-    public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode,
-                      String label, List<? extends NodeProperty<?>> nodeProperties) throws IOException, FormException {
-        super(name, nodeDescription, remoteFS, numExecutors, mode, label,
-                SELF_CLEANUP_LAUNCHER, RetentionStrategy.NOOP, nodeProperties);
+    public SwarmSlave(
+            String name,
+            String nodeDescription,
+            String remoteFS,
+            String numExecutors,
+            Mode mode,
+            String label,
+            List<? extends NodeProperty<?>> nodeProperties)
+            throws IOException, FormException {
+        super(
+                name,
+                nodeDescription,
+                remoteFS,
+                numExecutors,
+                mode,
+                label,
+                SELF_CLEANUP_LAUNCHER,
+                RetentionStrategy.NOOP,
+                nodeProperties);
     }
 
     @DataBoundConstructor
-    public SwarmSlave(String name, String nodeDescription, String remoteFS, String numExecutors, Mode mode,
-                      String labelString, ComputerLauncher launcher, RetentionStrategy<?> retentionStrategy,
-                      List<? extends NodeProperty<?>> nodeProperties) throws FormException, IOException {
-        super(name, nodeDescription, remoteFS, numExecutors, mode, labelString, launcher, retentionStrategy, nodeProperties);
+    public SwarmSlave(
+            String name,
+            String nodeDescription,
+            String remoteFS,
+            String numExecutors,
+            Mode mode,
+            String labelString,
+            ComputerLauncher launcher,
+            RetentionStrategy<?> retentionStrategy,
+            List<? extends NodeProperty<?>> nodeProperties)
+            throws FormException, IOException {
+        super(
+                name,
+                nodeDescription,
+                remoteFS,
+                numExecutors,
+                mode,
+                labelString,
+                launcher,
+                retentionStrategy,
+                nodeProperties);
     }
 
     @Override
@@ -52,17 +84,13 @@ public class SwarmSlave extends Slave implements EphemeralNode {
             return "Swarm agent";
         }
 
-        /**
-         * We only create this kind of nodes programmatically.
-         */
+        /** We only create this kind of nodes programmatically. */
         @Override
         public boolean isInstantiable() {
             return false;
         }
     }
 
-    /**
-     * {@link ComputerLauncher} that destroys itself upon a connection termination.
-     */
+    /** {@link ComputerLauncher} that destroys itself upon a connection termination. */
     private static final ComputerLauncher SELF_CLEANUP_LAUNCHER = new SwarmLauncher();
 }

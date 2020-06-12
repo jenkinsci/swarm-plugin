@@ -39,16 +39,22 @@ public class LabelFileWatcher implements Runnable {
     private final Options options;
     private final String name;
     private String labels;
-    private String[] args;
+    private final String[] args;
     private final URL masterUrl;
 
     public LabelFileWatcher(URL masterUrl, Options options, String name, String... args)
             throws IOException {
-        logger.config("LabelFileWatcher() constructed with: " + options.labelsFile + " and " + StringUtils.join(args));
+        logger.config(
+                "LabelFileWatcher() constructed with: "
+                        + options.labelsFile
+                        + " and "
+                        + StringUtils.join(args));
         this.masterUrl = masterUrl;
         this.options = options;
         this.name = name;
-        this.labels = new String(Files.readAllBytes(Paths.get(options.labelsFile)), StandardCharsets.UTF_8);
+        this.labels =
+                new String(
+                        Files.readAllBytes(Paths.get(options.labelsFile)), StandardCharsets.UTF_8);
         this.args = args;
         logger.config("Labels loaded: " + labels);
     }
@@ -60,7 +66,11 @@ public class LabelFileWatcher implements Runnable {
         // 1. get labels from master
         // 2. issue remove command for all old labels
         // 3. issue update commands for new labels
-        logger.log(Level.CONFIG, "NOTICE: " + options.labelsFile + " has changed.  Attempting soft label update (no node restart)");
+        logger.log(
+                Level.CONFIG,
+                "NOTICE: "
+                        + options.labelsFile
+                        + " has changed.  Attempting soft label update (no node restart)");
         CloseableHttpClient client = SwarmClient.createHttpClient(options);
         HttpClientContext context = SwarmClient.createHttpClientContext(options, masterUrl);
 
@@ -154,34 +164,58 @@ public class LabelFileWatcher implements Runnable {
     }
 
     private void hardLabelUpdate() throws IOException {
-        logger.config("NOTICE: " + options.labelsFile + " has changed.  Hard node restart attempt initiated.");
+        logger.config(
+                "NOTICE: "
+                        + options.labelsFile
+                        + " has changed.  Hard node restart attempt initiated.");
         isRunning = false;
-        final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+        String javaBin =
+                System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
         try {
-            final File currentJar = new File(LabelFileWatcher.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            File currentJar =
+                    new File(
+                            LabelFileWatcher.class
+                                    .getProtectionDomain()
+                                    .getCodeSource()
+                                    .getLocation()
+                                    .toURI());
             if (!currentJar.getName().endsWith(".jar")) {
                 throw new URISyntaxException(currentJar.getName(), "Doesn't end in .jar");
             } else {
                 // invoke the restart
-                final ArrayList<String> command = new ArrayList<>();
+                ArrayList<String> command = new ArrayList<>();
                 command.add(javaBin);
                 if (System.getProperty("java.util.logging.config.file") == null) {
-                    logger.warning("NOTE:  You do not have a -Djava.util.logging.config.file specified, but your labels file has changed.  You will lose logging for the new client instance. Although the client will continue to work, you will have no logging.");
+                    logger.warning(
+                            "NOTE:  You do not have a -Djava.util.logging.config.file specified,"
+                                + " but your labels file has changed.  You will lose logging for"
+                                + " the new client instance. Although the client will continue to"
+                                + " work, you will have no logging.");
                 } else {
-                    command.add("-Djava.util.logging.config.file=" + System.getProperty("java.util.logging.config.file"));
+                    command.add(
+                            "-Djava.util.logging.config.file="
+                                    + System.getProperty("java.util.logging.config.file"));
                 }
                 command.add("-jar");
                 command.add(currentJar.getPath());
                 Collections.addAll(command, args);
                 String sCommandString = Arrays.toString(command.toArray());
-                sCommandString = sCommandString.replaceAll("\n", "").replaceAll("\r", "").replaceAll(",", "");
+                sCommandString =
+                        sCommandString
+                                .replaceAll("\n", "")
+                                .replaceAll("\r", "")
+                                .replaceAll(",", "");
                 logger.config("Invoking: " + sCommandString);
-                final ProcessBuilder builder = new ProcessBuilder(command);
+                ProcessBuilder builder = new ProcessBuilder(command);
                 builder.start();
                 logger.config("New node instance started, ignore subsequent warning.");
             }
         } catch (URISyntaxException e) {
-            logger.log(Level.SEVERE, "ERROR: LabelFileWatcher unable to determine current running jar. Node failure. URISyntaxException.", e);
+            logger.log(
+                    Level.SEVERE,
+                    "ERROR: LabelFileWatcher unable to determine current running jar. Node"
+                            + " failure. URISyntaxException.",
+                    e);
         }
     }
 
@@ -207,12 +241,16 @@ public class LabelFileWatcher implements Runnable {
             try {
                 sTempLabels =
                         new String(
-                                Files.readAllBytes(Paths.get(options.labelsFile)), StandardCharsets.UTF_8);
+                                Files.readAllBytes(Paths.get(options.labelsFile)),
+                                StandardCharsets.UTF_8);
                 if (sTempLabels.equalsIgnoreCase(labels)) {
-                    logger.log(Level.FINEST, "Nothing to do. " + options.labelsFile + " has not changed.");
+                    logger.log(
+                            Level.FINEST,
+                            "Nothing to do. " + options.labelsFile + " has not changed.");
                 } else {
                     try {
-                        // try to do the "soft" form of label updating (manipulating the labels through the plugin APIs
+                        // try to do the "soft" form of label updating (manipulating the labels
+                        // through the plugin APIs
                         softLabelUpdate(sTempLabels);
                         labels =
                                 new String(
@@ -220,16 +258,27 @@ public class LabelFileWatcher implements Runnable {
                                         StandardCharsets.UTF_8);
                     } catch (SoftLabelUpdateException e) {
                         // if we're unable to
-                        logger.log(Level.WARNING, "WARNING: Normal process, soft label update failed. " + e.getLocalizedMessage() + ", forcing swarm client reboot.  This can be disruptive to Jenkins jobs.  Check your swarm client log files to see why this is happening.");
+                        logger.log(
+                                Level.WARNING,
+                                "WARNING: Normal process, soft label update failed. "
+                                        + e.getLocalizedMessage()
+                                        + ", forcing Swarm client restart. This can be disruptive"
+                                        + " to Jenkins jobs. Check your Swarm client log files to"
+                                        + " see why this is happening.");
                         hardLabelUpdate();
                     }
                 }
             } catch (IOException e) {
-                logger.log(Level.WARNING, "WARNING: unable to read " + options.labelsFile + ", node may not be reporting proper labels to master.", e);
+                logger.log(
+                        Level.WARNING,
+                        "WARNING: unable to read "
+                                + options.labelsFile
+                                + ", node may not be reporting proper labels to master.",
+                        e);
             }
         }
 
-        logger.warning("LabelFileWatcher no longer running. Shutting down this instance of Swarm Client.");
+        logger.warning("LabelFileWatcher no longer running. Shutting down this Swarm client.");
         System.exit(0);
     }
 }

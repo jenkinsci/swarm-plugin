@@ -1,19 +1,22 @@
 package hudson.plugins.swarm;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import edu.umd.cs.findbugs.annotations.NonNull;
+
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
 @Restricted(NoExternalUse.class)
 public final class XmlUtils {
