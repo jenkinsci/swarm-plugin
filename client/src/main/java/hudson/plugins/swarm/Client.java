@@ -10,7 +10,6 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.management.ManagementFactory;
@@ -19,6 +18,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Level;
@@ -28,12 +28,9 @@ public class Client {
 
     private static final Logger logger = Logger.getLogger(Client.class.getName());
 
-    private final Options options;
-
     // TODO: Cleanup the encoding issue
-    public static void main(String... args) throws InterruptedException, IOException {
+    public static void main(String... args) throws InterruptedException {
         Options options = new Options();
-        Client client = new Client(options);
         CmdLineParser parser = new CmdLineParser(options);
         try {
             parser.parseArgument(args);
@@ -49,6 +46,13 @@ public class Client {
             System.exit(0);
         }
 
+        validateOptions(options);
+
+        // Pass the command line arguments along so that the LabelFileWatcher thread can have them.
+        run(new SwarmClient(options), options, args);
+    }
+
+    private static void validateOptions(Options options) {
         if (options.pidFile != null) {
             /*
              * This will return a string like 12345@hostname, so we need to do some string
@@ -58,41 +62,43 @@ public class Client {
             String pidName = ManagementFactory.getRuntimeMXBean().getName();
             String[] pidNameParts = pidName.split("@");
             String pid = pidNameParts[0];
-            File pidFile = new File(options.pidFile);
-            if (pidFile.exists()) {
-                int oldPid =
-                        NumberUtils.toInt(
-                                new String(
-                                        Files.readAllBytes(pidFile.toPath()),
-                                        StandardCharsets.UTF_8),
-                                0);
+            Path pidFile = Paths.get(options.pidFile);
+            if (Files.exists(pidFile)) {
+                int oldPid;
+                try {
+                    oldPid =
+                            NumberUtils.toInt(
+                                    new String(Files.readAllBytes(pidFile), StandardCharsets.UTF_8),
+                                    0);
+                } catch (IOException e) {
+                    throw new UncheckedIOException("Failed to read PID file " + pidFile, e);
+                }
                 // check if this process is running
                 if (oldPid > 0) {
                     OSProcess oldProcess = new SystemInfo().getOperatingSystem().getProcess(oldPid);
                     if (oldProcess != null) {
-                        logger.severe(
+                        throw new RuntimeException(
                                 String.format(
                                         "Refusing to start because PID file '%s' already exists"
                                                 + " and the previous process %d (%s) is still"
                                                 + " running.",
-                                        pidFile.getAbsolutePath(),
+                                        pidFile.toAbsolutePath().toString(),
                                         oldPid,
                                         oldProcess.getCommandLine()));
-                        System.exit(1);
                     } else {
                         logger.fine(
                                 String.format(
                                         "Ignoring PID file '%s' because the previous process %d is"
                                                 + " no longer running.",
-                                        pidFile.getAbsolutePath(), oldPid));
+                                        pidFile.toAbsolutePath().toString(), oldPid));
                     }
                 }
             }
-            pidFile.deleteOnExit();
+            pidFile.toFile().deleteOnExit();
             try {
-                Files.write(pidFile.toPath(), pid.getBytes(StandardCharsets.UTF_8));
+                Files.write(pidFile, pid.getBytes(StandardCharsets.UTF_8));
             } catch (IOException e) {
-                throw new UncheckedIOException("Failed writing PID file: " + options.pidFile, e);
+                throw new UncheckedIOException("Failed to write PID file " + options.pidFile, e);
             }
         }
 
@@ -103,11 +109,15 @@ public class Client {
         }
         // read pass from file if no other password was specified
         if (options.password == null && options.passwordFile != null) {
-            options.password =
-                    new String(
-                                    Files.readAllBytes(Paths.get(options.passwordFile)),
-                                    StandardCharsets.UTF_8)
-                            .trim();
+            try {
+                options.password =
+                        new String(
+                                        Files.readAllBytes(Paths.get(options.passwordFile)),
+                                        StandardCharsets.UTF_8)
+                                .trim();
+            } catch (IOException e) {
+                throw new UncheckedIOException("Failed to read password from file", e);
+            }
         }
 
         /*
@@ -122,7 +132,7 @@ public class Client {
          */
         if (options.name == null) {
             try {
-                client.options.name = InetAddress.getLocalHost().getCanonicalHostName();
+                options.name = InetAddress.getLocalHost().getCanonicalHostName();
             } catch (UnknownHostException e) {
                 logger.severe(
                         "Failed to look up the canonical hostname of this agent. Check the system"
@@ -130,18 +140,9 @@ public class Client {
                 logger.severe(
                         "If it is not possible to resolve this host, specify a name using the"
                                 + " \"-name\" option.");
-                throw new UncheckedIOException(e);
+                throw new UncheckedIOException("Failed to set hostname", e);
             }
         }
-
-        SwarmClient swarmClient = new SwarmClient(options);
-
-        // Pass the command line arguments along so that the LabelFileWatcher thread can have them.
-        client.run(swarmClient, args);
-    }
-
-    public Client(Options options) {
-        this.options = options;
     }
 
     /**
@@ -149,7 +150,8 @@ public class Client {
      *
      * <p>This method never returns.
      */
-    public void run(SwarmClient swarmClient, String... args) throws InterruptedException {
+    static void run(SwarmClient swarmClient, Options options, String... args)
+            throws InterruptedException {
         logger.info("Connecting to Jenkins master");
         URL masterUrl = swarmClient.getMasterUrl();
 

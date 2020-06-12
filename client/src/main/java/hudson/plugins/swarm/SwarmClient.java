@@ -76,7 +76,6 @@ public class SwarmClient {
     private final String hash;
     private String name;
 
-    @SuppressFBWarnings("DM_EXIT")
     public SwarmClient(Options options) {
         this.options = options;
         if (!options.disableClientsUniqueId) {
