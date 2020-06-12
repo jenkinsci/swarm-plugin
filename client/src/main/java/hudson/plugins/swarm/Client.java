@@ -20,6 +20,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -180,7 +181,12 @@ public class Client {
                     labelFileWatcherThread.start();
                 }
 
-                swarmClient.connect(masterUrl);
+                /*
+                 * Note that any instances of InterruptedException or RuntimeException thrown
+                 * internally by the next two lines get wrapped in RetryException.
+                 */
+                List<String> jnlpArgs = swarmClient.getJnlpArgs(masterUrl);
+                swarmClient.connect(jnlpArgs, masterUrl);
                 if (options.noRetryAfterConnected) {
                     logger.warning("Connection closed, exiting...");
                     swarmClient.exitWithStatus(0);

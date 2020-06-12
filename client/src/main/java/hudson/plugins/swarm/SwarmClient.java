@@ -29,6 +29,7 @@ import org.jenkinsci.remoting.util.VersionNumber;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,6 +66,7 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import javax.xml.parsers.ParserConfigurationException;
 
 public class SwarmClient {
 
@@ -125,23 +127,21 @@ public class SwarmClient {
     }
 
     /**
-     * This method blocks while the Swarm agent is connected.
-     *
-     * <p>Interrupt the thread to abort it and return.
+     * @param masterUrl The Jenkins master URL
+     * @return The JNLP arguments, as returned from {@link Launcher#parseJnlpArguments()}.
      */
-    protected void connect(URL masterUrl) throws InterruptedException, IOException, RetryException {
+    List<String> getJnlpArgs(URL masterUrl) throws IOException, RetryException {
         logger.fine("connect() invoked");
 
         Launcher launcher = new Launcher();
 
-        // prevent infinite retry in hudson.remoting.Launcher.parseJnlpArguments()
+        /*
+         * Swarm does its own retrying internally, so disable the retrying functionality in
+         * Launcher#parseJnlpArguments().
+         */
         launcher.noReconnect = true;
 
-        try {
-            launcher.agentJnlpURL = new URL(masterUrl + "computer/" + name + "/slave-agent.jnlp");
-        } catch (MalformedURLException e) {
-            throw new RetryException("Failed to establish JNLP connection to " + masterUrl, e);
-        }
+        launcher.agentJnlpURL = new URL(masterUrl + "computer/" + name + "/slave-agent.jnlp");
 
         if (options.username != null && options.password != null) {
             launcher.auth = options.username + ":" + options.password;
@@ -156,13 +156,22 @@ public class SwarmClient {
             }
         }
 
-        List<String> jnlpArgs;
         try {
-            jnlpArgs = launcher.parseJnlpArguments();
-        } catch (Exception e) {
-            throw new RetryException("Failed to establish JNLP connection to " + masterUrl, e);
+            return launcher.parseJnlpArguments();
+        } catch (InterruptedException
+                | ParserConfigurationException
+                | RuntimeException
+                | SAXException e) {
+            throw new RetryException("Failed get JNLP arguments for " + masterUrl, e);
         }
+    }
 
+    /**
+     * This method blocks while the Swarm agent is connected.
+     *
+     * <p>Interrupt the thread to abort it and try connecting again.
+     */
+    void connect(List<String> jnlpArgs, URL masterUrl) throws IOException, RetryException {
         List<String> args = new ArrayList<>();
         args.add(jnlpArgs.get(0));
         args.add(jnlpArgs.get(1));
@@ -210,6 +219,11 @@ public class SwarmClient {
         }
 
         args.add("-headless");
+
+        /*
+         * Swarm does its own retrying internally, so disable the retrying functionality in
+         * hudson.remoting.Engine.
+         */
         args.add("-noreconnect");
 
         if (options.webSocket) {
@@ -218,7 +232,7 @@ public class SwarmClient {
 
         try {
             Main.main(args.toArray(new String[0]));
-        } catch (Exception e) {
+        } catch (InterruptedException | RuntimeException e) {
             throw new RetryException("Failed to establish JNLP connection to " + masterUrl, e);
         }
     }
