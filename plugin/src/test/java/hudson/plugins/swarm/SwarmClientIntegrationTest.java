@@ -10,6 +10,7 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
 import hudson.plugins.swarm.test.SwarmClientRule;
+import hudson.plugins.swarm.test.SwarmTemporaryFolder;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
@@ -25,7 +26,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -56,11 +56,10 @@ public class SwarmClientIntegrationTest {
     public JenkinsRule j = new JenkinsRule();
 
     @Rule(order = 20)
-    public TemporaryFolder temporaryFolder = TemporaryFolder.builder().assureDeletion().build();
+    public SwarmTemporaryFolder temporaryFolder = new SwarmTemporaryFolder();
 
     @Rule(order = 21)
-    public TemporaryFolder temporaryRemotingFolder =
-            TemporaryFolder.builder().assureDeletion().build();
+    public SwarmTemporaryFolder temporaryRemotingFolder = new SwarmTemporaryFolder();
 
     @Rule(order = 30)
     public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder);
