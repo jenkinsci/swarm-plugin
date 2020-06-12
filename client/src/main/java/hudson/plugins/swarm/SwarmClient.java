@@ -333,7 +333,7 @@ public class SwarmClient {
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
-    protected void createSwarmAgent(URL masterUrl) throws IOException, RetryException {
+    void createSwarmAgent(URL masterUrl) throws IOException, RetryException {
         logger.fine("createSwarmAgent() invoked");
 
         CloseableHttpClient client = createHttpClient(options);
@@ -455,7 +455,7 @@ public class SwarmClient {
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
-    protected static synchronized void postLabelRemove(
+    static synchronized void postLabelRemove(
             String name,
             String labels,
             CloseableHttpClient client,
@@ -491,7 +491,7 @@ public class SwarmClient {
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
-    protected static synchronized void postLabelAppend(
+    static synchronized void postLabelAppend(
             String name,
             String labels,
             CloseableHttpClient client,
@@ -544,7 +544,7 @@ public class SwarmClient {
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
-    protected VersionNumber getJenkinsVersion(
+    VersionNumber getJenkinsVersion(
             CloseableHttpClient client, HttpClientContext context, URL masterUrl)
             throws IOException, RetryException {
         logger.fine("getJenkinsVersion() invoked");
@@ -643,7 +643,7 @@ public class SwarmClient {
         Thread.sleep(waitTime * 1000);
     }
 
-    protected static class DefaultTrustManager implements X509TrustManager {
+    private static class DefaultTrustManager implements X509TrustManager {
 
         final List<String> allowedFingerprints = new ArrayList<>();
 
