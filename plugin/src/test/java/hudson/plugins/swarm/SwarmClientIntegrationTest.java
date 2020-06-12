@@ -353,7 +353,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void workDirEnabledByDefaultWithFsRootAsDefaultPath() throws Exception {
-        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
         swarmClientRule.createSwarmClient("-fsroot", fsRootPath.getAbsolutePath());
 
         assertDirectories(
@@ -365,7 +365,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void workDirWithCustomPath() throws Exception {
-        final File workDirPath = new File(temporaryRemotingFolder.getRoot(), "customworkdir");
+        File workDirPath = new File(temporaryRemotingFolder.getRoot(), "customworkdir");
         swarmClientRule.createSwarmClient("-workDir", workDirPath.getAbsolutePath());
 
         assertDirectories(
@@ -377,7 +377,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void disableWorkDirRunsInLegacyMode() throws Exception {
-        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
         swarmClientRule.createSwarmClient(
                 "-fsroot", fsRootPath.getAbsolutePath(), "-disableWorkDir");
 
@@ -390,8 +390,8 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void failIfWorkDirIsMissingDoesNothingIfDirectoryExists() throws Exception {
-        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
-        final File workDirPath = temporaryFolder.newFolder("remoting");
+        File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        File workDirPath = temporaryFolder.newFolder("remoting");
         swarmClientRule.createSwarmClient(
                 "-fsroot",
                 fsRootPath.getAbsolutePath(),
@@ -408,8 +408,8 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void failIfWorkDirIsMissingFailsOnMissingWorkDir() throws Exception {
-        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
-        final File workDirPath = new File(temporaryRemotingFolder.getRoot(), "customworkdir");
+        File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        File workDirPath = new File(temporaryRemotingFolder.getRoot(), "customworkdir");
         startFailingSwarmClient(
                 j.getURL(),
                 "should_fail",
@@ -434,7 +434,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void internalDirIsInWorkDirByDefault() throws Exception {
-        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
         swarmClientRule.createSwarmClient("-fsroot", fsRootPath.getAbsolutePath());
 
         assertDirectories(
@@ -446,7 +446,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void internalDirWithCustomPath() throws Exception {
-        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
         swarmClientRule.createSwarmClient(
                 "-fsroot", fsRootPath.getAbsolutePath(), "-internalDir", "custominternaldir");
 
@@ -459,8 +459,8 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void jarCacheWithCustomPath() throws Exception {
-        final File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
-        final File jarCachePath = new File(temporaryRemotingFolder.getRoot(), "customjarcache");
+        File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
+        File jarCachePath = new File(temporaryRemotingFolder.getRoot(), "customjarcache");
         swarmClientRule.createSwarmClient(
                 "-fsroot", fsRootPath.getAbsolutePath(), "-jar-cache", jarCachePath.getPath());
 

@@ -156,14 +156,14 @@ public class LabelFileWatcher implements Runnable {
     private void hardLabelUpdate() throws IOException {
         logger.config("NOTICE: " + options.labelsFile + " has changed.  Hard node restart attempt initiated.");
         isRunning = false;
-        final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+        String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
         try {
-            final File currentJar = new File(LabelFileWatcher.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            File currentJar = new File(LabelFileWatcher.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             if (!currentJar.getName().endsWith(".jar")) {
                 throw new URISyntaxException(currentJar.getName(), "Doesn't end in .jar");
             } else {
                 // invoke the restart
-                final ArrayList<String> command = new ArrayList<>();
+                ArrayList<String> command = new ArrayList<>();
                 command.add(javaBin);
                 if (System.getProperty("java.util.logging.config.file") == null) {
                     logger.warning("NOTE:  You do not have a -Djava.util.logging.config.file specified, but your labels file has changed.  You will lose logging for the new client instance. Although the client will continue to work, you will have no logging.");
@@ -176,7 +176,7 @@ public class LabelFileWatcher implements Runnable {
                 String sCommandString = Arrays.toString(command.toArray());
                 sCommandString = sCommandString.replaceAll("\n", "").replaceAll("\r", "").replaceAll(",", "");
                 logger.config("Invoking: " + sCommandString);
-                final ProcessBuilder builder = new ProcessBuilder(command);
+                ProcessBuilder builder = new ProcessBuilder(command);
                 builder.start();
                 logger.config("New node instance started, ignore subsequent warning.");
             }
