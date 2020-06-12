@@ -95,9 +95,8 @@ public class SwarmClient {
                 logger.info("Labels found in file: " + labels);
                 logger.info("Effective label list: " + Arrays.toString(options.labels.toArray()).replaceAll("\n", "").replaceAll("\r", ""));
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "Problem reading labels from file " + options.labelsFile, e);
-                e.printStackTrace();
-                System.exit(1);
+                throw new UncheckedIOException(
+                        "Problem reading labels from file " + options.labelsFile, e);
             }
         }
     }
@@ -233,11 +232,8 @@ public class SwarmClient {
                         new TrustManager[] {new DefaultTrustManager(trusted)},
                         new SecureRandom());
                 SSLContext.setDefault(ctx);
-            } catch (KeyManagementException e) {
-                logger.log(Level.SEVERE, "KeyManagementException occurred", e);
-                throw new RuntimeException(e);
-            } catch (NoSuchAlgorithmException e) {
-                logger.log(Level.SEVERE, "NoSuchAlgorithmException occurred", e);
+            } catch (KeyManagementException | NoSuchAlgorithmException e) {
+                logger.log(Level.SEVERE, "An error occurred", e);
                 throw new RuntimeException(e);
             }
         }

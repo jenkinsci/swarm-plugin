@@ -12,6 +12,7 @@ import oshi.software.os.OSProcess;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.URL;
@@ -84,9 +85,8 @@ public class Client {
             pidFile.deleteOnExit();
             try {
                 Files.write(pidFile.toPath(), pid.getBytes(StandardCharsets.UTF_8));
-            } catch (IOException exception) {
-                logger.severe("Failed writing PID file: " + options.pidFile);
-                System.exit(1);
+            } catch (IOException e) {
+                throw new UncheckedIOException("Failed writing PID file: " + options.pidFile, e);
             }
         }
 
@@ -124,7 +124,7 @@ public class Client {
                 logger.severe(
                         "If it is not possible to resolve this host, specify a name using the"
                                 + " \"-name\" option.");
-                System.exit(1);
+                throw new UncheckedIOException(e);
             }
         }
 
@@ -180,7 +180,6 @@ public class Client {
                 }
             } catch (IOException | RetryException e) {
                 logger.log(Level.SEVERE, "An error occurred", e);
-                e.printStackTrace();
             }
 
             int waitTime = options.retryBackOffStrategy.waitForRetry(retry++, options.retryInterval, options.maxRetryInterval);
