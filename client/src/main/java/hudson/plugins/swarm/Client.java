@@ -29,7 +29,7 @@ public class Client {
 
     private final Options options;
 
-    //TODO: Cleanup the encoding issue
+    // TODO: Cleanup the encoding issue
     public static void main(String... args) throws InterruptedException, IOException {
         Options options = new Options();
         Client client = new Client(options);
@@ -49,9 +49,11 @@ public class Client {
         }
 
         if (options.pidFile != null) {
-            // This will return a string like 12345@hostname, so we need to do some string manipulation
-            // to get the actual process identifier.
-            // In Java 9, this can be replaced with: ProcessHandle.current().getPid();
+            /*
+             * This will return a string like 12345@hostname, so we need to do some string
+             * manipulation to get the actual process identifier. In Java 9, this can be replaced
+             * with: ProcessHandle.current().getPid();
+             */
             String pidName = ManagementFactory.getRuntimeMXBean().getName();
             String[] pidNameParts = pidName.split("@");
             String pid = pidNameParts[0];
@@ -69,7 +71,9 @@ public class Client {
                     if (oldProcess != null) {
                         logger.severe(
                                 String.format(
-                                        "Refusing to start because PID file '%s' already exists and the previous process %d (%s) is still running.",
+                                        "Refusing to start because PID file '%s' already exists"
+                                                + " and the previous process %d (%s) is still"
+                                                + " running.",
                                         pidFile.getAbsolutePath(),
                                         oldPid,
                                         oldProcess.getCommandLine()));
@@ -77,7 +81,8 @@ public class Client {
                     } else {
                         logger.fine(
                                 String.format(
-                                        "Ignoring PID file '%s' because the previous process %d is no longer running.",
+                                        "Ignoring PID file '%s' because the previous process %d is"
+                                                + " no longer running.",
                                         pidFile.getAbsolutePath(), oldPid));
                     }
                 }
@@ -129,7 +134,9 @@ public class Client {
         }
 
         SwarmClient swarmClient = new SwarmClient(options);
-        client.run(swarmClient, args); // pass the command line arguments along so that the LabelFileWatcher thread can have them
+
+        // Pass the command line arguments along so that the LabelFileWatcher thread can have them.
+        client.run(swarmClient, args);
     }
 
     public Client(Options options) {
@@ -182,7 +189,9 @@ public class Client {
                 logger.log(Level.SEVERE, "An error occurred", e);
             }
 
-            int waitTime = options.retryBackOffStrategy.waitForRetry(retry++, options.retryInterval, options.maxRetryInterval);
+            int waitTime =
+                    options.retryBackOffStrategy.waitForRetry(
+                            retry++, options.retryInterval, options.maxRetryInterval);
             if (options.retry >= 0) {
                 if (retry >= options.retry) {
                     logger.severe("Retry limit reached, exiting...");

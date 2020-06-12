@@ -93,7 +93,11 @@ public class SwarmClient {
                                 StandardCharsets.UTF_8);
                 options.labels.addAll(Arrays.asList(labels.split(" ")));
                 logger.info("Labels found in file: " + labels);
-                logger.info("Effective label list: " + Arrays.toString(options.labels.toArray()).replaceAll("\n", "").replaceAll("\r", ""));
+                logger.info(
+                        "Effective label list: "
+                                + Arrays.toString(options.labels.toArray())
+                                        .replaceAll("\n", "")
+                                        .replaceAll("\r", ""));
             } catch (IOException e) {
                 throw new UncheckedIOException(
                         "Problem reading labels from file " + options.labelsFile, e);
@@ -337,7 +341,10 @@ public class SwarmClient {
         StringBuilder toolLocationBuilder = new StringBuilder();
         if (options.toolLocations != null) {
             for (Entry<String, String> toolLocation : options.toolLocations.entrySet()) {
-                toolLocationBuilder.append(param("toolLocation", toolLocation.getKey() + ":" + toolLocation.getValue()));
+                toolLocationBuilder.append(
+                        param(
+                                "toolLocation",
+                                toolLocation.getKey() + ":" + toolLocation.getValue()));
             }
         }
 
@@ -509,7 +516,8 @@ public class SwarmClient {
         return URLEncoder.encode(value, "UTF-8");
     }
 
-    private static synchronized String param(String name, String value) throws UnsupportedEncodingException {
+    private static synchronized String param(String name, String value)
+            throws UnsupportedEncodingException {
         logger.finer("param() invoked");
 
         if (value == null) {

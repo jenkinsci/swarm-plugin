@@ -14,8 +14,9 @@ import jenkins.slaves.DefaultJnlpSlaveReceiver;
 
 import org.jenkinsci.remoting.engine.JnlpConnectionState;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
+
+import javax.annotation.Nonnull;
 
 /**
  * {@link ComputerLauncher} for Swarm agents. We extend {@link JNLPLauncher} for compatibility with

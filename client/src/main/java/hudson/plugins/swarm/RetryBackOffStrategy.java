@@ -1,7 +1,6 @@
 package hudson.plugins.swarm;
 
 public enum RetryBackOffStrategy {
-
     NONE {
         @Override
         public int waitForRetry(int retry, int interval, int maxTime) {
@@ -24,5 +23,4 @@ public enum RetryBackOffStrategy {
     };
 
     abstract int waitForRetry(int retry, int interval, int maxTime);
-
 }

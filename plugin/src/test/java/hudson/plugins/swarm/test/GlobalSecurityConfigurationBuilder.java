@@ -124,8 +124,9 @@ public class GlobalSecurityConfigurationBuilder {
             strategy.add(Computer.CONNECT, swarmUsername);
 
             /*
-             * The following is necessary because AuthorizationMatrixNodeProperty.NodeListenerImpl#onCreated only
-             * applies to ProjectMatrixAuthorizationStrategy.
+             * The following is necessary because
+             * AuthorizationMatrixNodeProperty.NodeListenerImpl#onCreated only applies to
+             * ProjectMatrixAuthorizationStrategy.
              */
             if (!(authorizationStrategy instanceof ProjectMatrixAuthorizationStrategy)) {
                 // Needed to add/remove labels after the fact.

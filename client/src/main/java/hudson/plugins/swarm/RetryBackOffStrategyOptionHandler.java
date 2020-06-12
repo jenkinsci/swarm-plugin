@@ -7,7 +7,8 @@ import org.kohsuke.args4j.spi.Setter;
 
 public class RetryBackOffStrategyOptionHandler extends EnumOptionHandler<RetryBackOffStrategy> {
 
-    public RetryBackOffStrategyOptionHandler(CmdLineParser parser, OptionDef option, Setter<? super RetryBackOffStrategy> setter) {
+    public RetryBackOffStrategyOptionHandler(
+            CmdLineParser parser, OptionDef option, Setter<? super RetryBackOffStrategy> setter) {
         super(parser, option, setter, RetryBackOffStrategy.class);
     }
 
@@ -15,5 +16,4 @@ public class RetryBackOffStrategyOptionHandler extends EnumOptionHandler<RetryBa
     public String getDefaultMetaVariable() {
         return "RETRY_BACK_OFF_STRATEGY";
     }
-
 }

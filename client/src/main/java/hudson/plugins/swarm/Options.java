@@ -29,12 +29,19 @@ public class Options {
     @Option(name = "-executors", usage = "Number of executors")
     public int executors = Runtime.getRuntime().availableProcessors();
 
-    @Option(name = "-master", usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'.", required = true)
+    @Option(
+            name = "-master",
+            usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'.",
+            required = true)
     public String master;
 
-    @Option(name = "-tunnel", usage = "Connect to the specified host and port, instead of connecting directly to Jenkins. " +
-                    "Useful when connection to Jenkins needs to be tunneled. Can be also HOST: or :PORT, " +
-                    "in which case the missing portion will be auto-configured like the default behavior")
+    @Option(
+            name = "-tunnel",
+            usage =
+                    "Connect to the specified host and port, instead of connecting directly to"
+                        + " Jenkins. Useful when connection to Jenkins needs to be tunneled. Can"
+                        + " be also HOST: or :PORT, in which case the missing portion will be"
+                        + " auto-configured like the default behavior")
     public String tunnel;
 
     @Option(
@@ -43,27 +50,34 @@ public class Options {
             forbids = "-tunnel")
     public boolean webSocket;
 
-    @Option(name = "-noRetryAfterConnected", usage = "Do not retry if a successful connection gets closed.")
+    @Option(
+            name = "-noRetryAfterConnected",
+            usage = "Do not retry if a successful connection gets closed.")
     public boolean noRetryAfterConnected;
 
-    @Option(name = "-retry", usage = "Number of retries before giving up. Unlimited if not specified.")
+    @Option(
+            name = "-retry",
+            usage = "Number of retries before giving up. Unlimited if not specified.")
     public int retry = -1;
 
     @Option(
             name = "-retryBackOffStrategy",
-            usage = "The mode controlling retry wait time. Can be either " +
-                    "'none' (use same interval between retries) " +
-                    "or 'linear' (increase wait time before each retry up to maxRetryInterval) " +
-                    "or 'exponential' (double wait interval on each retry up to maxRetryInterval). " +
-                    "Default is 'none'.",
-            handler = RetryBackOffStrategyOptionHandler.class
-    )
+            usage =
+                    "The mode controlling retry wait time. Can be either 'none' (use same interval"
+                        + " between retries) or 'linear' (increase wait time before each retry up"
+                        + " to maxRetryInterval) or 'exponential' (double wait interval on each"
+                        + " retry up to maxRetryInterval). Default is 'none'.",
+            handler = RetryBackOffStrategyOptionHandler.class)
     public RetryBackOffStrategy retryBackOffStrategy = RetryBackOffStrategy.NONE;
 
-    @Option(name = "-retryInterval", usage = "Time to wait before retry in seconds. Default is 10 seconds.")
+    @Option(
+            name = "-retryInterval",
+            usage = "Time to wait before retry in seconds. Default is 10 seconds.")
     public int retryInterval = 10;
 
-    @Option(name = "-maxRetryInterval", usage = "Max time to wait before retry in seconds. Default is 60 seconds.")
+    @Option(
+            name = "-maxRetryInterval",
+            usage = "Max time to wait before retry in seconds. Default is 60 seconds.")
     public int maxRetryInterval = 60;
 
     @Option(
@@ -71,10 +85,13 @@ public class Options {
             usage = "Disable SSL verification in the HTTP client.")
     public boolean disableSslVerification;
 
-    @Option(name = "-sslFingerprints", usage = "Whitespace-separated list of accepted certificate fingerprints (SHA-256/Hex), "+
-                                               "otherwise system truststore will be used. " +
-                                               "No revocation, expiration or not yet valid check will be performed " +
-                                               "for custom fingerprints! Multiple options are allowed.")
+    @Option(
+            name = "-sslFingerprints",
+            usage =
+                    "Whitespace-separated list of accepted certificate fingerprints (SHA-256/Hex), "
+                            + "otherwise system truststore will be used. "
+                            + "No revocation, expiration or not yet valid check will be performed "
+                            + "for custom fingerprints! Multiple options are allowed.")
     public String sslFingerprints = "";
 
     @Option(name = "-disableClientsUniqueId", usage = "Disable client's unique ID.")
@@ -140,7 +157,11 @@ public class Options {
             usage = "File containing the Jenkins user API token or password.")
     public String passwordFile;
 
-    @Option(name = "-labelsFile", usage = "File location with space delimited list of labels.  If the file changes, the client is restarted.")
+    @Option(
+            name = "-labelsFile",
+            usage =
+                    "File location with space delimited list of labels.  If the file changes, the"
+                            + " client is restarted.")
     public String labelsFile;
 
     @Option(
@@ -165,7 +186,8 @@ public class Options {
     @Option(
             name = "-internalDir",
             usage =
-                    "The name of the directory within the Remoting working directory where files internal to Remoting will be stored.",
+                    "The name of the directory within the Remoting working directory where files"
+                            + " internal to Remoting will be stored.",
             forbids = "-disableWorkDir")
     public File internalDir;
 
@@ -177,7 +199,8 @@ public class Options {
     @Option(
             name = "-failIfWorkDirIsMissing",
             usage =
-                    "Fail if the requested Remoting working directory or internal directory is missing.",
+                    "Fail if the requested Remoting working directory or internal directory is"
+                            + " missing.",
             forbids = "-disableWorkDir")
     public boolean failIfWorkDirIsMissing = false;
 }
