@@ -39,7 +39,7 @@ public class LabelFileWatcher implements Runnable {
     private final Options options;
     private final String name;
     private String labels;
-    private String[] args;
+    private final String[] args;
     private final URL masterUrl;
 
     public LabelFileWatcher(URL masterUrl, Options options, String name, String... args)
