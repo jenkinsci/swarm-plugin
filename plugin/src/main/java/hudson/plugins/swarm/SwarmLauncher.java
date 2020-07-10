@@ -1,5 +1,7 @@
 package hudson.plugins.swarm;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.Descriptor;
@@ -15,8 +17,6 @@ import jenkins.slaves.DefaultJnlpSlaveReceiver;
 import org.jenkinsci.remoting.engine.JnlpConnectionState;
 
 import java.io.IOException;
-
-import javax.annotation.Nonnull;
 
 /**
  * {@link ComputerLauncher} for Swarm agents. We extend {@link JNLPLauncher} for compatibility with
@@ -51,7 +51,7 @@ public class SwarmLauncher extends JNLPLauncher {
     @Extension
     public static class DescriptorImpl extends Descriptor<ComputerLauncher> {
 
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Launch Swarm agent";
