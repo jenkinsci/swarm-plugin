@@ -14,43 +14,41 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.BuildWatcher;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.JenkinsSessionRule;
 
 public class PipelineJobRestartTest {
 
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
 
-    /** Static so that it can be used with {@link #swarmClientRule}. */
-    private static final RestartableJenkinsRule holder =
-            new RestartableJenkinsRule.Builder().withReusedPort().build();
+    @Rule(order = 10)
+    public JenkinsSessionRule story = new JenkinsSessionRule();
 
-    @Rule public RestartableJenkinsRule story = holder;
+    /** For use with {@link #swarmClientRule} */
+    private JenkinsRule holder;
 
-    /** A {@link ClassRule} for compatibility with {@link RestartableJenkinsRule}. */
-    @ClassRule(order = 20)
-    public static TemporaryFolder temporaryFolder =
-            TemporaryFolder.builder().assureDeletion().build();
+    @Rule(order = 20)
+    public TemporaryFolder temporaryFolder = TemporaryFolder.builder().assureDeletion().build();
 
-    /** A {@link ClassRule} for compatibility with {@link RestartableJenkinsRule}. */
-    @ClassRule(order = 30)
-    public static SwarmClientRule swarmClientRule =
-            new SwarmClientRule(() -> holder.j, temporaryFolder);
+    @Rule(order = 30)
+    public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> holder, temporaryFolder);
 
     /**
      * Starts a Jenkins job on a Swarm agent, restarts Jenkins while the job is running, and
      * verifies that the job continues running on the same agent after Jenkins has been restarted.
      */
     @Test
-    public void buildShellScriptAfterRestart() {
+    public void buildShellScriptAfterRestart() throws Throwable {
         story.then(
-                s -> {
+                r -> {
+                    holder = r;
                     swarmClientRule.globalSecurityConfigurationBuilder().build();
 
                     // "-deleteExistingClients" is needed so that the Swarm Client can connect
                     // after the restart.
                     Node node = swarmClientRule.createSwarmClient("-deleteExistingClients");
 
-                    WorkflowJob project = story.j.createProject(WorkflowJob.class, "test");
+                    WorkflowJob project = r.createProject(WorkflowJob.class, "test");
                     project.setConcurrentBuild(false);
                     project.setDefinition(
                             new CpsFlowDefinition(PipelineJobTest.getFlow(node, 1), true));
@@ -59,14 +57,14 @@ public class PipelineJobRestartTest {
                     SemaphoreStep.waitForStart("wait-0/1", build);
                 });
         story.then(
-                s -> {
+                r -> {
+                    holder = r;
                     SemaphoreStep.success("wait-0/1", null);
-                    WorkflowJob project =
-                            story.j.jenkins.getItemByFullName("test", WorkflowJob.class);
+                    WorkflowJob project = r.jenkins.getItemByFullName("test", WorkflowJob.class);
                     assertNotNull(project);
                     WorkflowRun build = project.getBuildByNumber(1);
-                    story.j.assertBuildStatusSuccess(story.j.waitForCompletion(build));
-                    story.j.assertLogContains("ON_SWARM_CLIENT=true", build);
+                    r.assertBuildStatusSuccess(r.waitForCompletion(build));
+                    r.assertLogContains("ON_SWARM_CLIENT=true", build);
                 });
     }
 }
