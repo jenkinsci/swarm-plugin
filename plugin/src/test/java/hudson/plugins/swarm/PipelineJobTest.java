@@ -101,7 +101,7 @@ public class PipelineJobTest {
                         + "\";"
                         + "while [ -f \""
                         + f1
-                        + "\" ]; do sleep 1; done;"
+                        + "\" ]; do echo waiting; sleep 1; done;"
                         + "echo finished waiting;"
                         + "rm \""
                         + f2
@@ -115,6 +115,7 @@ public class PipelineJobTest {
         while (!f2.isFile()) {
             Thread.sleep(100L);
         }
+        j.waitForMessage("waiting", build);
         assertTrue(build.isBuilding());
         Computer computer = node.toComputer();
         assertNotNull(computer);
