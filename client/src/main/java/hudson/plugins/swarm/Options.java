@@ -203,4 +203,9 @@ public class Options {
                             + " missing.",
             forbids = "-disableWorkDir")
     public boolean failIfWorkDirIsMissing = false;
+
+    @Option(
+            name = "-prometheusPort",
+            usage = "If defined, then start an HTTP service on this port for Prometheus metrics.")
+    public int prometheusPort = -1;
 }

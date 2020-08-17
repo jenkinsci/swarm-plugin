@@ -34,9 +34,12 @@ import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Writer;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -469,6 +472,30 @@ public class SwarmClientIntegrationTest {
                 new File(fsRootPath, "remoting"),
                 new File(fsRootPath, "remoting/logs"),
                 jarCachePath);
+    }
+
+    @Test
+    public void metricsPrometheus() throws Exception {
+        swarmClientRule.createSwarmClient("-prometheusPort", "9999");
+
+        // Fetch the metrics page from the client
+        URL url = new URL("http://localhost:9999/prometheus");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        BufferedReader reader =
+                new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String inputLine;
+        StringBuilder content = new StringBuilder();
+        while ((inputLine = reader.readLine()) != null) {
+            content.append(inputLine);
+        }
+        reader.close();
+        connection.disconnect();
+
+        // Assert that a non-zero length string was read
+        assertTrue(content.length() > 0);
+        // Assert that we got at least one known Prometheus metric
+        assertTrue(content.toString().contains("process_cpu_usage"));
     }
 
     @After

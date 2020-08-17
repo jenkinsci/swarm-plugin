@@ -39,6 +39,7 @@ settings unexpectedly.
 * [Changelog](CHANGELOG.md)
 * [Global Security Configuration](docs/security.md)
 * [Logging](docs/logging.md)
+* [Prometheus](docs/prometheus.md)
 * [Proxy Configuration](docs/proxy.md)
 
 ## Available options
@@ -70,6 +71,7 @@ Name                                            | Description
 `-passwordEnvVariable VAL`                      | Environment variable containing the Jenkins user API token or password.
 `-passwordFile VAL`                             | File containing the Jenkins user API token or password.
 `-pidFile VAL`                                  | File to write PID to. The client will refuse to start if this file exists and the previous process is still running.
+`-prometheusPort N`                             | If defined, then start an HTTP service on this port for Prometheus metrics. (default: -1)
 `-retry N`                                      | Number of retries before giving up. Unlimited if not specified. (default: -1)
 `-retryBackOffStrategy RETRY_BACK_OFF_STRATEGY` | The mode controlling retry wait time. Can be either 'none' (use same interval between retries) or 'linear' (increase wait time before each retry up to maxRetryInterval) or 'exponential' (double wait interval on each retry up to maxRetryInterval). Default is 'none'. (default: NONE)
 `-retryInterval N`                              | Time to wait before retry in seconds. Default is 10 seconds. (default: 10)
