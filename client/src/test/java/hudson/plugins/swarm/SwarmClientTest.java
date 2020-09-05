@@ -2,7 +2,7 @@ package hudson.plugins.swarm;
 
 import static org.junit.Assert.assertNotNull;
 
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.junit.Test;
 
 import java.io.IOException;

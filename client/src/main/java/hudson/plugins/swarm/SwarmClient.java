@@ -7,24 +7,27 @@ import hudson.remoting.jnlp.Main;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.Header;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpStatus;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.auth.AuthCache;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
+import org.apache.hc.client5.http.impl.auth.BasicScheme;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.client5.http.ssl.HttpsSupport;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.ssl.SSLInitializationException;
 import org.jenkinsci.remoting.util.VersionNumber;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -62,6 +65,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -239,27 +243,41 @@ public class SwarmClient {
     static CloseableHttpClient createHttpClient(Options clientOptions) {
         logger.fine("createHttpClient() invoked");
 
+        HttpClientBuilder builder = HttpClientBuilder.create();
+        builder.useSystemProperties();
+
         if (clientOptions.disableSslVerification || !clientOptions.sslFingerprints.isEmpty()) {
+            // Set the default SSL context for Remoting.
+            SSLContext sslContext;
             try {
-                SSLContext ctx = SSLContext.getInstance("TLS");
+                sslContext = SSLContext.getInstance("TLS");
                 String trusted =
                         clientOptions.disableSslVerification ? "" : clientOptions.sslFingerprints;
-                ctx.init(
+                sslContext.init(
                         new KeyManager[0],
                         new TrustManager[] {new DefaultTrustManager(trusted)},
                         new SecureRandom());
-                SSLContext.setDefault(ctx);
             } catch (KeyManagementException | NoSuchAlgorithmException e) {
                 logger.log(Level.SEVERE, "An error occurred", e);
-                throw new RuntimeException(e);
+                throw new SSLInitializationException(e.getMessage(), e);
             }
+            SSLContext.setDefault(sslContext);
+
+            // HttpComponents Client does not use the default SSL context, so explicitly configure
+            // it with the SSL context we created above.
+            HostnameVerifier hostnameVerifier =
+                    clientOptions.disableSslVerification
+                            ? NoopHostnameVerifier.INSTANCE
+                            : HttpsSupport.getDefaultHostnameVerifier();
+            SSLConnectionSocketFactory sslSocketFactory =
+                    new SSLConnectionSocketFactory(sslContext, hostnameVerifier);
+            HttpClientConnectionManager connectionManager =
+                    PoolingHttpClientConnectionManagerBuilder.create()
+                            .setSSLSocketFactory(sslSocketFactory)
+                            .build();
+            builder.setConnectionManager(connectionManager);
         }
 
-        HttpClientBuilder builder = HttpClientBuilder.create();
-        builder.useSystemProperties();
-        if (clientOptions.disableSslVerification) {
-            builder.setSSLHostnameVerifier(new NoopHostnameVerifier());
-        }
         return builder.build();
     }
 
@@ -271,18 +289,18 @@ public class SwarmClient {
         if (clientOptions.username != null && clientOptions.password != null) {
             logger.fine("Setting HttpClient credentials based on options passed");
 
-            CredentialsProvider credsProvider = new BasicCredentialsProvider();
-            credsProvider.setCredentials(
-                    new AuthScope(urlForAuth.getHost(), urlForAuth.getPort()),
+            BasicScheme basicScheme = new BasicScheme();
+            basicScheme.initPreemptive(
                     new UsernamePasswordCredentials(
-                            clientOptions.username, clientOptions.password));
-            context.setCredentialsProvider(credsProvider);
+                            clientOptions.username, clientOptions.password.toCharArray()));
+
+            HttpHost host =
+                    new HttpHost(
+                            urlForAuth.getProtocol(), urlForAuth.getHost(), urlForAuth.getPort());
+            context.resetAuthExchange(host, basicScheme);
 
             AuthCache authCache = new BasicAuthCache();
-            authCache.put(
-                    new HttpHost(
-                            urlForAuth.getHost(), urlForAuth.getPort(), urlForAuth.getProtocol()),
-                    new BasicScheme());
+            authCache.put(host, basicScheme);
             context.setAuthCache(authCache);
         }
 
@@ -294,7 +312,7 @@ public class SwarmClient {
             justification = "False positive for try-with-resources in Java 11")
     private static synchronized Crumb getCsrfCrumb(
             CloseableHttpClient client, HttpClientContext context, URL masterUrl)
-            throws IOException {
+            throws IOException, ParseException {
         logger.finer("getCsrfCrumb() invoked");
 
         String[] crumbResponse;
@@ -306,12 +324,12 @@ public class SwarmClient {
                                 + URLEncoder.encode(
                                         "concat(//crumbRequestField,\":\",//crumb)", "UTF-8"));
         try (CloseableHttpResponse response = client.execute(httpGet, context)) {
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+            if (response.getCode() != HttpStatus.SC_OK) {
                 logger.log(
                         Level.SEVERE,
                         String.format(
                                 "Could not obtain CSRF crumb. Response code: %s%n%s",
-                                response.getStatusLine().getStatusCode(),
+                                response.getCode(),
                                 EntityUtils.toString(
                                         response.getEntity(), StandardCharsets.UTF_8)));
                 return null;
@@ -332,7 +350,7 @@ public class SwarmClient {
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
-    void createSwarmAgent(URL masterUrl) throws IOException, RetryException {
+    void createSwarmAgent(URL masterUrl) throws IOException, ParseException, RetryException {
         logger.fine("createSwarmAgent() invoked");
 
         CloseableHttpClient client = createHttpClient(options);
@@ -407,11 +425,11 @@ public class SwarmClient {
         }
 
         try (CloseableHttpResponse response = client.execute(post, context)) {
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+            if (response.getCode() != HttpStatus.SC_OK) {
                 throw new RetryException(
                         String.format(
                                 "Failed to create a Swarm agent on Jenkins. Response code: %s%n%s",
-                                response.getStatusLine().getStatusCode(),
+                                response.getCode(),
                                 EntityUtils.toString(
                                         response.getEntity(), StandardCharsets.UTF_8)));
             }
@@ -460,7 +478,7 @@ public class SwarmClient {
             CloseableHttpClient client,
             HttpClientContext context,
             URL masterUrl)
-            throws IOException, RetryException {
+            throws IOException, ParseException, RetryException {
         HttpPost post =
                 new HttpPost(
                         masterUrl
@@ -476,11 +494,11 @@ public class SwarmClient {
         }
 
         try (CloseableHttpResponse response = client.execute(post, context)) {
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+            if (response.getCode() != HttpStatus.SC_OK) {
                 throw new RetryException(
                         String.format(
                                 "Failed to remove agent labels. Response code: %s%n%s",
-                                response.getStatusLine().getStatusCode(),
+                                response.getCode(),
                                 EntityUtils.toString(
                                         response.getEntity(), StandardCharsets.UTF_8)));
             }
@@ -496,7 +514,7 @@ public class SwarmClient {
             CloseableHttpClient client,
             HttpClientContext context,
             URL masterUrl)
-            throws IOException, RetryException {
+            throws IOException, ParseException, RetryException {
         HttpPost post =
                 new HttpPost(
                         masterUrl
@@ -512,11 +530,11 @@ public class SwarmClient {
         }
 
         try (CloseableHttpResponse response = client.execute(post, context)) {
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+            if (response.getCode() != HttpStatus.SC_OK) {
                 throw new RetryException(
                         String.format(
                                 "Failed to update agent labels. Response code: %s%n%s",
-                                response.getStatusLine().getStatusCode(),
+                                response.getCode(),
                                 EntityUtils.toString(
                                         response.getEntity(), StandardCharsets.UTF_8)));
             }
@@ -545,16 +563,16 @@ public class SwarmClient {
             justification = "False positive for try-with-resources in Java 11")
     VersionNumber getJenkinsVersion(
             CloseableHttpClient client, HttpClientContext context, URL masterUrl)
-            throws IOException, RetryException {
+            throws IOException, ParseException, RetryException {
         logger.fine("getJenkinsVersion() invoked");
 
         HttpGet httpGet = new HttpGet(masterUrl + "api");
         try (CloseableHttpResponse response = client.execute(httpGet, context)) {
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+            if (response.getCode() != HttpStatus.SC_OK) {
                 throw new RetryException(
                         String.format(
                                 "Could not get Jenkins version. Response code: %s%n%s",
-                                response.getStatusLine().getStatusCode(),
+                                response.getCode(),
                                 EntityUtils.toString(
                                         response.getEntity(), StandardCharsets.UTF_8)));
             }
