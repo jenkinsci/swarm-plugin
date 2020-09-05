@@ -19,6 +19,7 @@ import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.client5.http.ssl.HttpsSupport;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.core5.http.Header;
@@ -26,7 +27,7 @@ import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.ssl.SSLContexts;
+import org.apache.hc.core5.ssl.SSLInitializationException;
 import org.jenkinsci.remoting.util.VersionNumber;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -64,6 +65,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -241,34 +243,41 @@ public class SwarmClient {
     static CloseableHttpClient createHttpClient(Options clientOptions) {
         logger.fine("createHttpClient() invoked");
 
+        HttpClientBuilder builder = HttpClientBuilder.create();
+        builder.useSystemProperties();
+
         if (clientOptions.disableSslVerification || !clientOptions.sslFingerprints.isEmpty()) {
+            // Set the default SSL context for Remoting.
+            SSLContext sslContext;
             try {
-                SSLContext ctx = SSLContext.getInstance("TLS");
+                sslContext = SSLContext.getInstance("TLS");
                 String trusted =
                         clientOptions.disableSslVerification ? "" : clientOptions.sslFingerprints;
-                ctx.init(
+                sslContext.init(
                         new KeyManager[0],
                         new TrustManager[] {new DefaultTrustManager(trusted)},
                         new SecureRandom());
-                SSLContext.setDefault(ctx);
             } catch (KeyManagementException | NoSuchAlgorithmException e) {
                 logger.log(Level.SEVERE, "An error occurred", e);
-                throw new RuntimeException(e);
+                throw new SSLInitializationException(e.getMessage(), e);
             }
+            SSLContext.setDefault(sslContext);
+
+            // HttpComponents Client does not use the default SSL context, so explicitly configure
+            // it with the SSL context we created above.
+            HostnameVerifier hostnameVerifier =
+                    clientOptions.disableSslVerification
+                            ? NoopHostnameVerifier.INSTANCE
+                            : HttpsSupport.getDefaultHostnameVerifier();
+            SSLConnectionSocketFactory sslSocketFactory =
+                    new SSLConnectionSocketFactory(sslContext, hostnameVerifier);
+            HttpClientConnectionManager connectionManager =
+                    PoolingHttpClientConnectionManagerBuilder.create()
+                            .setSSLSocketFactory(sslSocketFactory)
+                            .build();
+            builder.setConnectionManager(connectionManager);
         }
 
-        HttpClientBuilder builder = HttpClientBuilder.create();
-        builder.useSystemProperties();
-        if (clientOptions.disableSslVerification) {
-            SSLConnectionSocketFactory sslsf =
-                    new SSLConnectionSocketFactory(
-                            SSLContexts.createDefault(), new NoopHostnameVerifier());
-            HttpClientConnectionManager cm =
-                    PoolingHttpClientConnectionManagerBuilder.create()
-                            .setSSLSocketFactory(sslsf)
-                            .build();
-            builder.setConnectionManager(cm);
-        }
         return builder.build();
     }
 
