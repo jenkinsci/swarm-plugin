@@ -1,8 +1,8 @@
 # Proxy Configuration
 
 Swarm uses
-[`SystemDefaultHttpClient`](https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/impl/client/SystemDefaultHttpClient.html),
-which supports customization of the HTTP client through 18 different Java
+[`HttpClientBuilder`](https://hc.apache.org/httpcomponents-client-5.0.x/httpclient5/apidocs/org/apache/hc/client5/http/impl/classic/HttpClientBuilder.html),
+which supports customization of the HTTP client through system
 properties. Use the following system properties to configure a proxy:
 
 * `http.proxyHost`

@@ -1,6 +1,7 @@
 package hudson.plugins.swarm;
 
 import org.apache.commons.lang.math.NumberUtils;
+import org.apache.hc.core5.http.ParseException;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.NamedOptionDef;
@@ -193,7 +194,7 @@ public class Client {
                     logger.warning("Connection closed, exiting...");
                     swarmClient.exitWithStatus(0);
                 }
-            } catch (IOException | RetryException e) {
+            } catch (IOException | ParseException | RetryException e) {
                 logger.log(Level.SEVERE, "An error occurred", e);
             }
 
