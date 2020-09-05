@@ -234,7 +234,7 @@ public class Client {
         String key = getKey(handler);
         Object value = getValue(handler);
 
-        if (key.equals("-help")) {
+        if (handler.option.help()) {
             return;
         }
 
@@ -244,7 +244,7 @@ public class Client {
 
         sb.append(key);
         sb.append(' ');
-        if (key.equals("-username") || key.equals("-password")) {
+        if (key.equals("-username") || key.startsWith("-password")) {
             sb.append("*****");
         } else {
             sb.append(value);
