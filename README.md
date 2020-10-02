@@ -41,9 +41,9 @@ settings unexpectedly.
 
 ## Available Options
 
-### `$ java -jar swarm-client.jar -help`
+`$ java -jar swarm-client.jar -help`
 
-Options                                         | What it does!
+Name                                            | Description
 -|-
 `-deleteExistingClients`                        | Delete any existing agent with the same name. (default: false)
 `-description VAL`                              | Description to be put on the agent.
@@ -54,12 +54,12 @@ Options                                         | What it does!
 `-executors N`                                  | Number of executors (default: number of CPUs)
 `-failIfWorkDirIsMissing`                       | Fail if the requested Remoting working directory or internal directory is missing. (default: false)
 `-fsroot FILE`                                  | Remote root directory. (default: .)
-`-help (--help)`                                | Show the help screen (default: false)
+`-help (--help, -h)`                            | Show the help screen (default: false)
 `-internalDir FILE`                             | The name of the directory within the Remoting working directory where files internal to Remoting will be stored.
 `-jar-cache FILE`                               | Cache directory that stores JAR files sent from the master.
 `-labels VAL`                                   | Whitespace-separated list of labels to be assigned for this agent. Multiple options are allowed.
-`-labelsFile VAL`                               | File location with space delimited list of labels. If the file changes, the client is restarted.
-`-master VAL`                                   | The complete target Jenkins URL like `http://server:8080/jenkins/`.
+`-labelsFile VAL`                               | File location with space delimited list of labels.  If the file changes, the client is restarted.
+`-master VAL`                                   | The complete target Jenkins URL like 'http://server:8080/jenkins/'.
 `-maxRetryInterval N`                           | Max time to wait before retry in seconds. Default is 60 seconds. (default: 60)
 `-mode MODE`                                    | The mode controlling how Jenkins allocates jobs to agents. Can be either 'normal' (use this node as much as possible) or 'exclusive' (only build jobs with label expressions matching this node). Default is 'normal'. (default: normal)
 `-name VAL`                                     | Name of the agent.
