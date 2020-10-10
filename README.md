@@ -83,6 +83,7 @@ Name                                            | Description
 ## Issues
 
 Report issues and enhancements in the [Jenkins issue tracker](https://issues.jenkins-ci.org/).
+Use the `swarm-plugin` component in the `JENKINS` project.
 
 ## Contributing
 
