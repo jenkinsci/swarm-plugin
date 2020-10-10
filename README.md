@@ -1,10 +1,12 @@
 # Swarm Plugin
 
-[![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/swarm-plugin/master)](https://ci.jenkins.io/job/Plugins/job/swarm-plugin/job/master/)
-[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/swarm.svg)](https://plugins.jenkins.io/swarm/)
-[![GitHub Release](https://img.shields.io/github/release/jenkinsci/swarm-plugin.svg?label=changelog)](https://github.com/jenkinsci/swarm-plugin/releases/latest)
-[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/swarm.svg?color=blue)](https://plugins.jenkins.io/swarm/)
-[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=jenkinsci/swarm-plugin)](https://dependabot.com)
+[![Build Status](https://ci.jenkins.io/job/Plugins/job/swarm-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/swarm-plugin/job/master/)
+[![Contributors](https://img.shields.io/github/contributors/jenkinsci/swarm-plugin.svg)](https://github.com/jenkinsci/swarm-plugin/graphs/contributors)
+[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/swarm.svg)](https://plugins.jenkins.io/swarm)
+[![GitHub release](https://img.shields.io/github/release/jenkinsci/swarm-plugin.svg?label=changelog)](https://github.com/jenkinsci/swarm-plugin/releases/latest)
+[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/swarm.svg?color=blue)](https://plugins.jenkins.io/swarm)
+
+## Introduction
 
 The Swarm plugin enables nodes to join a nearby Jenkins master, thereby
 forming an ad-hoc cluster. This plugin makes it easier to scale a Jenkins
@@ -23,7 +25,7 @@ Swarm client is running on a separate VM, there is no need to worry
 about the builds/tests interfering with the host system or altering its
 settings unexpectedly.
 
-## Usage
+## Getting started
 
  1. Install the Swarm plugin from the Update Center.
  2. Download [the Swarm
@@ -39,7 +41,7 @@ settings unexpectedly.
 * [Logging](docs/logging.md)
 * [Proxy Configuration](docs/proxy.md)
 
-## Available Options
+## Available options
 
 `$ java -jar swarm-client.jar -help`
 
@@ -77,3 +79,11 @@ Name                                            | Description
 `-username VAL`                                 | The Jenkins username for authentication.
 `-webSocket`                                    | Connect using the WebSocket protocol. (default: false)
 `-workDir FILE`                                 | The Remoting working directory where the JAR cache and logs will be stored.
+
+## Issues
+
+Report issues and enhancements in the [Jenkins issue tracker](https://issues.jenkins-ci.org/).
+
+## Contributing
+
+Refer to our [contribution guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md).
