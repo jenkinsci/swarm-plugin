@@ -479,18 +479,14 @@ public class SwarmClientIntegrationTest {
         swarmClientRule.createSwarmClient("-prometheusPort", "9999");
 
         // Fetch the metrics page from the client
-        URL url = new URL("http://localhost:9999/prometheus");
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        BufferedReader reader =
-                new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String inputLine;
         StringBuilder content = new StringBuilder();
-        while ((inputLine = reader.readLine()) != null) {
-            content.append(inputLine);
+        try (InputStream is = new URL("http://localhost:9999/prometheus").openStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+            String inputLine;
+            while ((inputLine = reader.readLine()) != null) {
+                content.append(inputLine);
+            }
         }
-        reader.close();
-        connection.disconnect();
 
         // Assert that a non-zero length string was read
         assertTrue(content.length() > 0);
