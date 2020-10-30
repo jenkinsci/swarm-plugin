@@ -1,11 +1,12 @@
 package hudson.plugins.swarm;
 
+import com.sun.net.httpserver.HttpServer;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
 
-import com.sun.net.httpserver.HttpServer;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmHeapPressureMetrics;
@@ -16,6 +17,7 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.binder.system.UptimeMetrics;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hc.client5.http.auth.AuthCache;
@@ -683,7 +685,8 @@ public class SwarmClient {
 
     private void startPrometheusService(int port) {
         logger.fine("Starting Prometheus service on port " + port);
-        PrometheusMeterRegistry prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        PrometheusMeterRegistry prometheusRegistry =
+                new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
         // Add some standard metrics to the registry
         new ClassLoaderMetrics().bindTo(prometheusRegistry);
         new FileDescriptorMetrics().bindTo(prometheusRegistry);
@@ -696,14 +699,16 @@ public class SwarmClient {
 
         try {
             prometheusServer = HttpServer.create(new InetSocketAddress(port), 0);
-            prometheusServer.createContext("/prometheus", httpExchange -> {
-                String response = prometheusRegistry.scrape();
-                byte[] responseContent = response.getBytes(StandardCharsets.UTF_8);
-                httpExchange.sendResponseHeaders(200, responseContent.length);
-                try (OutputStream os = httpExchange.getResponseBody()) {
-                    os.write(responseContent);
-                }
-            });
+            prometheusServer.createContext(
+                    "/prometheus",
+                    httpExchange -> {
+                        String response = prometheusRegistry.scrape();
+                        byte[] responseContent = response.getBytes(StandardCharsets.UTF_8);
+                        httpExchange.sendResponseHeaders(200, responseContent.length);
+                        try (OutputStream os = httpExchange.getResponseBody()) {
+                            os.write(responseContent);
+                        }
+                    });
 
             new Thread(prometheusServer::start).start();
         } catch (IOException e) {
