@@ -708,7 +708,7 @@ public class SwarmClient {
             new Thread(prometheusServer::start).start();
         } catch (IOException e) {
             logger.severe("Failed to start Prometheus service: " + e.getMessage());
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
         logger.info("Started Prometheus service on port " + port);
     }
