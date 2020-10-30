@@ -1,9 +1,22 @@
 package hudson.plugins.swarm;
 
+import com.sun.net.httpserver.HttpServer;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
+
+import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmHeapPressureMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
+import io.micrometer.core.instrument.binder.system.FileDescriptorMetrics;
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
+import io.micrometer.core.instrument.binder.system.UptimeMetrics;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
@@ -37,11 +50,13 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -79,6 +94,7 @@ public class SwarmClient {
     private final Options options;
     private final String hash;
     private String name;
+    private HttpServer prometheusServer = null;
 
     public SwarmClient(Options options) {
         this.options = options;
@@ -107,6 +123,10 @@ public class SwarmClient {
                 throw new UncheckedIOException(
                         "Problem reading labels from file " + options.labelsFile, e);
             }
+        }
+
+        if (options.prometheusPort > 0) {
+            startPrometheusService(options.prometheusPort);
         }
     }
 
@@ -653,11 +673,49 @@ public class SwarmClient {
     }
 
     public void exitWithStatus(int status) {
+        if (prometheusServer != null) {
+            prometheusServer.stop(1);
+        }
         System.exit(status);
     }
 
     public void sleepSeconds(int waitTime) throws InterruptedException {
         Thread.sleep(waitTime * 1000);
+    }
+
+    private void startPrometheusService(int port) {
+        logger.fine("Starting Prometheus service on port " + port);
+        PrometheusMeterRegistry prometheusRegistry =
+                new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        // Add some standard metrics to the registry
+        new ClassLoaderMetrics().bindTo(prometheusRegistry);
+        new FileDescriptorMetrics().bindTo(prometheusRegistry);
+        new JvmGcMetrics().bindTo(prometheusRegistry);
+        new JvmHeapPressureMetrics().bindTo(prometheusRegistry);
+        new JvmMemoryMetrics().bindTo(prometheusRegistry);
+        new JvmThreadMetrics().bindTo(prometheusRegistry);
+        new ProcessorMetrics().bindTo(prometheusRegistry);
+        new UptimeMetrics().bindTo(prometheusRegistry);
+
+        try {
+            prometheusServer = HttpServer.create(new InetSocketAddress(port), 0);
+            prometheusServer.createContext(
+                    "/prometheus",
+                    httpExchange -> {
+                        String response = prometheusRegistry.scrape();
+                        byte[] responseContent = response.getBytes(StandardCharsets.UTF_8);
+                        httpExchange.sendResponseHeaders(200, responseContent.length);
+                        try (OutputStream os = httpExchange.getResponseBody()) {
+                            os.write(responseContent);
+                        }
+                    });
+
+            new Thread(prometheusServer::start).start();
+        } catch (IOException e) {
+            logger.severe("Failed to start Prometheus service: " + e.getMessage());
+            throw new UncheckedIOException(e);
+        }
+        logger.info("Started Prometheus service on port " + port);
     }
 
     private static class DefaultTrustManager implements X509TrustManager {
