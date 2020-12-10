@@ -7,7 +7,6 @@ updates:
     schedule:
       interval: "daily"
     ignore:
-      - dependency-name: "org.jenkins-ci.plugins:matrix-auth"
       - dependency-name: "org.jenkins-ci.plugins:role-strategy"
     reviewers:
       - "basil"
