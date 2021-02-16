@@ -286,29 +286,4 @@ public class PluginImpl extends Plugin {
 
         return result;
     }
-
-    /**
-     * This merely exists to support older versions of the Swarm client that expect to be able to
-     * retrieve a UUID-based secret. Security is now handled through CSRF and permission checks
-     * rather than a UUID-based secret. Newer clients do not call this method or pass in a
-     * UUID-based secret, and newer versions of the server do not check for a UUID-based secret.
-     * When support for older clients that call this endpoint is removed, this endpoint can be
-     * deleted.
-     */
-    @Deprecated
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification = "False positive for try-with-resources in Java 11")
-    public void doSlaveInfo(StaplerRequest req, StaplerResponse rsp) throws IOException {
-        Jenkins jenkins = Jenkins.get();
-        jenkins.checkPermission(Computer.CREATE);
-
-        rsp.setContentType("text/xml");
-        try (Writer writer = rsp.getCompressedWriter(req)) {
-            writer.write(
-                    "<slaveInfo><swarmSecret>"
-                            + UUID.randomUUID().toString()
-                            + "</swarmSecret></slaveInfo>");
-        }
-    }
 }
