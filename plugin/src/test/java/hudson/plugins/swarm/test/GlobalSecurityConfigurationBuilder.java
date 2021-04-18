@@ -14,12 +14,8 @@ import hudson.security.ProjectMatrixAuthorizationStrategy;
 import hudson.security.csrf.DefaultCrumbIssuer;
 
 import jenkins.model.Jenkins;
-import jenkins.security.ApiTokenProperty;
-import jenkins.security.apitoken.ApiTokenStore;
 
 import java.io.IOException;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Set;
 import java.util.SortedMap;
@@ -95,16 +91,9 @@ public class GlobalSecurityConfigurationBuilder {
         swarmClientRule.swarmPassword = swarmPassword;
 
         if (swarmToken) {
-            ApiTokenStore tokenStore =
-                    swarmUser.getProperty(ApiTokenProperty.class).getTokenStore();
-            String tokenName =
-                    String.format(
-                            "Token created on %s",
-                            DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(ZonedDateTime.now()));
-            ApiTokenStore.TokenUuidAndPlainValue swarmToken =
-                    tokenStore.generateNewToken(tokenName);
+            String token = swarmClientRule.j.get().createApiToken(swarmUser);
             swarmUser.save();
-            swarmClientRule.swarmPassword = swarmToken.plainValue;
+            swarmClientRule.swarmPassword = token;
         }
 
         swarmClientRule.j.get().jenkins.setSecurityRealm(realm);
