@@ -83,7 +83,7 @@ Finally, ensure that the name of GitHub account prepared for Swarm connections i
 On the GitHub side, it suffices to generate a token with minimal permission set needed for authentication, per requirements of the GitHub Authentication plugin -- currently one needs to have the `read:user` and `read:org` permissions (and possibly `user:email`).
 
 NOTE: Authentication to the GitHub API directly by password no longer works since 2020, only by tokens.
-On an upside, this allows to issue (and revoke) many tokens for many build agents using the same GitHub account, and to limit the impact of a breach using a minimally privileged token.
+The upside is that this allows the administrator to issue (and revoke) tokens for many build agents using the same GitHub account and to limit the impact of a breach using a minimally privileged token.
 
 ==== Recommendations about tokens
 
