@@ -80,7 +80,7 @@ On the Jenkins controller side, the active authorization strategy has to be swit
 It would be statically listing names of your project's GitHub organizations and teams of admin and other accounts as groups with specific rights.
 Finally, ensure that the name of GitHub account prepared for Swarm connections is granted the permissions needed for Swarm client, as detailed above.
 
-WARNING: Be sure to not lock yourself out in the process -- perhaps adding an entry for your GitHub user name explicitly, assigning all privileges to it, and applying the change as the first step.
+WARNING: Be sure to not lock yourself out in the process -- perhaps adding a Matrix strategy entry for your GitHub user name explicitly, assigning all privileges to it, and applying that change as the first step.
 
 On the GitHub side, it suffices to generate a token with minimal permission set needed for authentication, per requirements of the GitHub Authentication plugin -- currently one needs to have the `read:user` and `read:org` permissions (and possibly `user:email`).
 
