@@ -99,7 +99,7 @@ It is recommended to keep the GitHub account for authenticating Swarm connection
 
 * so it has no rights there assigned by accident or abused by a security breach;
 * even (or especially) if your organizations or projects are private, *this* account does not need to access them for its work -- it only needs to exist and successfully authenticate with GitHub API;
-* the Matrix-based security configuration with GitHub Authentication plugin supports user names as accounts, and organization names and `org*team` notation as groups; while it is reasonable to allow any members of the specified organization various permissions for the Jenkins jobs and other objects, an account used purely for agent connections does not need those (and should not inherit them by being an org member).
+* the Matrix-based security configuration with GitHub Authentication plugin supports user names as Jenkins accounts, and organization names and `org*team` notation as Jenkins groups; while it is reasonable to allow any members of the specified organization various permissions for the Jenkins jobs and other objects, an account used purely for agent connections does not need those (and should not inherit them by being an org member).
 
 ==== Further notes
 
