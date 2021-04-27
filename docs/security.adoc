@@ -60,20 +60,46 @@ image:images/roleBasedStrategyAssign.png[image]
 
 == Caveats and Troubleshooting
 
-A single Jenkins controller currenly supports a single selection from a multitude of possible authentication providers. If your Jenkins deployment outgrows locally-defined accounts and switches to an external database, such as LDAP, GitHub or Google authentication, you would have to define there not only team member accounts, but also some for your Swarm agents to use.
+A single Jenkins controller currenly supports a single selection from a multitude of possible authentication providers.
+If your Jenkins deployment outgrows locally-defined accounts and switches to an external database, such as LDAP, GitHub or Google authentication, you would have to define there not only team member accounts, but also some for your Swarm agents to use.
 
 === GitHub Authentication plugin
 
-As tracked in https://issues.jenkins.io/browse/JENKINS-63421[issue JENKINS-63421] currently the Autorization Strategy delivered as an optional part of the GitHub Authentication plugin (`github-oauth-plugin`) lacks a way to assign *Agent/...* permissions. Due to this, currently you would have to define a Matrix-based or Project-based Matrix strategy as detailed above, and use the account (and group/organization) names provided and confirmed by the Authentication part. Note this can forfeit some benefits compared to native stragegy provided by the plugin: not sure the matrix setup can go into such detail as `github-oauth-plugin` natively can -- e.g. considering PR authors, collaborators, contributors... as special groups).
+With "Github Authentication Plugin" selected as the active Security Realm implementation for a Jenkins controller, it is no longer possible to authenticate the Swarm client with an account defined only locally on the Jenkins controller with a password (since the local database was no longer selected to be used for authentication), although this account is otherwise known and manageable in Jenkins UI.
 
-It was verified that Swarm clients can connect with a new GitHub account not attached to any organization, after generating a token for it with "read:user" and "read:org" permissions, and passing it with one of the `-password*` CLI options for the Swarm agent JAR startup.
+As tracked in https://issues.jenkins.io/browse/JENKINS-63421[issue JENKINS-63421] currently the "GitHub Committer Authorization Strategy" delivered as an optional part of the https://plugins.jenkins.io/github-oauth/[GitHub Authentication plugin] (`github-oauth-plugin`) lacks a way to assign *Agent/...* permissions.
+Due to this, you would have to define a Matrix-based or Project-based Matrix strategy as detailed above, and use the account (and group/organization) names provided and confirmed by its Authentication part as your enabled Security Realm.
+Note this can forfeit some benefits compared to native strategy provided by the plugin: it is questionable whether the matrix setup can go into such detail as `github-oauth-plugin` natively can -- e.g. considering PR authors, collaborators, contributors... as special groups).
 
-As part of verification, it was not possible to authenticate the Swarm client with an account defined only locally on the Jenkins controller with a password (since the local database was no longer selected to be used for authentication), although this account is otherwise known and manageable in Jenkins UI.
+==== Primary setup
 
-Note that API auth directly by password no longer works on GitHub side since 2020, only by tokens. On an upside, this allows to issue (and pull back) many tokens for many build agents using the same account.
+Swarm clients can connect to the Jenkins controller using a GitHub account, and passing the token string with one of the `-password*` CLI options for the Swarm agent JAR startup.
 
-The account was kept outside the GitHub organization so it has no rights there by accident or security breach. Also the Matrix-based security configuration in the tested setup allowed any members of the specified organization various permissions for the Jenkins jobs and other objects, which an account used purely for agent connections does not need.
+On the Jenkins controller side, the active authorization strategy has to be switched from "GitHub Committer Authorization Strategy" to a manually made somewhat equivalent Matrix. 
+It would be statically listing names of your project's GitHub organizations and teams of admin and other accounts as groups with specific rights.
+Be sure to not lock yourself out in the process -- perhaps adding an entry for your GitHub user name explicitly, assigning all privileges to it, and applying the change as the first step.
+Finally, make that the name of GitHub account prepared for Swarm connections is granted the permissions needed for Swarm client, as detailed above.
 
-On Jenkins controller side, authorization strategy had to be switched from GitHub strategy to a manually made somewhat similar matrix (which sufficed for test project's static list of GitHub organizations and teams of admin accounts), and that new account was granted the permissions needed for Swarm client.
+On the GitHub side, it suffices to generate a token with minimal permission set needed for authentication, per requirements of the GitHub Authentication plugin -- currently one needs to have the `read:user` and `read:org` permissions (and possibly `user:email`).
 
-It was also double-checked that with the worker machine isolated by firewall, so it can not access the Internet and can only talk to the Jenkins controller (in the same subnet), GitHub authentication still works -- so it is not the client that has to go to GitHub and back to confirm the account.
+NOTE: Authentication to the GitHub API directly by password no longer works since 2020, only by tokens.
+On an upside, this allows to issue (and revoke) many tokens for many build agents using the same GitHub account, and to limit the impact of a breach using a minimally privileged token.
+
+==== Recommendations about tokens
+
+For easier management and revokation of tokens, take time to comment the token in the optional Note field (e.g. which team member or pre-built image is it delegated to, and when) while you are generating it.
+
+This is particularly important if tokens are later used on machines not managed by the Jenkins build farm administrators, e.g. team members or project users contributing resources to help a project.
+
+If you distribute pre-built images for containers or virtual machines that can be used as workers for your project, it is reasonable to ensure that recent and secure software is used on systems connecting to your Jenkins controller, by pre-installing different tokens over time and phasing out access for old ones -- as those images eventually become insecure.
+
+==== Recommendations about membership
+
+It is recommended to keep the GitHub account for authenticating Swarm connections outside your project's GitHub organization for several reasons:
+* so it has no rights there assigned by accident or abused by a security breach;
+* even (or especially) if your organizations or projects are private, *this* account does not need to access them for its work -- it only needs to exist and successfully authenticate with GitHub API;
+* the Matrix-based security configuration with GitHub Authentication plugin supports user names as accounts, and organization names and `org*team` notation as groups; while it is reasonable to allow any members of the specified organization various permissions for the Jenkins jobs and other objects, an account used purely for agent connections does not need those (and should not inherit them by being an org member).
+
+==== Further notes
+
+Even if the worker machine is isolated by firewall, so that it can not access the Internet generally and can only talk to the Jenkins controller (using both HTTP/HTTPS and the "TCP port for inbound agents"), the GitHub authentication still works -- since it is not the Swarm client that has to go to GitHub and back to confirm the account.
