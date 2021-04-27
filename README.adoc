@@ -15,7 +15,7 @@ https://github.com/jenkinsci/swarm-plugin/graphs/contributors[image:https://img.
 https://plugins.jenkins.io/swarm[image:https://img.shields.io/jenkins/plugin/v/swarm.svg[Jenkins Plugin]]
 https://github.com/jenkinsci/swarm-plugin/releases/latest[image:https://img.shields.io/github/release/jenkinsci/swarm-plugin.svg?label=changelog[GitHub release]]
 https://plugins.jenkins.io/swarm[image:https://img.shields.io/jenkins/plugin/i/swarm.svg?color=blue[Jenkins Plugin Installs]]
-https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/[image:https://img.shields.io/badge/download-swarm--client-blue[Download Swarm Client]]
+https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/[image:https://img.shields.io/badge/download-swarm%2D-client-blue[Download Swarm Client]]
 
 toc::[]
 
