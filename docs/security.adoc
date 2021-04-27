@@ -60,7 +60,7 @@ image:images/roleBasedStrategyAssign.png[image]
 
 == Caveats and Troubleshooting
 
-A single Jenkins controller currenly supports a single selection from a multitude of possible authentication providers.
+A single Jenkins controller currently supports a single selection from a multitude of possible authentication providers.
 If your Jenkins deployment outgrows locally-defined accounts and switches to an external database, such as LDAP, GitHub or Google authentication, you would have to define there not only team member accounts, but also some for your Swarm agents to use.
 
 === GitHub Authentication plugin
