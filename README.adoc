@@ -34,7 +34,8 @@ Because the Swarm client is running on a separate VM, there is no need to worry 
 == Getting started
 
 . Install the Swarm plugin from the Update Center.
-. Download https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/[the Swarm client] on your worker machine or container (JRE 8+ also needed there).
+. Ensure your agent is running version 8 or later of the Java Runtime Environment (JRE). The recommendation is to use the same JRE distribution and version as the controller.
+. Download https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/[the Swarm client] on your agent.
 . Run the Swarm client with `java -jar path/to/swarm-client.jar -master JENKINS_URL -username SWARM_ACCOUNT -password...` (note there are several ways to pass a password/token, of varying security; the account should have permissions set up to interact with the swarm-plugin on server side -- see Security document referenced below for details). There are no other required command-line options; run with the `-help` option to see the available options.
 
 == Documentation
