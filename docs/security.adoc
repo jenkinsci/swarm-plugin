@@ -87,7 +87,7 @@ The upside is that this allows the administrator to issue (and revoke) tokens fo
 
 ==== Recommendations about tokens
 
-For easier management and revokation of tokens, take time to comment the token in the optional Note field (e.g. which team member or pre-built image is it delegated to, and when) while you are generating it.
+For easier management and revocation of tokens, take time to comment the token in the optional Note field (e.g. which team member or pre-built image is it delegated to, and when) while you are generating it.
 
 This is particularly important if tokens are later used on machines not managed by the Jenkins build farm administrators, e.g. team members or project users contributing resources to help a project.
 
