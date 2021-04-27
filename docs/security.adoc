@@ -69,7 +69,7 @@ With "Github Authentication Plugin" selected as the active Security Realm implem
 
 As tracked in https://issues.jenkins.io/browse/JENKINS-63421[issue JENKINS-63421] currently the "GitHub Committer Authorization Strategy" delivered as an optional part of the https://plugins.jenkins.io/github-oauth/[GitHub Authentication plugin] (`github-oauth-plugin`) lacks a way to assign *Agent/...* permissions.
 Due to this, you would have to define a Matrix-based or Project-based Matrix strategy as detailed above, and use the account (and group/organization) names provided and confirmed by its Authentication part as your enabled Security Realm.
-Note this can forfeit some benefits compared to native strategy provided by the plugin: it is questionable whether the matrix setup can go into such detail as `github-oauth-plugin` natively can -- e.g. considering PR authors, collaborators, contributors... as special groups).
+NOTE: This can forfeit some benefits compared to the native strategy provided by the plugin: it is questionable whether the matrix setup can go into such detail as `github-oauth-plugin` natively can, e.g. considering PR authors, collaborators, contributors, etc as special groups).
 
 ==== Primary setup
 
