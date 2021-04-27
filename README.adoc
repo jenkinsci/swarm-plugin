@@ -21,7 +21,7 @@ toc::[]
 == Introduction
 
 The Swarm plugin enables nodes to join a nearby Jenkins controller, thereby forming an ad-hoc cluster.
-This plugin makes it easier to scale a Jenkins cluster by spinning up and tearing down new nodes.
+This plugin makes it easier to scale a Jenkins cluster by spinning up and tearing down new nodes, for team members to contribute compute resources to a build farm, or to attach builders that the Jenkins controller can not initiate connections to.
 
 This plugin consists of two pieces:
 
