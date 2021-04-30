@@ -62,10 +62,10 @@ public class SwarmClientRule extends ExternalResource {
     /** Whether or not the client is currently active. */
     private boolean isActive = false;
 
-    /** The username to use when connecting to the Jenkins master. */
+    /** The username to use when connecting to the Jenkins controller. */
     String swarmUsername;
 
-    /** The password or API token to use when connecting to the Jenkins master. */
+    /** The password or API token to use when connecting to the Jenkins controller. */
     String swarmPassword;
 
     /**
@@ -136,7 +136,7 @@ public class SwarmClientRule extends ExternalResource {
                             + " creating a new one.");
         }
 
-        // Download the Swarm client JAR from the Jenkins master.
+        // Download the Swarm client JAR from the Jenkins controller.
         Path swarmClientJar =
                 Files.createTempFile(temporaryFolder.getRoot().toPath(), "swarm-client", ".jar");
         download(swarmClientJar);
@@ -212,7 +212,7 @@ public class SwarmClientRule extends ExternalResource {
      * A helper method to get the command-line arguments to start the client.
      *
      * @param swarmClientJar The path to the client JAR.
-     * @param url The URL of the Jenkins master, if one is being provided to the client.
+     * @param url The URL of the Jenkins controller, if one is being provided to the client.
      * @param agentName The proposed name of the agent.
      * @param args Any other desired arguments.
      */
@@ -233,7 +233,7 @@ public class SwarmClientRule extends ExternalResource {
         command.add("-jar");
         command.add(swarmClientJar.toString());
         if (url != null) {
-            command.add("-master");
+            command.add("-url");
             command.add(url.toString());
         }
         command.add("-name");
@@ -378,9 +378,11 @@ public class SwarmClientRule extends ExternalResource {
                 }
             }
 
-            // Wait for the agent to be disconnected from the master
+            // Wait for the agent to be disconnected from the controller
             if (computer != null) {
-                logger.log(Level.INFO, "Waiting for the agent to be disconnected from the master.");
+                logger.log(
+                        Level.INFO,
+                        "Waiting for the agent to be disconnected from the controller.");
                 try (Timeout t = Timeout.limit(60, TimeUnit.SECONDS)) {
                     computer.disconnect(null);
                     while (computer.isOnline()) {

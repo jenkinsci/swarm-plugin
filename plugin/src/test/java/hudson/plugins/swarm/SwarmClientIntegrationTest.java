@@ -350,7 +350,7 @@ public class SwarmClientIntegrationTest {
     }
 
     @Test
-    public void missingMasterOption() throws Exception {
+    public void missingUrlOption() throws Exception {
         startFailingSwarmClient(null, "test");
     }
 
@@ -511,13 +511,13 @@ public class SwarmClientIntegrationTest {
 
     /**
      * This is a subset of {@link SwarmClientRule#createSwarmClientWithName(String, String...)}. It
-     * does not wait for the agent to be added on the Jenkins master, nor does it check for whether
-     * a Swarm client is already running. Clients started with this method are expected to fail to
-     * start.
+     * does not wait for the agent to be added on the Jenkins controller, nor does it check for
+     * whether a Swarm client is already running. Clients started with this method are expected to
+     * fail to start.
      */
     private void startFailingSwarmClient(URL url, String agentName, String... args)
             throws IOException, InterruptedException {
-        // Download the Swarm client JAR from the Jenkins master.
+        // Download the Swarm client JAR from the Jenkins controller.
         Path swarmClientJar =
                 Files.createTempFile(temporaryFolder.getRoot().toPath(), "swarm-client", ".jar");
         swarmClientRule.download(swarmClientJar);

@@ -37,7 +37,7 @@ Because the Swarm client is running on a separate VM, there is no need to worry 
 . Install the Swarm plugin from the Update Center.
 . Ensure your agent is running version 8 or later of the Java Runtime Environment (JRE). The recommendation is to use the same JRE distribution and version as the controller.
 . Download https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/[the Swarm client] on your agent.
-. Run the Swarm client with `java -jar path/to/swarm-client.jar -master ${JENKINS_URL} -username ${USERNAME}` and one of the authentication options as described in xref:docs/security.adoc#authentication[the Global Security Configuration documentation]. There are no other required command-line options; run with the `-help` option to see the available options.
+. Run the Swarm client with `java -jar path/to/swarm-client.jar -url ${JENKINS_URL} -username ${USERNAME}` and one of the authentication options as described in xref:docs/security.adoc#authentication[the Global Security Configuration documentation]. There are no other required command-line options; run with the `-help` option to see the available options.
 
 == Documentation
 
@@ -65,10 +65,9 @@ Because the Swarm client is running on a separate VM, there is no need to worry 
 |`-fsroot FILE` |Remote root directory. (default: .)
 |`-help (--help, -h)` |Show the help screen (default: false)
 |`-internalDir FILE` |The name of the directory within the Remoting working directory where files internal to Remoting will be stored.
-|`-jar-cache FILE` |Cache directory that stores JAR files sent from the master.
+|`-jar-cache FILE` |Cache directory that stores JAR files sent from the controller.
 |`-labels VAL` |Whitespace-separated list of labels to be assigned for this agent. Multiple options are allowed.
 |`-labelsFile VAL` |File location with space delimited list of labels. If the file changes, the client is restarted.
-|`-master VAL` |The complete target Jenkins URL like `http://server:8080/jenkins/'.
 |`-maxRetryInterval N` |Max time to wait before retry in seconds. Default is 60 seconds. (default: 60)
 |`-mode MODE` |The mode controlling how Jenkins allocates jobs to agents. Can be either `normal' (use this node as much as possible) or `exclusive' (only build jobs with label expressions matching this node). Default is `normal'. (default: normal)
 |`-name VAL` |Name of the agent.
@@ -84,6 +83,7 @@ Because the Swarm client is running on a separate VM, there is no need to worry 
 |`-sslFingerprints VAL` |Whitespace-separated list of accepted certificate fingerprints (SHA-256/Hex), otherwise system truststore will be used. No revocation, expiration or not yet valid check will be performed for custom fingerprints! Multiple options are allowed. (default: )
 |`-t (--toolLocation)` |A tool location to be defined on this agent. It is specified as `toolName=location'.
 |`-tunnel VAL` |Connect to the specified host and port, instead of connecting directly to Jenkins. Useful when connection to Jenkins needs to be tunneled. Can be also HOST: or :PORT, in which case the missing portion will be auto-configured like the default behavior
+|`-url (-master) VAL` |The complete target Jenkins URL like `http://server:8080/jenkins/'.
 |`-username VAL` |The Jenkins username for authentication.
 |`-webSocket` |Connect using the WebSocket protocol. (default: false)
 |`-workDir FILE` |The Remoting working directory where the JAR cache and logs will be stored.

@@ -57,8 +57,8 @@ public class PipelineJobTest {
     }
 
     /**
-     * Executes a shell script build on a Swarm agent that has disconnected while the Jenkins master
-     * is still running.
+     * Executes a shell script build on a Swarm agent that has disconnected while the Jenkins
+     * controller is still running.
      */
     @Test
     public void buildShellScriptAfterDisconnect() throws Exception {

@@ -134,26 +134,25 @@ public class SwarmClient {
         return name;
     }
 
-    public URL getMasterUrl() {
-        logger.config("getMasterUrl() invoked");
+    public URL getUrl() {
+        logger.config("getUrl() invoked");
 
-        if (!options.master.endsWith("/")) {
-            options.master += "/";
+        if (!options.url.endsWith("/")) {
+            options.url += "/";
         }
 
         try {
-            return new URL(options.master);
+            return new URL(options.url);
         } catch (MalformedURLException e) {
-            throw new UncheckedIOException(
-                    String.format("The master URL %s is invalid", options.master), e);
+            throw new UncheckedIOException(String.format("The URL %s is invalid", options.url), e);
         }
     }
 
     /**
-     * @param masterUrl The Jenkins master URL
+     * @param url The URL
      * @return The JNLP arguments, as returned from {@link Launcher#parseJnlpArguments()}.
      */
-    List<String> getJnlpArgs(URL masterUrl) throws IOException, RetryException {
+    List<String> getJnlpArgs(URL url) throws IOException, RetryException {
         logger.fine("connect() invoked");
 
         Launcher launcher = new Launcher();
@@ -164,7 +163,7 @@ public class SwarmClient {
          */
         launcher.noReconnect = true;
 
-        launcher.agentJnlpURL = new URL(masterUrl + "computer/" + name + "/slave-agent.jnlp");
+        launcher.agentJnlpURL = new URL(url + "computer/" + name + "/slave-agent.jnlp");
 
         if (options.username != null && options.password != null) {
             launcher.auth = options.username + ":" + options.password;
@@ -185,7 +184,7 @@ public class SwarmClient {
                 | ParserConfigurationException
                 | RuntimeException
                 | SAXException e) {
-            throw new RetryException("Failed get JNLP arguments for " + masterUrl, e);
+            throw new RetryException("Failed get JNLP arguments for " + url, e);
         }
     }
 
@@ -194,13 +193,13 @@ public class SwarmClient {
      *
      * <p>Interrupt the thread to abort it and try connecting again.
      */
-    void connect(List<String> jnlpArgs, URL masterUrl) throws IOException, RetryException {
+    void connect(List<String> jnlpArgs, URL url) throws IOException, RetryException {
         List<String> args = new ArrayList<>();
         args.add(jnlpArgs.get(0));
         args.add(jnlpArgs.get(1));
 
         args.add("-url");
-        args.add(masterUrl.toString());
+        args.add(url.toString());
 
         if (options.disableSslVerification) {
             args.add("-disableHttpsCertValidation");
@@ -256,7 +255,7 @@ public class SwarmClient {
         try {
             Main.main(args.toArray(new String[0]));
         } catch (InterruptedException | RuntimeException e) {
-            throw new RetryException("Failed to establish JNLP connection to " + masterUrl, e);
+            throw new RetryException("Failed to establish JNLP connection to " + url, e);
         }
     }
 
@@ -331,7 +330,7 @@ public class SwarmClient {
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
     private static synchronized Crumb getCsrfCrumb(
-            CloseableHttpClient client, HttpClientContext context, URL masterUrl)
+            CloseableHttpClient client, HttpClientContext context, URL url)
             throws IOException, ParseException {
         logger.finer("getCsrfCrumb() invoked");
 
@@ -339,7 +338,7 @@ public class SwarmClient {
 
         HttpGet httpGet =
                 new HttpGet(
-                        masterUrl
+                        url
                                 + "crumbIssuer/api/xml?xpath="
                                 + URLEncoder.encode(
                                         "concat(//crumbRequestField,\":\",//crumb)", "UTF-8"));
@@ -370,13 +369,13 @@ public class SwarmClient {
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
-    void createSwarmAgent(URL masterUrl) throws IOException, ParseException, RetryException {
+    void createSwarmAgent(URL url) throws IOException, ParseException, RetryException {
         logger.fine("createSwarmAgent() invoked");
 
         CloseableHttpClient client = createHttpClient(options);
-        HttpClientContext context = createHttpClientContext(options, masterUrl);
+        HttpClientContext context = createHttpClientContext(options, url);
 
-        VersionNumber jenkinsVersion = getJenkinsVersion(client, context, masterUrl);
+        VersionNumber jenkinsVersion = getJenkinsVersion(client, context, url);
         if (options.webSocket
                 && jenkinsVersion.isOlderThan(new VersionNumber("2.229"))
                 && !(jenkinsVersion.getDigitAt(0) == 2
@@ -385,7 +384,7 @@ public class SwarmClient {
             throw new RetryException(
                     String.format(
                             "\"%s\" running Jenkins %s does not support the WebSocket protocol.",
-                            masterUrl, jenkinsVersion));
+                            url, jenkinsVersion));
         }
 
         String labelStr = StringUtils.join(options.labels, ' ');
@@ -421,7 +420,7 @@ public class SwarmClient {
 
         HttpPost post =
                 new HttpPost(
-                        masterUrl
+                        url
                                 + "plugin/swarm/createSlave?name="
                                 + options.name
                                 + "&executors="
@@ -439,7 +438,7 @@ public class SwarmClient {
 
         post.addHeader("Connection", "close");
 
-        Crumb csrfCrumb = getCsrfCrumb(client, context, masterUrl);
+        Crumb csrfCrumb = getCsrfCrumb(client, context, url);
         if (csrfCrumb != null) {
             post.addHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
         }
@@ -479,12 +478,12 @@ public class SwarmClient {
                 sb.append(s);
                 sb.append(" ");
                 if (sb.length() > 1000) {
-                    postLabelAppend(name, sb.toString(), client, context, masterUrl);
+                    postLabelAppend(name, sb.toString(), client, context, url);
                     sb = new StringBuilder();
                 }
             }
             if (sb.length() > 0) {
-                postLabelAppend(name, sb.toString(), client, context, masterUrl);
+                postLabelAppend(name, sb.toString(), client, context, url);
             }
         }
     }
@@ -497,18 +496,18 @@ public class SwarmClient {
             String labels,
             CloseableHttpClient client,
             HttpClientContext context,
-            URL masterUrl)
+            URL url)
             throws IOException, ParseException, RetryException {
         HttpPost post =
                 new HttpPost(
-                        masterUrl
+                        url
                                 + "plugin/swarm/removeSlaveLabels?name="
                                 + name
                                 + SwarmClient.param("labels", labels));
 
         post.addHeader("Connection", "close");
 
-        Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, context, masterUrl);
+        Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, context, url);
         if (csrfCrumb != null) {
             post.addHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
         }
@@ -533,18 +532,15 @@ public class SwarmClient {
             String labels,
             CloseableHttpClient client,
             HttpClientContext context,
-            URL masterUrl)
+            URL url)
             throws IOException, ParseException, RetryException {
         HttpPost post =
                 new HttpPost(
-                        masterUrl
-                                + "plugin/swarm/addSlaveLabels?name="
-                                + name
-                                + param("labels", labels));
+                        url + "plugin/swarm/addSlaveLabels?name=" + name + param("labels", labels));
 
         post.addHeader("Connection", "close");
 
-        Crumb csrfCrumb = getCsrfCrumb(client, context, masterUrl);
+        Crumb csrfCrumb = getCsrfCrumb(client, context, url);
         if (csrfCrumb != null) {
             post.addHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
         }
@@ -581,12 +577,11 @@ public class SwarmClient {
     @SuppressFBWarnings(
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
-    VersionNumber getJenkinsVersion(
-            CloseableHttpClient client, HttpClientContext context, URL masterUrl)
+    VersionNumber getJenkinsVersion(CloseableHttpClient client, HttpClientContext context, URL url)
             throws IOException, ParseException, RetryException {
         logger.fine("getJenkinsVersion() invoked");
 
-        HttpGet httpGet = new HttpGet(masterUrl + "api");
+        HttpGet httpGet = new HttpGet(url + "api");
         try (CloseableHttpResponse response = client.execute(httpGet, context)) {
             if (response.getCode() != HttpStatus.SC_OK) {
                 throw new RetryException(

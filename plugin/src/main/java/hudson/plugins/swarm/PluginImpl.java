@@ -35,7 +35,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Exposes an entry point to add a new Swarm agent.
@@ -175,7 +174,7 @@ public class PluginImpl extends Plugin {
         if (hash == null && jenkins.getNode(name) != null && !deleteExistingClients) {
             /*
              * This is a legacy client. They won't be able to pick up the new name, so throw them
-             * away. Perhaps they can find another master to connect to.
+             * away. Perhaps they can find another controller to connect to.
              */
             rsp.setStatus(SC_CONFLICT);
             rsp.setContentType("text/plain; UTF-8");

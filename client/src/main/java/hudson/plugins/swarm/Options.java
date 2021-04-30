@@ -30,10 +30,11 @@ public class Options {
     public int executors = Runtime.getRuntime().availableProcessors();
 
     @Option(
-            name = "-master",
+            name = "-url",
+            aliases = "-master",
             usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'.",
             required = true)
-    public String master;
+    public String url;
 
     @Option(
             name = "-tunnel",
@@ -193,7 +194,7 @@ public class Options {
 
     @Option(
             name = "-jar-cache",
-            usage = "Cache directory that stores JAR files sent from the master.")
+            usage = "Cache directory that stores JAR files sent from the controller.")
     public File jarCache;
 
     @Option(

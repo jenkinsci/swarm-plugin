@@ -147,27 +147,27 @@ public class Client {
     }
 
     /**
-     * Finds a Jenkins master that supports swarming, and join it.
+     * Run the Swarm client.
      *
      * <p>This method never returns.
      */
     static void run(SwarmClient swarmClient, Options options, String... args)
             throws InterruptedException {
-        logger.info("Connecting to Jenkins master");
-        URL masterUrl = swarmClient.getMasterUrl();
+        logger.info("Connecting to Jenkins controller");
+        URL url = swarmClient.getUrl();
 
         // wait until we get the ACK back
         int retry = 0;
         while (true) {
             try {
-                logger.info("Attempting to connect to " + masterUrl);
+                logger.info("Attempting to connect to " + url);
 
                 /*
                  * Create a new Swarm agent. After this method returns, the value of the name field
                  * has been set to the name returned by the server, which may or may not be the name
                  * we originally requested.
                  */
-                swarmClient.createSwarmAgent(masterUrl);
+                swarmClient.createSwarmAgent(url);
 
                 /*
                  * Set up the label file watcher thread. If the label file changes, this thread
@@ -178,7 +178,7 @@ public class Client {
                 if (options.labelsFile != null) {
                     logger.info("Setting up LabelFileWatcher");
                     LabelFileWatcher l =
-                            new LabelFileWatcher(masterUrl, options, swarmClient.getName(), args);
+                            new LabelFileWatcher(url, options, swarmClient.getName(), args);
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
                     labelFileWatcherThread.setDaemon(true);
                     labelFileWatcherThread.start();
@@ -188,8 +188,8 @@ public class Client {
                  * Note that any instances of InterruptedException or RuntimeException thrown
                  * internally by the next two lines get wrapped in RetryException.
                  */
-                List<String> jnlpArgs = swarmClient.getJnlpArgs(masterUrl);
-                swarmClient.connect(jnlpArgs, masterUrl);
+                List<String> jnlpArgs = swarmClient.getJnlpArgs(url);
+                swarmClient.connect(jnlpArgs, url);
                 if (options.noRetryAfterConnected) {
                     logger.warning("Connection closed, exiting...");
                     swarmClient.exitWithStatus(0);

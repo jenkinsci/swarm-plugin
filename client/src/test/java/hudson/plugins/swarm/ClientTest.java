@@ -60,7 +60,7 @@ public class ClientTest {
 
     private Options givenBackOff(RetryBackOffStrategy retryBackOffStrategy) {
         Options options = new Options();
-        options.master = "http://localhost:8080";
+        options.url = "http://localhost:8080";
         options.retryBackOffStrategy = retryBackOffStrategy;
         options.retry = 10;
         options.retryInterval = 10;
@@ -84,7 +84,7 @@ public class ClientTest {
         }
 
         @Override
-        protected void createSwarmAgent(URL masterUrl) throws RetryException {
+        protected void createSwarmAgent(URL url) throws RetryException {
             throw new RetryException("try again");
         }
 
