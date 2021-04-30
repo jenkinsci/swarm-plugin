@@ -41,16 +41,16 @@ public class LabelFileWatcher implements Runnable {
     private final String name;
     private String labels;
     private final String[] args;
-    private final URL masterUrl;
+    private final URL url;
 
-    public LabelFileWatcher(URL masterUrl, Options options, String name, String... args)
+    public LabelFileWatcher(URL url, Options options, String name, String... args)
             throws IOException {
         logger.config(
                 "LabelFileWatcher() constructed with: "
                         + options.labelsFile
                         + " and "
                         + StringUtils.join(args));
-        this.masterUrl = masterUrl;
+        this.url = url;
         this.options = options;
         this.name = name;
         this.labels =
@@ -64,7 +64,7 @@ public class LabelFileWatcher implements Runnable {
             value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
             justification = "False positive for try-with-resources in Java 11")
     private void softLabelUpdate(String sNewLabels) throws SoftLabelUpdateException {
-        // 1. get labels from master
+        // 1. get labels from controller
         // 2. issue remove command for all old labels
         // 3. issue update commands for new labels
         logger.log(
@@ -73,31 +73,31 @@ public class LabelFileWatcher implements Runnable {
                         + options.labelsFile
                         + " has changed.  Attempting soft label update (no node restart)");
         CloseableHttpClient client = SwarmClient.createHttpClient(options);
-        HttpClientContext context = SwarmClient.createHttpClientContext(options, masterUrl);
+        HttpClientContext context = SwarmClient.createHttpClientContext(options, url);
 
-        logger.log(Level.CONFIG, "Getting current labels from master");
+        logger.log(Level.CONFIG, "Getting current labels from controller");
 
         Document xml;
 
-        HttpGet get = new HttpGet(masterUrl + "/plugin/swarm/getSlaveLabels?name=" + name);
+        HttpGet get = new HttpGet(url + "/plugin/swarm/getSlaveLabels?name=" + name);
         try (CloseableHttpResponse response = client.execute(get, context)) {
             if (response.getCode() != HttpStatus.SC_OK) {
                 logger.log(
                         Level.CONFIG,
-                        "Failed to retrieve labels from master -- Response code: "
+                        "Failed to retrieve labels from controller -- Response code: "
                                 + response.getCode());
                 throw new SoftLabelUpdateException(
-                        "Unable to acquire labels from master to begin removal process.");
+                        "Unable to acquire labels from controller to begin removal process.");
             }
             try {
                 xml = XmlUtils.parse(response.getEntity().getContent());
             } catch (SAXException e) {
-                String msg = "Invalid XML received from " + masterUrl;
+                String msg = "Invalid XML received from " + url;
                 logger.log(Level.SEVERE, msg, e);
                 throw new SoftLabelUpdateException(msg);
             }
         } catch (IOException e) {
-            String msg = "IOException when reading from " + masterUrl;
+            String msg = "IOException when reading from " + url;
             logger.log(Level.SEVERE, msg, e);
             throw new SoftLabelUpdateException(msg);
         }
@@ -115,9 +115,9 @@ public class LabelFileWatcher implements Runnable {
             sb.append(" ");
             if (sb.length() > 1000) {
                 try {
-                    SwarmClient.postLabelRemove(name, sb.toString(), client, context, masterUrl);
+                    SwarmClient.postLabelRemove(name, sb.toString(), client, context, url);
                 } catch (IOException | ParseException | RetryException e) {
-                    String msg = "Exception when removing label from " + masterUrl;
+                    String msg = "Exception when removing label from " + url;
                     logger.log(Level.SEVERE, msg, e);
                     throw new SoftLabelUpdateException(msg);
                 }
@@ -126,9 +126,9 @@ public class LabelFileWatcher implements Runnable {
         }
         if (sb.length() > 0) {
             try {
-                SwarmClient.postLabelRemove(name, sb.toString(), client, context, masterUrl);
+                SwarmClient.postLabelRemove(name, sb.toString(), client, context, url);
             } catch (IOException | ParseException | RetryException e) {
-                String msg = "Exception when removing label from " + masterUrl;
+                String msg = "Exception when removing label from " + url;
                 logger.log(Level.SEVERE, msg, e);
                 throw new SoftLabelUpdateException(msg);
             }
@@ -143,9 +143,9 @@ public class LabelFileWatcher implements Runnable {
             sb.append(" ");
             if (sb.length() > 1000) {
                 try {
-                    SwarmClient.postLabelAppend(name, sb.toString(), client, context, masterUrl);
+                    SwarmClient.postLabelAppend(name, sb.toString(), client, context, url);
                 } catch (IOException | ParseException | RetryException e) {
-                    String msg = "Exception when appending label to " + masterUrl;
+                    String msg = "Exception when appending label to " + url;
                     logger.log(Level.SEVERE, msg, e);
                     throw new SoftLabelUpdateException(msg);
                 }
@@ -155,9 +155,9 @@ public class LabelFileWatcher implements Runnable {
 
         if (sb.length() > 0) {
             try {
-                SwarmClient.postLabelAppend(name, sb.toString(), client, context, masterUrl);
+                SwarmClient.postLabelAppend(name, sb.toString(), client, context, url);
             } catch (IOException | ParseException | RetryException e) {
-                String msg = "Exception when appending label to " + masterUrl;
+                String msg = "Exception when appending label to " + url;
                 logger.log(Level.SEVERE, msg, e);
                 throw new SoftLabelUpdateException(msg);
             }
@@ -274,7 +274,7 @@ public class LabelFileWatcher implements Runnable {
                         Level.WARNING,
                         "WARNING: unable to read "
                                 + options.labelsFile
-                                + ", node may not be reporting proper labels to master.",
+                                + ", node may not be reporting proper labels to controller.",
                         e);
             }
         }

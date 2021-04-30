@@ -22,7 +22,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * A helper class that configures the test Jenkins master with various realistic global security
+ * A helper class that configures the test Jenkins controller with various realistic global security
  * configurations.
  */
 public class GlobalSecurityConfigurationBuilder {
