@@ -229,7 +229,7 @@ public class SwarmClientIntegrationTest {
         // Java Process doesn't provide the PID, so we have to work around it. Find all of our child
         // processes, one of them must be the client we just started, and thus would match the PID
         // in the PID file.
-        List<OSProcess> childProcesses = os.getChildProcesses(os.getProcessId(), 0, null);
+        List<OSProcess> childProcesses = os.getChildProcesses(os.getProcessId(), null, null, 0);
         assertTrue(
                 "PID in PID file must match our new PID",
                 childProcesses.stream().anyMatch(proc -> proc.getProcessID() == newPid));
