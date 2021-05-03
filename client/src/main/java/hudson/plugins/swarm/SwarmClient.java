@@ -77,6 +77,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -675,7 +676,7 @@ public class SwarmClient {
     }
 
     public void sleepSeconds(int waitTime) throws InterruptedException {
-        Thread.sleep(waitTime * 1000);
+        TimeUnit.SECONDS.sleep(waitTime);
     }
 
     private void startPrometheusService(int port) {
