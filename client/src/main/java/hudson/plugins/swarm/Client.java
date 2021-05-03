@@ -28,6 +28,8 @@ import java.util.logging.Logger;
 public class Client {
 
     private static final Logger logger = Logger.getLogger(Client.class.getName());
+    private static final String NON_FATAL_JNLP_AGENT_ENDPOINT_RESOLUTION_EXCEPTIONS =
+            "hudson.remoting.Engine.nonFatalJnlpAgentEndpointResolutionExceptions";
 
     // TODO: Cleanup the encoding issue
     public static void main(String... args) throws InterruptedException {
@@ -182,6 +184,15 @@ public class Client {
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
                     labelFileWatcherThread.setDaemon(true);
                     labelFileWatcherThread.start();
+                }
+
+                /*
+                 * Prevent Remoting from killing the process on JNLP agent endpoint resolution
+                 * exceptions.
+                 */
+                if (System.getProperty(NON_FATAL_JNLP_AGENT_ENDPOINT_RESOLUTION_EXCEPTIONS)
+                        == null) {
+                    System.setProperty(NON_FATAL_JNLP_AGENT_ENDPOINT_RESOLUTION_EXCEPTIONS, "true");
                 }
 
                 /*
