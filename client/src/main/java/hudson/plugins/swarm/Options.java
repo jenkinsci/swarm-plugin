@@ -40,8 +40,8 @@ public class Options {
             name = "-tunnel",
             usage =
                     "Connect to the specified host and port, instead of connecting directly to"
-                        + " Jenkins. Useful when connection to Jenkins needs to be tunneled. Can"
-                        + " be also HOST: or :PORT, in which case the missing portion will be"
+                        + " Jenkins. Useful when connection to Jenkins needs to be tunneled. Can be"
+                        + " also HOST: or :PORT, in which case the missing portion will be"
                         + " auto-configured like the default behavior")
     public String tunnel;
 
