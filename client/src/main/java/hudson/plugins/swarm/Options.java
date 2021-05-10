@@ -209,4 +209,9 @@ public class Options {
             name = "-prometheusPort",
             usage = "If defined, then start an HTTP service on this port for Prometheus metrics.")
     public int prometheusPort = -1;
+
+    @Option(
+            name = "-config",
+            usage = "Yaml configuration file containing the options.")
+    public File config;
 }

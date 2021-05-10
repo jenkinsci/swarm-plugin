@@ -7,11 +7,13 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.NamedOptionDef;
 import org.kohsuke.args4j.spi.FieldSetter;
 import org.kohsuke.args4j.spi.OptionHandler;
-
+import org.yaml.snakeyaml.Yaml;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -49,10 +51,26 @@ public class Client {
             System.exit(0);
         }
 
+        if (options.config != null) {
+            logger.log(Level.INFO, "Load configuration from {0}", options.config.getPath());
+
+            try (InputStream is = new FileInputStream(options.config)) {
+                options = loadFromConfig(is);
+            } catch (IOException ex) {
+                throw new UncheckedIOException("Failed to load configuration", ex);
+            }
+        }
+
         validateOptions(options);
 
         // Pass the command line arguments along so that the LabelFileWatcher thread can have them.
         run(new SwarmClient(options), options, args);
+    }
+
+    static Options loadFromConfig(InputStream is)
+    {
+        final Yaml yaml = new Yaml();
+        return yaml.loadAs(is, Options.class);
     }
 
     private static void validateOptions(Options options) {
