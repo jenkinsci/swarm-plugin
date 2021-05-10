@@ -12,7 +12,7 @@ import hudson.slaves.RetentionStrategy;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -82,7 +82,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
     public static final class DescriptorImpl extends SlaveDescriptor {
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Swarm agent";
         }
