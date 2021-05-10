@@ -1,6 +1,9 @@
 package hudson.plugins.swarm;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
 import hudson.model.Slave;
@@ -35,7 +38,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
             String label,
             List<? extends NodeProperty<?>> nodeProperties)
             throws IOException, FormException {
-        super(
+        this(
                 name,
                 nodeDescription,
                 remoteFS,
@@ -59,16 +62,15 @@ public class SwarmSlave extends Slave implements EphemeralNode {
             RetentionStrategy<?> retentionStrategy,
             List<? extends NodeProperty<?>> nodeProperties)
             throws FormException, IOException {
-        super(
-                name,
-                nodeDescription,
-                remoteFS,
-                numExecutors,
-                mode,
-                labelString,
-                launcher,
-                retentionStrategy,
-                nodeProperties);
+        super(name, remoteFS, launcher);
+        this.setNodeDescription(nodeDescription);
+        this.setMode(mode);
+        this.setLabelString(labelString);
+        this.setRetentionStrategy(retentionStrategy);
+        this.setNodeProperties(nodeProperties);
+
+        final Number executors = Util.tryParseNumber(numExecutors, 1);
+        this.setNumExecutors(executors != null ? executors.intValue() : 1);
     }
 
     @Override
@@ -80,6 +82,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
     public static final class DescriptorImpl extends SlaveDescriptor {
 
         @Override
+        @NonNull
         public String getDisplayName() {
             return "Swarm agent";
         }
