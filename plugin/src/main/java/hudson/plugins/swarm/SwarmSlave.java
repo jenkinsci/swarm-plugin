@@ -1,6 +1,7 @@
 package hudson.plugins.swarm;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
 import hudson.model.Slave;
@@ -14,6 +15,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * {@link Slave} created by ad-hoc local systems.
@@ -36,7 +38,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
             String label,
             List<? extends NodeProperty<?>> nodeProperties)
             throws IOException, FormException {
-        super(
+        this(
                 name,
                 nodeDescription,
                 remoteFS,
@@ -60,16 +62,15 @@ public class SwarmSlave extends Slave implements EphemeralNode {
             RetentionStrategy<?> retentionStrategy,
             List<? extends NodeProperty<?>> nodeProperties)
             throws FormException, IOException {
-        super(
-                name,
-                nodeDescription,
-                remoteFS,
-                numExecutors,
-                mode,
-                labelString,
-                launcher,
-                retentionStrategy,
-                nodeProperties);
+        super(name, remoteFS, launcher);
+        this.setNodeDescription(nodeDescription);
+        this.setMode(mode);
+        this.setLabelString(labelString);
+        this.setRetentionStrategy(retentionStrategy);
+        this.setNodeProperties(nodeProperties);
+
+        final Number executors = Util.tryParseNumber(numExecutors, 1);
+        this.setNumExecutors(executors != null ? executors.intValue() : 1);
     }
 
     @Override
