@@ -1,5 +1,7 @@
 package hudson.plugins.swarm;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor.FormException;
@@ -12,10 +14,8 @@ import hudson.slaves.RetentionStrategy;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * {@link Slave} created by ad-hoc local systems.
