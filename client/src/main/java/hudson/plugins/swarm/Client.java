@@ -83,7 +83,7 @@ public class Client {
                                         "Refusing to start because PID file '%s' already exists"
                                                 + " and the previous process %d (%s) is still"
                                                 + " running.",
-                                        pidFile.toAbsolutePath().toString(),
+                                        pidFile.toAbsolutePath(),
                                         oldPid,
                                         oldProcess.getCommandLine()));
                     } else {
@@ -91,7 +91,7 @@ public class Client {
                                 String.format(
                                         "Ignoring PID file '%s' because the previous process %d is"
                                                 + " no longer running.",
-                                        pidFile.toAbsolutePath().toString(), oldPid));
+                                        pidFile.toAbsolutePath(), oldPid));
                     }
                 }
             }

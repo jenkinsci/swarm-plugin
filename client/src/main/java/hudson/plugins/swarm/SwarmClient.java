@@ -429,8 +429,8 @@ public class SwarmClient {
                                 + param("remoteFsRoot", options.remoteFsRoot.getAbsolutePath())
                                 + param("description", options.description)
                                 + param("labels", sMyLabels)
-                                + toolLocationBuilder.toString()
-                                + environmentVariablesBuilder.toString()
+                                + toolLocationBuilder
+                                + environmentVariablesBuilder
                                 + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
                                 + param("hash", hash)
                                 + param(
