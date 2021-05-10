@@ -1,6 +1,5 @@
 package hudson.plugins.swarm.test;
 
-import com.google.common.collect.ImmutableSet;
 import com.michelin.cio.hudson.plugins.rolestrategy.Role;
 import com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy;
 import com.michelin.cio.hudson.plugins.rolestrategy.RoleMap;
@@ -16,7 +15,9 @@ import hudson.security.csrf.DefaultCrumbIssuer;
 import jenkins.model.Jenkins;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -138,10 +139,11 @@ public class GlobalSecurityConfigurationBuilder {
                     new Role(
                             "swarm",
                             ".*",
-                            ImmutableSet.of(
-                                    Computer.CREATE.getId(),
-                                    Computer.CONNECT.getId(),
-                                    Computer.CONFIGURE.getId()),
+                            new HashSet<>(
+                                    Arrays.asList(
+                                            Computer.CREATE.getId(),
+                                            Computer.CONNECT.getId(),
+                                            Computer.CONFIGURE.getId())),
                             "Swarm users");
 
             SortedMap<Role, Set<String>> roleMap = new TreeMap<>();
