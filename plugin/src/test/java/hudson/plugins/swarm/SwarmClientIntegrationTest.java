@@ -1,5 +1,10 @@
 package hudson.plugins.swarm;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import hudson.Functions;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -9,7 +14,9 @@ import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 import hudson.util.VersionNumber;
+
 import jenkins.model.Jenkins;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -23,6 +30,7 @@ import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
@@ -43,11 +51,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class SwarmClientIntegrationTest {
 
@@ -497,20 +500,21 @@ public class SwarmClientIntegrationTest {
         final File config = temporaryFolder.newFile("swarm.yml");
         FileUtils.writeStringToFile(
                 config,
-                "name: node-yml\n" +
-                        "disableClientsUniqueId: true\n" +
-                        "description: yaml config node\n" +
-                        "url: " + j.getURL() + "\n" +
-                        "username: swarm\n" +
-                        "password: honeycomb\n" +
-                        "executors: 5\n" +
-                        "retry: 0\n",
+                "name: node-yml\n"
+                        + "disableClientsUniqueId: true\n"
+                        + "description: yaml config node\n"
+                        + "url: "
+                        + j.getURL()
+                        + "\n"
+                        + "username: swarm\n"
+                        + "password: honeycomb\n"
+                        + "executors: 5\n"
+                        + "retry: 0\n",
                 StandardCharsets.UTF_8);
 
-        Node node = swarmClientRule.createSwarmClientWithName(
-                "node-yml",
-                "-config",
-                config.getAbsolutePath());
+        Node node =
+                swarmClientRule.createSwarmClientWithName(
+                        "node-yml", "-config", config.getAbsolutePath());
         assertEquals("node-yml", node.getNodeName());
         assertEquals(5, node.getNumExecutors());
         assertTrue(node.getNodeDescription().endsWith("yaml config node"));
@@ -518,10 +522,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void configFromYamlFailsIfConfigFileNotFound() throws Exception {
-        startFailingSwarmClient(
-                j.getURL(),
-                "-config",
-                "_not_existing_file_");
+        startFailingSwarmClient(j.getURL(), "-config", "_not_existing_file_");
     }
 
     @After
