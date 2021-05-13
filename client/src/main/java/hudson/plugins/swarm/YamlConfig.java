@@ -1,11 +1,12 @@
 package hudson.plugins.swarm;
 
+import org.kohsuke.args4j.Option;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
+import java.lang.reflect.Field;
+import java.util.Objects;
 
 /**
  * Reads {@link Options} from a YAML file.
@@ -14,6 +15,7 @@ import java.util.List;
  * which aren't allowed.
  */
 public class YamlConfig {
+    private static final Options defaultOptions = new Options();
     private final Yaml yaml;
 
     public YamlConfig() {
@@ -22,70 +24,61 @@ public class YamlConfig {
 
     public Options loadOptions(InputStream inputStream) throws ConfigurationException {
         final Options options = yaml.loadAs(inputStream, Options.class);
-        required(Entry.of(options.url, "url"));
-        forbidden(Entry.of(options.config, "config"));
-        forbidden(Entry.of(options.help, "help"));
-        excluding(Entry.of(options.webSocket, "webSocket"), Entry.of(options.tunnel, "tunnel"));
-        excluding(
-                Entry.of(options.disableWorkDir, "disableWorkDir"),
-                Entry.of(options.workDir, "workDir"));
-        excluding(
-                Entry.of(options.disableWorkDir, "disableWorkDir"),
-                Entry.of(options.internalDir, "internalDir"));
-        excluding(
-                Entry.of(options.disableWorkDir, "disableWorkDir"),
-                Entry.of(options.failIfWorkDirIsMissing, "failIfWorkDirIsMissing"));
-        hasAllowedValue(
-                Entry.of(options.mode, "mode"),
-                Arrays.asList(ModeOptionHandler.NORMAL, ModeOptionHandler.EXCLUSIVE));
+        checkForbidden(options.config != null, "config");
+
+        for (Field field : Options.class.getDeclaredFields()) {
+            checkField(options, field);
+        }
+
+        if (!ModeOptionHandler.accepts(options.mode)) {
+            throw new ConfigurationException("'mode' has an invalid value: '" + options.mode + "'");
+        }
+
         return options;
     }
 
-    private <T> void required(Entry<T> entry) throws ConfigurationException {
-        if (!entry.set) {
-            throw new ConfigurationException("'" + entry.name + "' is required");
+    private void checkForbidden(boolean hasValue, String name) throws ConfigurationException {
+        if (hasValue) {
+            throw new ConfigurationException("'" + name + "' is not allowed in configuration file");
         }
     }
 
-    private <T> void forbidden(Entry<T> entry) throws ConfigurationException {
-        if (entry.set) {
-            throw new ConfigurationException(
-                    "'" + entry.name + "' is not allowed in configuration file");
-        }
+    private boolean isSet(Options options, Field field)
+            throws NoSuchFieldException, IllegalAccessException {
+        final Object defaultValue =
+                Options.class.getDeclaredField(field.getName()).get(defaultOptions);
+        return !Objects.equals(field.get(options), defaultValue);
     }
 
-    private <T, U> void excluding(Entry<T> entryA, Entry<U> entryB) throws ConfigurationException {
-        if (entryA.set && entryB.set) {
-            throw new ConfigurationException(
-                    "'" + entryA.name + "' can not be used with '" + entryB.name + "'");
-        }
-    }
+    private void checkField(Options options, Field field) throws ConfigurationException {
+        try {
+            final Option annotation = field.getAnnotation(Option.class);
 
-    private <T> void hasAllowedValue(Entry<T> entry, List<T> allowed)
-            throws ConfigurationException {
-        if (!allowed.contains(entry.value)) {
-            throw new ConfigurationException(
-                    "'" + entry.name + "' has an invalid value: '" + entry.value + "'");
-        }
-    }
+            if (annotation != null) {
+                if (annotation.required() && !isSet(options, field)) {
+                    throw new ConfigurationException("'" + field.getName() + "' is required");
+                }
 
-    private static class Entry<T> {
-        final T value;
-        final String name;
-        final boolean set;
+                if (annotation.help()) {
+                    checkForbidden(isSet(options, field), field.getName());
+                }
 
-        private Entry(T value, String name, boolean set) {
-            this.value = value;
-            this.name = name;
-            this.set = set;
-        }
+                for (String forbidden : annotation.forbids()) {
+                    final Field forbiddenField =
+                            Options.class.getDeclaredField(forbidden.replace("-", ""));
 
-        public static <T> Entry<T> of(T value, String name) {
-            return new Entry<>(value, name, value != null);
-        }
-
-        static Entry<Boolean> of(boolean value, String name) {
-            return new Entry<>(value, name, value);
+                    if (isSet(options, field) && isSet(options, forbiddenField)) {
+                        throw new ConfigurationException(
+                                "'"
+                                        + field.getName()
+                                        + "' can not be used with '"
+                                        + forbiddenField.getName()
+                                        + "'");
+                    }
+                }
+            }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 }

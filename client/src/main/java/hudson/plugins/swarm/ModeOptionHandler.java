@@ -28,8 +28,7 @@ public class ModeOptionHandler extends OneArgumentOptionHandler<String> {
 
     @Override
     public String parse(String argument) throws NumberFormatException, CmdLineException {
-        int index = ACCEPTABLE_VALUES.indexOf(argument);
-        if (index == -1) {
+        if (!accepts(argument)) {
             throw new CmdLineException(owner, "Invalid mode", null);
         }
 
@@ -39,5 +38,9 @@ public class ModeOptionHandler extends OneArgumentOptionHandler<String> {
     @Override
     public String getDefaultMetaVariable() {
         return "MODE";
+    }
+
+    static boolean accepts(String value) {
+        return ACCEPTABLE_VALUES.contains(value);
     }
 }
