@@ -40,8 +40,7 @@ public class Client {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
+            fail(e.getMessage());
         }
 
         logArguments(parser);
@@ -56,13 +55,16 @@ public class Client {
 
             try (InputStream is = new FileInputStream(options.config)) {
                 options = new YamlConfig().loadOptions(is);
-            } catch (IOException | ConfigurationException ex) {
-                System.err.println(ex.getMessage());
-                System.exit(1);
+            } catch (IOException | ConfigurationException e) {
+                fail(e.getMessage());
             }
         }
 
-        validateOptions(options);
+        try {
+            validateOptions(options);
+        } catch (RuntimeException e) {
+            fail(e.getMessage());
+        }
 
         // Pass the command line arguments along so that the LabelFileWatcher thread can have them.
         run(new SwarmClient(options), options, args);
@@ -306,5 +308,10 @@ public class Client {
             }
         }
         return false;
+    }
+
+    private static void fail(String message) {
+        System.err.println(message);
+        System.exit(1);
     }
 }
