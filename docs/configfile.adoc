@@ -1,0 +1,47 @@
+= Yaml Configuration file
+
+Options can be configured by a YAML file using `-config`:
+
+[source,bash]
+----
+$ java -jar swarm-client.jar -config config.yml
+----
+
+IMPORTANT: If `-config` is passed, all other arguments are ignored.
+
+The YAML configuration uses the same options as xref:../README.adoc[CLI]; _alias_ aren't supported.
+
+.Required:
+
+- `url`
+
+.Forbidden:
+
+- `help`
+- `config`
+- `password` (use `passwordFile` or `passwordEnvVariable` instead)
+
+.Deviant naming:
+
+- `environmentVariables` _(List)_
+- `toolLocations` _(List)_
+
+
+.Example Configuration:
+[source,yaml]
+----
+url: https://localhost:8080/jenkins
+name: agent-name-0
+description: Configured from yml
+executors: 3
+labels:
+  - label-a
+  - label-b
+  - label-c
+webSocket: true
+environmentVariables:
+  ENV_1: 1234
+  ENV_2: swarm-client
+username: swarm
+passwordEnvVariable: SWARM_KEY
+----
