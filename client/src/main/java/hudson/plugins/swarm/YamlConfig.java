@@ -8,12 +8,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.Objects;
 
-/**
- * Reads {@link Options} from a YAML file.
- *
- * <p>The keys are equal the field names of {@link Options}, except {@code help} and {@code config}
- * which aren't allowed.
- */
+/** Reads {@link Options} from a YAML file. */
 public class YamlConfig {
     private static final Options defaultOptions = new Options();
     private final Yaml yaml;
