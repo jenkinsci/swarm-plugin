@@ -1,5 +1,6 @@
 package hudson.plugins.swarm;
 
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -138,7 +139,7 @@ public class YamlConfigTest {
     }
 
     @Test
-    public void failsOnWebSocketAndTunnelOption() {
+    public void failsOnConflictingOptions() {
         final Throwable ex =
                 assertThrows(
                         ConfigurationException.class,
@@ -147,42 +148,7 @@ public class YamlConfigTest {
                                         "url: ignore\n"
                                                 + "webSocket: true\n"
                                                 + "tunnel: excluded-by.ws:123\n"));
-        assertThat(ex.getMessage(), containsString("tunnel"));
-    }
-
-    @Test
-    public void failsOnDisableWorkDirAndWorkDirOption() {
-        final Throwable ex =
-                assertThrows(
-                        ConfigurationException.class,
-                        () -> loadYaml("url: ignore\ndisableWorkDir: true\nworkDir: /tmp/wd\n"));
-        assertThat(ex.getMessage(), containsString("workDir"));
-    }
-
-    @Test
-    public void failsOnDisableWorkDirAndInternalDirOption() {
-        final Throwable ex =
-                assertThrows(
-                        ConfigurationException.class,
-                        () ->
-                                loadYaml(
-                                        "url: ignore\n"
-                                                + "disableWorkDir: true\n"
-                                                + "internalDir: /tmp/id\n"));
-        assertThat(ex.getMessage(), containsString("internalDir"));
-    }
-
-    @Test
-    public void failsOnDisableWorkDirAndFailIfWorkDirIsMissingOption() {
-        final Throwable ex =
-                assertThrows(
-                        ConfigurationException.class,
-                        () ->
-                                loadYaml(
-                                        "url: ignore\n"
-                                                + "disableWorkDir: true\n"
-                                                + "failIfWorkDirIsMissing: true\n"));
-        assertThat(ex.getMessage(), containsString("failIfWorkDirIsMissing"));
+        assertThat(ex.getMessage(), allOf(containsString("webSocket"), containsString("tunnel")));
     }
 
     @Test
