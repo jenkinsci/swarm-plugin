@@ -9,7 +9,7 @@ $ java -jar swarm-client.jar -config config.yml
 
 IMPORTANT: If `-config` is passed, all other arguments are ignored.
 
-The YAML configuration uses the same options as xref:../README.adoc[CLI]; _alias_ aren't supported.
+The YAML configuration uses lower camel case naming of the xref:../README.adoc[CLI] options; _alias_ aren't supported.
 
 .Required:
 
