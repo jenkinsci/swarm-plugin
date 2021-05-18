@@ -43,7 +43,6 @@ public class YamlConfigTest {
                         + "sslFingerprints: fp0 fp1 fp2\n"
                         + "deleteExistingClients: true\n"
                         + "username: swarm-user-name\n"
-                        + "password: no_actual_value\n"
                         + "passwordEnvVariable: PASS_ENV\n"
                         + "passwordFile: ~/p.conf\n"
                         + "labelsFile: ~/l.conf\n"
@@ -131,10 +130,11 @@ public class YamlConfigTest {
     }
 
     @Test
-    public void failsIfRequiredOptionIsMissing() {
+    public void failsIfDeprecatedOptionIsUsed() {
         final Throwable ex =
-                assertThrows(ConfigurationException.class, () -> loadYaml("name: should-fail\n"));
-        assertThat(ex.getMessage(), containsString("url"));
+                assertThrows(
+                        ConfigurationException.class, () -> loadYaml("password: should-fail\n"));
+        assertThat(ex.getMessage(), containsString("password"));
     }
 
     @Test

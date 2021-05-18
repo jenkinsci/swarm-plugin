@@ -69,6 +69,9 @@ public class Client {
     }
 
     private static void validateOptions(Options options) {
+        if (options.url == null) {
+            throw new RuntimeException("Missing 'url' option.");
+        }
         if (options.pidFile != null) {
             /*
              * This will return a string like 12345@hostname, so we need to do some string

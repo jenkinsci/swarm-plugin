@@ -32,8 +32,7 @@ public class Options {
     @Option(
             name = "-url",
             aliases = "-master",
-            usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'.",
-            required = true)
+            usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'.")
     public String url;
 
     @Option(

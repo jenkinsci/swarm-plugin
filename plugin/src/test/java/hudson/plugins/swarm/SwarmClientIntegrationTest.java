@@ -497,6 +497,8 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void configFromYaml() throws Exception {
+        final File pwFile = temporaryFolder.newFile("pw");
+        FileUtils.writeStringToFile(pwFile, "honeycomb", StandardCharsets.UTF_8);
         final File config = temporaryFolder.newFile("swarm.yml");
         FileUtils.writeStringToFile(
                 config,
@@ -507,7 +509,9 @@ public class SwarmClientIntegrationTest {
                         + j.getURL()
                         + "\n"
                         + "username: swarm\n"
-                        + "password: honeycomb\n"
+                        + "passwordFile: "
+                        + pwFile.getAbsolutePath()
+                        + "\n"
                         + "executors: 5\n"
                         + "retry: 0\n",
                 StandardCharsets.UTF_8);
@@ -522,7 +526,14 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void configFromYamlFailsIfConfigFileNotFound() throws Exception {
-        startFailingSwarmClient(j.getURL(), "-config", "_not_existing_file_");
+        startFailingSwarmClient(j.getURL(), "invalid-node", "-config", "_not_existing_file_");
+    }
+
+    @Test
+    public void configFromYamlFailsIfNoUrl() throws Exception {
+        final File config = temporaryFolder.newFile("swarm.yml");
+        FileUtils.writeStringToFile(config, "name: node-without-url\n", StandardCharsets.UTF_8);
+        startFailingSwarmClient(null, "node-without-url", "-config", config.getAbsolutePath());
     }
 
     @After

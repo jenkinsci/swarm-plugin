@@ -25,6 +25,7 @@ public class YamlConfig {
     public Options loadOptions(InputStream inputStream) throws ConfigurationException {
         final Options options = yaml.loadAs(inputStream, Options.class);
         checkForbidden(options.config != null, "config");
+        checkForbidden(options.password != null, "password");
 
         for (Field field : Options.class.getDeclaredFields()) {
             checkField(options, field);
