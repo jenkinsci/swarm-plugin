@@ -51,6 +51,9 @@ public class Client {
         }
 
         if (options.config != null) {
+            if (hasConflictingOptions(parser)) {
+                fail("'-config' can not be used with other options.");
+            }
             logger.log(Level.INFO, "Load configuration from {0}", options.config.getPath());
 
             try (InputStream is = new FileInputStream(options.config)) {
@@ -68,6 +71,17 @@ public class Client {
 
         // Pass the command line arguments along so that the LabelFileWatcher thread can have them.
         run(new SwarmClient(options), options, args);
+    }
+
+    private static boolean hasConflictingOptions(CmdLineParser parser) {
+        return parser.getOptions().stream()
+                .anyMatch(
+                        oh ->
+                                !getKey(oh).equals("-config")
+                                        && !isDefaultOption(
+                                                getKey(oh),
+                                                getValue(oh),
+                                                new CmdLineParser(new Options())));
     }
 
     private static void validateOptions(Options options) {

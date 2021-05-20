@@ -517,7 +517,7 @@ public class SwarmClientIntegrationTest {
                 StandardCharsets.UTF_8);
 
         Node node =
-                swarmClientRule.createSwarmClientWithName(
+                swarmClientRule.createSwarmClientWithoutDefaultArgs(
                         "node-yml", "-config", config.getAbsolutePath());
         assertEquals("node-yml", node.getNodeName());
         assertEquals(5, node.getNumExecutors());
@@ -526,14 +526,34 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void configFromYamlFailsIfConfigFileNotFound() throws Exception {
-        startFailingSwarmClient(j.getURL(), "invalid-node", "-config", "_not_existing_file_");
+        startFailingSwarmClient(null, null, "-config", "_not_existing_file_");
     }
 
     @Test
     public void configFromYamlFailsIfNoUrl() throws Exception {
         final File config = temporaryFolder.newFile("swarm.yml");
         FileUtils.writeStringToFile(config, "name: node-without-url\n", StandardCharsets.UTF_8);
-        startFailingSwarmClient(null, "node-without-url", "-config", config.getAbsolutePath());
+        startFailingSwarmClient(null, null, "-config", config.getAbsolutePath());
+    }
+
+    @Test
+    public void configFromYamlFailsIfUsedWithOtherOption() throws Exception {
+        final File pwFile = temporaryFolder.newFile("pw");
+        FileUtils.writeStringToFile(pwFile, "honeycomb", StandardCharsets.UTF_8);
+        final File config = temporaryFolder.newFile("swarm.yml");
+        FileUtils.writeStringToFile(
+                config,
+                "name: failing-node\n"
+                        + "url: "
+                        + j.getURL()
+                        + "\n"
+                        + "username: swarm\n"
+                        + "passwordFile: "
+                        + pwFile.getAbsolutePath()
+                        + "\n",
+                StandardCharsets.UTF_8);
+        startFailingSwarmClient(
+                j.getURL(), "failing-node", "-webSocket", "-config", config.getAbsolutePath());
     }
 
     @After
