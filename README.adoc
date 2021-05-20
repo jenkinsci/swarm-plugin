@@ -46,6 +46,7 @@ Because the Swarm client is running on a separate VM, there is no need to worry 
 * xref:docs/prometheus.adoc[Prometheus Monitoring]
 * xref:docs/proxy.adoc[Proxy Configuration]
 * xref:docs/security.adoc[Global Security Configuration]
+* xref:docs/configfile.adoc[YAML Configuration]
 
 == Available options
 
@@ -54,6 +55,7 @@ Because the Swarm client is running on a separate VM, there is no need to worry 
 [cols="1,1",options="header"]
 |===
 |Name |Description
+|`-config FILE` |YAML configuration file containing the options.
 |`-deleteExistingClients` |Delete any existing agent with the same name. (default: false)
 |`-description VAL` |Description to be put on the agent.
 |`-disableClientsUniqueId` |Disable client's unique ID. (default: false)

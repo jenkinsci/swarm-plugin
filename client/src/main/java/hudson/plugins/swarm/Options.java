@@ -32,8 +32,7 @@ public class Options {
     @Option(
             name = "-url",
             aliases = "-master",
-            usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'.",
-            required = true)
+            usage = "The complete target Jenkins URL like 'http://server:8080/jenkins/'.")
     public String url;
 
     @Option(
@@ -209,4 +208,7 @@ public class Options {
             name = "-prometheusPort",
             usage = "If defined, then start an HTTP service on this port for Prometheus metrics.")
     public int prometheusPort = -1;
+
+    @Option(name = "-config", usage = "YAML configuration file containing the options.")
+    public File config;
 }

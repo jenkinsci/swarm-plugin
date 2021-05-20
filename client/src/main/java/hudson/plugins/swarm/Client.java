@@ -11,7 +11,9 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -38,8 +40,7 @@ public class Client {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
+            fail(e.getMessage());
         }
 
         logArguments(parser);
@@ -49,13 +50,44 @@ public class Client {
             System.exit(0);
         }
 
-        validateOptions(options);
+        if (options.config != null) {
+            if (hasConflictingOptions(parser)) {
+                fail("'-config' can not be used with other options.");
+            }
+            logger.log(Level.INFO, "Load configuration from {0}", options.config.getPath());
+
+            try (InputStream is = new FileInputStream(options.config)) {
+                options = new YamlConfig().loadOptions(is);
+            } catch (IOException | ConfigurationException e) {
+                fail(e.getMessage());
+            }
+        }
+
+        try {
+            validateOptions(options);
+        } catch (RuntimeException e) {
+            fail(e.getMessage());
+        }
 
         // Pass the command line arguments along so that the LabelFileWatcher thread can have them.
         run(new SwarmClient(options), options, args);
     }
 
+    private static boolean hasConflictingOptions(CmdLineParser parser) {
+        return parser.getOptions().stream()
+                .anyMatch(
+                        oh ->
+                                !getKey(oh).equals("-config")
+                                        && !isDefaultOption(
+                                                getKey(oh),
+                                                getValue(oh),
+                                                new CmdLineParser(new Options())));
+    }
+
     private static void validateOptions(Options options) {
+        if (options.url == null) {
+            throw new RuntimeException("Missing 'url' option.");
+        }
         if (options.pidFile != null) {
             /*
              * This will return a string like 12345@hostname, so we need to do some string
@@ -290,5 +322,10 @@ public class Client {
             }
         }
         return false;
+    }
+
+    private static void fail(String message) {
+        System.err.println(message);
+        System.exit(1);
     }
 }

@@ -17,6 +17,7 @@ import hudson.util.VersionNumber;
 
 import jenkins.model.Jenkins;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.junit.After;
@@ -492,6 +493,67 @@ public class SwarmClientIntegrationTest {
         assertTrue(content.length() > 0);
         // Assert that we got at least one known Prometheus metric
         assertTrue(content.toString().contains("process_cpu_usage"));
+    }
+
+    @Test
+    public void configFromYaml() throws Exception {
+        final File pwFile = temporaryFolder.newFile("pw");
+        FileUtils.writeStringToFile(pwFile, "honeycomb", StandardCharsets.UTF_8);
+        final File config = temporaryFolder.newFile("swarm.yml");
+        FileUtils.writeStringToFile(
+                config,
+                "name: node-yml\n"
+                        + "disableClientsUniqueId: true\n"
+                        + "description: yaml config node\n"
+                        + "url: "
+                        + j.getURL()
+                        + "\n"
+                        + "username: swarm\n"
+                        + "passwordFile: "
+                        + pwFile.getAbsolutePath()
+                        + "\n"
+                        + "executors: 5\n"
+                        + "retry: 0\n",
+                StandardCharsets.UTF_8);
+
+        Node node =
+                swarmClientRule.createSwarmClientWithoutDefaultArgs(
+                        "node-yml", "-config", config.getAbsolutePath());
+        assertEquals("node-yml", node.getNodeName());
+        assertEquals(5, node.getNumExecutors());
+        assertTrue(node.getNodeDescription().endsWith("yaml config node"));
+    }
+
+    @Test
+    public void configFromYamlFailsIfConfigFileNotFound() throws Exception {
+        startFailingSwarmClient(null, null, "-config", "_not_existing_file_");
+    }
+
+    @Test
+    public void configFromYamlFailsIfNoUrl() throws Exception {
+        final File config = temporaryFolder.newFile("swarm.yml");
+        FileUtils.writeStringToFile(config, "name: node-without-url\n", StandardCharsets.UTF_8);
+        startFailingSwarmClient(null, null, "-config", config.getAbsolutePath());
+    }
+
+    @Test
+    public void configFromYamlFailsIfUsedWithOtherOption() throws Exception {
+        final File pwFile = temporaryFolder.newFile("pw");
+        FileUtils.writeStringToFile(pwFile, "honeycomb", StandardCharsets.UTF_8);
+        final File config = temporaryFolder.newFile("swarm.yml");
+        FileUtils.writeStringToFile(
+                config,
+                "name: failing-node\n"
+                        + "url: "
+                        + j.getURL()
+                        + "\n"
+                        + "username: swarm\n"
+                        + "passwordFile: "
+                        + pwFile.getAbsolutePath()
+                        + "\n",
+                StandardCharsets.UTF_8);
+        startFailingSwarmClient(
+                j.getURL(), "failing-node", "-webSocket", "-config", config.getAbsolutePath());
     }
 
     @After

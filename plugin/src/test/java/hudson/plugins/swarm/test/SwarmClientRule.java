@@ -22,6 +22,7 @@ import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -127,8 +129,65 @@ public class SwarmClientRule extends ExternalResource {
      *
      * @param agentName The proposed name of the agent.
      * @param args The arguments to pass to the client.
+     * @return The online node
      */
     public synchronized Node createSwarmClientWithName(String agentName, String... args)
+            throws InterruptedException, IOException {
+        // Create the password file.
+        Path passwordFile = null;
+        if (swarmPassword != null) {
+            passwordFile =
+                    Files.createTempFile(temporaryFolder.getRoot().toPath(), "password", null);
+            Files.write(passwordFile, swarmPassword.getBytes(StandardCharsets.UTF_8));
+        }
+
+        final String passwordFilePath = passwordFile != null ? passwordFile.toString() : null;
+        return createSwarmClientWithCommand(
+                agentName,
+                swarmClientJar -> {
+                    try {
+                        return getCommand(
+                                swarmClientJar,
+                                j.get().getURL(),
+                                agentName,
+                                swarmUsername,
+                                passwordFilePath,
+                                args);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                });
+    }
+
+    /**
+     * Create a new Swarm agent on the local host and wait for it to come online before returning.
+     * Unlike {@link #createSwarmClientWithName(String, String...)} no default CLI arguments are
+     * passed.
+     *
+     * @param agentName The proposed name of the agent.
+     * @param args The arguments to pass to the client.
+     * @return The online node
+     */
+    public synchronized Node createSwarmClientWithoutDefaultArgs(String agentName, String... args)
+            throws InterruptedException, IOException {
+        return createSwarmClientWithCommand(
+                agentName,
+                swarmClientJar -> getCommand(swarmClientJar, null, null, null, null, args));
+    }
+
+    /**
+     * Create a new Swarm agent on the local host and wait for it to come online before returning.
+     *
+     * <p>The function used to generate the launch CLI takes the client JAR path as an argument and
+     * returns the list of commands, typically by invoking {@link #getCommand(Path, URL, String,
+     * String, String, String...)}.
+     *
+     * @param agentName The proposed name of the agent.
+     * @param commandGenerator Generator of the client launch CLI
+     * @return The online node
+     */
+    private Node createSwarmClientWithCommand(
+            String agentName, Function<Path, List<String>> commandGenerator)
             throws InterruptedException, IOException {
         if (isActive) {
             throw new IllegalStateException(
@@ -141,23 +200,7 @@ public class SwarmClientRule extends ExternalResource {
                 Files.createTempFile(temporaryFolder.getRoot().toPath(), "swarm-client", ".jar");
         download(swarmClientJar);
 
-        // Create the password file.
-        Path passwordFile = null;
-        if (swarmPassword != null) {
-            passwordFile =
-                    Files.createTempFile(temporaryFolder.getRoot().toPath(), "password", null);
-            Files.write(passwordFile, swarmPassword.getBytes(StandardCharsets.UTF_8));
-        }
-
-        // Form the list of command-line arguments.
-        List<String> command =
-                getCommand(
-                        swarmClientJar,
-                        j.get().getURL(),
-                        agentName,
-                        swarmUsername,
-                        passwordFile != null ? passwordFile.toString() : null,
-                        args);
+        final List<String> command = commandGenerator.apply(swarmClientJar);
 
         logger.log(Level.INFO, "Starting client process.");
         try {
@@ -236,8 +279,10 @@ public class SwarmClientRule extends ExternalResource {
             command.add("-url");
             command.add(url.toString());
         }
-        command.add("-name");
-        command.add(agentName);
+        if (agentName != null) {
+            command.add("-name");
+            command.add(agentName);
+        }
         if (username != null) {
             command.add("-username");
             command.add(username);
