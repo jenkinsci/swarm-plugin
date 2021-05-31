@@ -18,7 +18,7 @@ import org.jenkinsci.plugins.workflow.support.concurrent.Timeout;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.jvnet.hudson.test.JenkinsSessionRule;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,13 +46,13 @@ import java.util.logging.Logger;
  * time. If an instance is running at the end of the test method, it will be automatically torn
  * down. Automatic tear down will also take place if the test times out.
  *
- * <p>Should work in combination with {@link JenkinsRule} or {@link RestartableJenkinsRule}.
+ * <p>Should work in combination with {@link JenkinsRule} or {@link JenkinsSessionRule}.
  */
 public class SwarmClientRule extends ExternalResource {
 
     private static final Logger logger = Logger.getLogger(SwarmClientRule.class.getName());
 
-    /** A {@link Supplier} for compatibility with {@link RestartableJenkinsRule}. */
+    /** A {@link Supplier} for compatibility with {@link JenkinsSessionRule}. */
     final Supplier<JenkinsRule> j;
 
     /**

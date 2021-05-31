@@ -22,7 +22,7 @@ public class PipelineJobRestartTest {
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
 
     @Rule(order = 10)
-    public JenkinsSessionRule story = new JenkinsSessionRule();
+    public JenkinsSessionRule sessions = new JenkinsSessionRule();
 
     /** For use with {@link #swarmClientRule} */
     private JenkinsRule holder;
@@ -39,7 +39,7 @@ public class PipelineJobRestartTest {
      */
     @Test
     public void buildShellScriptAfterRestart() throws Throwable {
-        story.then(
+        sessions.then(
                 r -> {
                     holder = r;
                     swarmClientRule.globalSecurityConfigurationBuilder().build();
@@ -56,7 +56,7 @@ public class PipelineJobRestartTest {
                     WorkflowRun build = project.scheduleBuild2(0).waitForStart();
                     SemaphoreStep.waitForStart("wait-0/1", build);
                 });
-        story.then(
+        sessions.then(
                 r -> {
                     holder = r;
                     SemaphoreStep.success("wait-0/1", null);
