@@ -88,6 +88,7 @@ Because the Swarm client is running on a separate VM, there is no need to worry 
 |`-url (-master) VAL` |The complete target Jenkins URL like `http://server:8080/jenkins/'.
 |`-username VAL` |The Jenkins username for authentication.
 |`-webSocket` |Connect using the WebSocket protocol. (default: false)
+|`-webSocketHeader NAME=VALUE` |Additional WebSocket header to set, eg for authenticating with reverse proxies. To specify multiple headers, call this flag multiple times, one with each header.
 |`-workDir FILE` |The Remoting working directory where the JAR cache and logs will be stored.
 |===
 

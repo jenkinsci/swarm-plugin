@@ -75,6 +75,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -251,6 +252,13 @@ public class SwarmClient {
 
         if (options.webSocket) {
             args.add("-webSocket");
+
+            if (options.webSocketHeaders != null) {
+                for (Map.Entry<String, String> entry : options.webSocketHeaders.entrySet()) {
+                    args.add("-webSocketHeader");
+                    args.add(entry.getValue() + "=" + entry.getValue());
+                }
+            }
         }
 
         try {

@@ -74,10 +74,10 @@ public class YamlConfigTest {
                 "url: http://localhost:8080/jenkins\n"
                         + "toolLocations:\n"
                         + "  tool-a: /tool/path/a\n"
-                        + "  tool-b: /tool/path/b\n"
-                        + "  ENV_2: env#2\n";
+                        + "  tool-b: /tool/path/b\n";
 
         final Options options = loadYaml(yamlString);
+        assertThat(options.toolLocations.size(), equalTo(2));
         assertThat(options.toolLocations.get("tool-a"), equalTo("/tool/path/a"));
         assertThat(options.toolLocations.get("tool-b"), equalTo("/tool/path/b"));
     }
@@ -109,6 +109,7 @@ public class YamlConfigTest {
                         + "  ENV_2: env#2\n";
 
         final Options options = loadYaml(yamlString);
+        assertThat(options.environmentVariables.size(), equalTo(2));
         assertThat(options.environmentVariables.get("ENV_1"), equalTo("env#1"));
         assertThat(options.environmentVariables.get("ENV_2"), equalTo("env#2"));
     }
@@ -133,11 +134,40 @@ public class YamlConfigTest {
     }
 
     @Test
-    public void webSocketOptions() throws ConfigurationException {
+    public void webSocketOption() throws ConfigurationException {
         final String yamlString = "url: http://localhost:8080/jenkins\n" + "webSocket: true\n";
 
         final Options options = loadYaml(yamlString);
         assertThat(options.webSocket, equalTo(true));
+    }
+
+    @Test
+    public void webSocketHeadersOption() throws ConfigurationException {
+        final String yamlString =
+                "url: http://localhost:8080/jenkins\n"
+                        + "webSocket: true\n"
+                        + "webSocketHeaders:\n"
+                        + "  WS_HEADER_0: WS_VALUE_0\n"
+                        + "  WS_HEADER_1: WS_VALUE_1\n";
+
+        final Options options = loadYaml(yamlString);
+        assertThat(options.webSocketHeaders.size(), equalTo(2));
+        assertThat(options.webSocketHeaders.get("WS_HEADER_0"), equalTo("WS_VALUE_0"));
+        assertThat(options.webSocketHeaders.get("WS_HEADER_1"), equalTo("WS_VALUE_1"));
+    }
+
+    @Test
+    public void webSocketHeadersFailsIfWebSocketOptionIsNotSet() {
+        final String yamlString =
+                "url: http://localhost:8080/jenkins\n"
+                        + "webSocketHeaders:\n"
+                        + "  WS_HEADER_0: WS_VALUE_0\n"
+                        + "  WS_HEADER_1: WS_VALUE_1\n";
+
+        final Throwable ex = assertThrows(ConfigurationException.class, () -> loadYaml(yamlString));
+        assertThat(
+                ex.getMessage(),
+                allOf(containsString("webSocketHeaders"), containsString("webSocket")));
     }
 
     @Test
