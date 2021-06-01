@@ -26,26 +26,10 @@ public class YamlConfigTest {
                         + "  - label-a\n"
                         + "  - label-b\n"
                         + "  - label-c\n"
-                        + "webSocket: true\n"
                         + "disableClientsUniqueId: true\n"
                         + "mode: exclusive\n"
-                        + "retry: 0\n"
                         + "failIfWorkDirIsMissing: false\n"
-                        + "toolLocations:\n"
-                        + "  tool-a: /tool/path/a\n"
-                        + "  tool-b: /tool/path/b\n"
-                        + "noRetryAfterConnected: true\n"
-                        + "environmentVariables:\n"
-                        + "  ENV_1: env#1\n"
-                        + "  ENV_2: env#2\n"
-                        + "retryInterval: 12\n"
-                        + "maxRetryInterval: 9\n"
-                        + "disableSslVerification: false\n"
-                        + "sslFingerprints: fp0 fp1 fp2\n"
                         + "deleteExistingClients: true\n"
-                        + "username: swarm-user-name\n"
-                        + "passwordEnvVariable: PASS_ENV\n"
-                        + "passwordFile: ~/p.conf\n"
                         + "labelsFile: ~/l.conf\n"
                         + "pidFile: ~/s.pid\n"
                         + "prometheusPort: 112233\n";
@@ -55,26 +39,10 @@ public class YamlConfigTest {
         assertThat(options.description, equalTo("Configured from yml"));
         assertThat(options.executors, equalTo(3));
         assertThat(options.labels, hasItems("label-a", "label-b", "label-c"));
-        assertThat(options.webSocket, equalTo(true));
         assertThat(options.disableClientsUniqueId, equalTo(true));
         assertThat(options.mode, equalTo(ModeOptionHandler.EXCLUSIVE));
-        assertThat(options.retry, equalTo(0));
         assertThat(options.failIfWorkDirIsMissing, equalTo(false));
-        assertThat(options.toolLocations.size(), equalTo(2));
-        assertThat(options.toolLocations.get("tool-a"), equalTo("/tool/path/a"));
-        assertThat(options.toolLocations.get("tool-b"), equalTo("/tool/path/b"));
-        assertThat(options.noRetryAfterConnected, equalTo(true));
-        assertThat(options.environmentVariables.size(), equalTo(2));
-        assertThat(options.environmentVariables.get("ENV_1"), equalTo("env#1"));
-        assertThat(options.environmentVariables.get("ENV_2"), equalTo("env#2"));
-        assertThat(options.retryInterval, equalTo(12));
-        assertThat(options.maxRetryInterval, equalTo(9));
-        assertThat(options.disableSslVerification, equalTo(false));
-        assertThat(options.sslFingerprints, equalTo("fp0 fp1 fp2"));
         assertThat(options.deleteExistingClients, equalTo(true));
-        assertThat(options.username, equalTo("swarm-user-name"));
-        assertThat(options.passwordEnvVariable, equalTo("PASS_ENV"));
-        assertThat(options.passwordFile, equalTo("~/p.conf"));
         assertThat(options.labelsFile, equalTo("~/l.conf"));
         assertThat(options.pidFile, equalTo("~/s.pid"));
         assertThat(options.prometheusPort, equalTo(112233));
@@ -98,6 +66,78 @@ public class YamlConfigTest {
                                 fail(e.getMessage());
                             }
                         });
+    }
+
+    @Test
+    public void toolLocationOption() throws ConfigurationException {
+        final String yamlString =
+                "url: http://localhost:8080/jenkins\n"
+                        + "toolLocations:\n"
+                        + "  tool-a: /tool/path/a\n"
+                        + "  tool-b: /tool/path/b\n"
+                        + "  ENV_2: env#2\n";
+
+        final Options options = loadYaml(yamlString);
+        assertThat(options.toolLocations.get("tool-a"), equalTo("/tool/path/a"));
+        assertThat(options.toolLocations.get("tool-b"), equalTo("/tool/path/b"));
+    }
+
+    @Test
+    public void errorHandlingOptions() throws ConfigurationException {
+        final String yamlString =
+                "url: http://localhost:8080/jenkins\n"
+                        + "retry: 0\n"
+                        + "noRetryAfterConnected: true\n"
+                        + "retryInterval: 12\n"
+                        + "maxRetryInterval: 9\n";
+
+        final Options options = loadYaml(yamlString);
+        assertThat(options.url, equalTo("http://localhost:8080/jenkins"));
+        assertThat(options.retry, equalTo(0));
+        assertThat(options.failIfWorkDirIsMissing, equalTo(false));
+        assertThat(options.noRetryAfterConnected, equalTo(true));
+        assertThat(options.retryInterval, equalTo(12));
+        assertThat(options.maxRetryInterval, equalTo(9));
+    }
+
+    @Test
+    public void environmentVariablesOption() throws ConfigurationException {
+        final String yamlString =
+                "url: http://localhost:8080/jenkins\n"
+                        + "environmentVariables:\n"
+                        + "  ENV_1: env#1\n"
+                        + "  ENV_2: env#2\n";
+
+        final Options options = loadYaml(yamlString);
+        assertThat(options.environmentVariables.get("ENV_1"), equalTo("env#1"));
+        assertThat(options.environmentVariables.get("ENV_2"), equalTo("env#2"));
+    }
+
+    @Test
+    public void authenticationOptions() throws ConfigurationException {
+        final String yamlString =
+                "url: http://localhost:8080/jenkins\n"
+                        + "disableSslVerification: false\n"
+                        + "sslFingerprints: fp0 fp1 fp2\n"
+                        + "username: swarm-user-name\n"
+                        + "passwordEnvVariable: PASS_ENV\n"
+                        + "passwordFile: ~/p.conf\n";
+
+        final Options options = loadYaml(yamlString);
+        assertThat(options.url, equalTo("http://localhost:8080/jenkins"));
+        assertThat(options.disableSslVerification, equalTo(false));
+        assertThat(options.sslFingerprints, equalTo("fp0 fp1 fp2"));
+        assertThat(options.username, equalTo("swarm-user-name"));
+        assertThat(options.passwordEnvVariable, equalTo("PASS_ENV"));
+        assertThat(options.passwordFile, equalTo("~/p.conf"));
+    }
+
+    @Test
+    public void webSocketOptions() throws ConfigurationException {
+        final String yamlString = "url: http://localhost:8080/jenkins\n" + "webSocket: true\n";
+
+        final Options options = loadYaml(yamlString);
+        assertThat(options.webSocket, equalTo(true));
     }
 
     @Test
