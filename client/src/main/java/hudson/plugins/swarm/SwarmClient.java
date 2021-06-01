@@ -256,7 +256,7 @@ public class SwarmClient {
             if (options.webSocketHeaders != null) {
                 for (Map.Entry<String, String> entry : options.webSocketHeaders.entrySet()) {
                     args.add("-webSocketHeader");
-                    args.add(entry.getValue() + "=" + entry.getValue());
+                    args.add(entry.getKey() + "=" + entry.getValue());
                 }
             }
         }
