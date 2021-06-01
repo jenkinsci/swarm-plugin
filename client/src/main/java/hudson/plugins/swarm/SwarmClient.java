@@ -101,7 +101,7 @@ public class SwarmClient {
     public SwarmClient(Options options) {
         this.options = options;
         if (!options.disableClientsUniqueId) {
-            this.hash = hash(options.remoteFsRoot);
+            this.hash = hash(options.fsroot);
         } else {
             this.hash = "";
         }
@@ -223,7 +223,7 @@ public class SwarmClient {
             String workDirPath =
                     options.workDir != null
                             ? options.workDir.getPath()
-                            : options.remoteFsRoot.getPath();
+                            : options.fsroot.getPath();
             args.add("-workDir");
             args.add(workDirPath);
 
@@ -434,7 +434,7 @@ public class SwarmClient {
                                 + options.name
                                 + "&executors="
                                 + options.executors
-                                + param("remoteFsRoot", options.remoteFsRoot.getAbsolutePath())
+                                + param("remoteFsRoot", options.fsroot.getAbsolutePath())
                                 + param("description", options.description)
                                 + param("labels", sMyLabels)
                                 + toolLocationBuilder

@@ -24,7 +24,7 @@ public class Options {
     public List<String> labels = new ArrayList<>();
 
     @Option(name = "-fsroot", usage = "Remote root directory.")
-    public File remoteFsRoot = new File(".");
+    public File fsroot = new File(".");
 
     @Option(name = "-executors", usage = "Number of executors")
     public int executors = Runtime.getRuntime().availableProcessors();
