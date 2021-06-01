@@ -48,6 +48,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -240,7 +241,7 @@ public class SwarmClientIntegrationTest {
     @Test
     @Issue("JENKINS-61969")
     public void webSocket() throws Exception {
-        Assume.assumeTrue(Jenkins.getVersion().isNewerThanOrEqualTo(new VersionNumber("2.222.4")));
+        Assume.assumeTrue(hasWebSocketSupport());
         Node node = swarmClientRule.createSwarmClient("-webSocket");
 
         FreeStyleProject project = j.createFreeStyleProject();
@@ -250,6 +251,26 @@ public class SwarmClientIntegrationTest {
 
         FreeStyleBuild build = j.buildAndAssertSuccess(project);
         j.assertLogContains("ON_SWARM_CLIENT=true", build);
+    }
+
+    @Test
+    public void webSocketHeaders() throws IOException, InterruptedException {
+        Assume.assumeTrue(hasWebSocketSupport());
+        swarmClientRule.createSwarmClient(
+                "-webSocket", "-webSocketHeader", "WS_HEADER=HEADER_VALUE");
+    }
+
+    @Test
+    public void webSocketHeadersFailsIfNoWebSocketArgument()
+            throws IOException, InterruptedException {
+        Assume.assumeTrue(hasWebSocketSupport());
+        startFailingSwarmClient(
+                j.getURL(), "should_fail", "-webSocketHeader", "WS_HEADER=HEADER_VALUE");
+    }
+
+    private boolean hasWebSocketSupport() {
+        return Objects.requireNonNull(Jenkins.getVersion())
+                .isNewerThanOrEqualTo(new VersionNumber("2.222.4"));
     }
 
     @Test

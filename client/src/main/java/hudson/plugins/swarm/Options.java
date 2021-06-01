@@ -51,6 +51,16 @@ public class Options {
     public boolean webSocket;
 
     @Option(
+            name = "-webSocketHeader",
+            usage =
+                    "Additional WebSocket header to set, eg for authenticating with reverse"
+                        + " proxies. To specify multiple headers, call this flag multiple times,"
+                        + " one with each header.",
+            metaVar = "NAME=VALUE",
+            depends = "-webSocket")
+    public Map<String, String> webSocketHeaders;
+
+    @Option(
             name = "-noRetryAfterConnected",
             usage = "Do not retry if a successful connection gets closed.")
     public boolean noRetryAfterConnected;

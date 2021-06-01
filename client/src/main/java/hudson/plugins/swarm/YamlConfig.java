@@ -59,22 +59,43 @@ public class YamlConfig {
                     checkForbidden(isSet(options, field), field.getName());
                 }
 
-                for (String forbidden : annotation.forbids()) {
-                    final Field forbiddenField =
-                            Options.class.getDeclaredField(forbidden.replace("-", ""));
-
-                    if (isSet(options, field) && isSet(options, forbiddenField)) {
-                        throw new ConfigurationException(
-                                "'"
-                                        + field.getName()
-                                        + "' can not be used with '"
-                                        + forbiddenField.getName()
-                                        + "'");
-                    }
-                }
+                checkForbids(options, field, annotation.forbids());
+                checkDepends(options, field, annotation.depends());
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void checkDepends(Options options, Field field, String[] depends)
+            throws NoSuchFieldException, IllegalAccessException, ConfigurationException {
+        for (String dependsOnOption : depends) {
+            final Field dependsOn = fieldForOption(dependsOnOption);
+
+            if (isSet(options, field) && !isSet(options, dependsOn)) {
+                throw new ConfigurationException(
+                        "'" + field.getName() + "' depends on '" + dependsOn.getName() + "'");
+            }
+        }
+    }
+
+    private void checkForbids(Options options, Field field, String[] forbids)
+            throws NoSuchFieldException, IllegalAccessException, ConfigurationException {
+        for (String forbidden : forbids) {
+            final Field forbiddenField = fieldForOption(forbidden);
+
+            if (isSet(options, field) && isSet(options, forbiddenField)) {
+                throw new ConfigurationException(
+                        "'"
+                                + field.getName()
+                                + "' can not be used with '"
+                                + forbiddenField.getName()
+                                + "'");
+            }
+        }
+    }
+
+    private Field fieldForOption(String option) throws NoSuchFieldException {
+        return Options.class.getDeclaredField(option.replace("-", ""));
     }
 }
