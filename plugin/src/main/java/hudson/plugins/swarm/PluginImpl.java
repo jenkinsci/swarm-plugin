@@ -1,8 +1,5 @@
 package hudson.plugins.swarm;
 
-import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import hudson.Functions;
@@ -36,6 +33,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * Exposes an entry point to add a new Swarm agent.
  *
@@ -48,7 +47,7 @@ public class PluginImpl extends Plugin {
         Node node = jenkins.getNode(name);
 
         if (node == null) {
-            rsp.setStatus(SC_NOT_FOUND);
+            rsp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             rsp.setContentType("text/plain; UTF-8");
             rsp.getWriter().printf("Agent \"%s\" does not exist.%n", name);
             return null;
@@ -176,7 +175,7 @@ public class PluginImpl extends Plugin {
              * This is a legacy client. They won't be able to pick up the new name, so throw them
              * away. Perhaps they can find another controller to connect to.
              */
-            rsp.setStatus(SC_CONFLICT);
+            rsp.setStatus(HttpServletResponse.SC_CONFLICT);
             rsp.setContentType("text/plain; UTF-8");
             rsp.getWriter().printf("Agent \"%s\" already exists.%n", name);
             return;
@@ -199,7 +198,7 @@ public class PluginImpl extends Plugin {
                  * This is an existing connection. We'll only cause issues if we trample over an
                  * online connection.
                  */
-                rsp.setStatus(SC_CONFLICT);
+                rsp.setStatus(HttpServletResponse.SC_CONFLICT);
                 rsp.setContentType("text/plain; UTF-8");
                 rsp.getWriter().printf("Agent \"%s\" is already created and on-line.%n", name);
                 return;

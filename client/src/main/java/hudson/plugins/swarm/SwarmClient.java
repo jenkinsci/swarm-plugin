@@ -76,7 +76,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -399,7 +398,7 @@ public class SwarmClient {
         String labelStr = StringUtils.join(options.labels, ' ');
         StringBuilder toolLocationBuilder = new StringBuilder();
         if (options.toolLocations != null) {
-            for (Entry<String, String> toolLocation : options.toolLocations.entrySet()) {
+            for (Map.Entry<String, String> toolLocation : options.toolLocations.entrySet()) {
                 toolLocationBuilder.append(
                         param(
                                 "toolLocation",
@@ -409,7 +408,7 @@ public class SwarmClient {
 
         StringBuilder environmentVariablesBuilder = new StringBuilder();
         if (options.environmentVariables != null) {
-            for (Entry<String, String> environmentVariable :
+            for (Map.Entry<String, String> environmentVariable :
                     options.environmentVariables.entrySet()) {
                 environmentVariablesBuilder.append(
                         param(

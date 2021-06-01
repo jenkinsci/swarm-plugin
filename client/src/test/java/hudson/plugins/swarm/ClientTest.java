@@ -1,9 +1,5 @@
 package hudson.plugins.swarm;
 
-import static hudson.plugins.swarm.RetryBackOffStrategy.EXPONENTIAL;
-import static hudson.plugins.swarm.RetryBackOffStrategy.LINEAR;
-import static hudson.plugins.swarm.RetryBackOffStrategy.NONE;
-
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertThrows;
@@ -16,7 +12,7 @@ public class ClientTest {
 
     @Test
     public void should_not_retry_more_than_specified() {
-        Options options = givenBackOff(NONE);
+        Options options = givenBackOff(RetryBackOffStrategy.NONE);
         // one try
         options.retry = 1;
         runAndVerify(options, "Exited with status 1 after 0 seconds");
@@ -27,7 +23,7 @@ public class ClientTest {
 
     @Test
     public void should_run_with_web_socket() {
-        Options options = givenBackOff(NONE);
+        Options options = givenBackOff(RetryBackOffStrategy.NONE);
         options.webSocket = true;
         options.retry = -1;
         runAndVerify(options, "Running long enough");
@@ -35,26 +31,26 @@ public class ClientTest {
 
     @Test
     public void should_keep_retrying_if_there_is_no_limit() {
-        Options options = givenBackOff(NONE);
+        Options options = givenBackOff(RetryBackOffStrategy.NONE);
         options.retry = -1;
         runAndVerify(options, "Running long enough");
     }
 
     @Test
     public void should_run_with_no_backoff() {
-        Options options = givenBackOff(NONE);
+        Options options = givenBackOff(RetryBackOffStrategy.NONE);
         runAndVerify(options, "Exited with status 1 after 90 seconds");
     }
 
     @Test
     public void should_run_with_linear_backoff() {
-        Options options = givenBackOff(LINEAR);
+        Options options = givenBackOff(RetryBackOffStrategy.LINEAR);
         runAndVerify(options, "Exited with status 1 after 450 seconds");
     }
 
     @Test
     public void should_run_with_exponential_backoff() {
-        Options options = givenBackOff(EXPONENTIAL);
+        Options options = givenBackOff(RetryBackOffStrategy.EXPONENTIAL);
         runAndVerify(options, "Exited with status 1 after 750 seconds");
     }
 
