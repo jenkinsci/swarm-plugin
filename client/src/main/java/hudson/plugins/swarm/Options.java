@@ -53,7 +53,7 @@ public class Options {
     @Option(
             name = "-webSocketHeader",
             usage =
-                    "Additional WebSocket header to set, eg for authenticating with reverse"
+                    "Additional WebSocket header to set, e.g. for authenticating with reverse"
                         + " proxies. To specify multiple headers, call this flag multiple times,"
                         + " one with each header.",
             metaVar = "NAME=VALUE",

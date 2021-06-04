@@ -1,4 +1,4 @@
-= Yaml Configuration file
+= YAML Configuration File
 
 Options can be configured by a YAML file using `-config`:
 
@@ -9,7 +9,7 @@ $ java -jar swarm-client.jar -config config.yml
 
 IMPORTANT: `-config` can not be used with other options.
 
-The YAML configuration uses lower camel case naming of the xref:../README.adoc[CLI] options; _alias_ aren't supported.
+The YAML configuration uses lower camel case naming of the xref:../README.adoc[CLI] options; aliases aren't supported.
 
 .Required:
 

@@ -14,9 +14,9 @@
 * Swarm client
 ** Fix https://jenkins.io/security/advisory/2019-04-30/#SECURITY-1252[SECURITY-1252] XML External Entity (XXE) vulnerability (https://github.com/jenkinsci/swarm-plugin/pull/84[#84], https://github.com/jenkinsci/swarm-plugin/pull/90[#90], https://github.com/jenkinsci/swarm-plugin/pull/96[#96])
 ** Rework logging of command-line arguments (https://github.com/jenkinsci/swarm-plugin/pull/95[#95])
-** Fix https://issues.jenkins.io/browse/JENKINS-42930[JENKINS-42930] Use System proxy when available and migrate from https://hc.apache.org/httpclient-3.x/[Commons HttpClient 3.x] to https://hc.apache.org/httpcomponents-client-ga/index.html[HttpComponents Client 4.x] (https://github.com/jenkinsci/swarm-plugin/pull/105[#105], link:docs/proxy.md[Documentation])
+** Fix https://issues.jenkins.io/browse/JENKINS-42930[JENKINS-42930] Use System proxy when available and migrate from https://hc.apache.org/httpclient-3.x/[Commons HttpClient 3.x] to https://hc.apache.org/httpcomponents-client-ga/index.html[HttpComponents Client 4.x] (https://github.com/jenkinsci/swarm-plugin/pull/105[#105], link:docs/proxy.adoc[Documentation])
 ** Fix https://issues.jenkins.io/browse/JENKINS-45295[JENKINS-45295] Swarm client should update labels on the fly when labels file changes (https://github.com/jenkinsci/swarm-plugin/pull/104[#104], https://github.com/jenkinsci/swarm-plugin/pull/110[#110])
-** Fix https://issues.jenkins.io/browse/JENKINS-50970[JENKINS-50970] SLF4J logging not working in Swarm client (https://github.com/jenkinsci/swarm-plugin/pull/98[#98], https://github.com/jenkinsci/swarm-plugin/pull/99[#99], https://github.com/jenkinsci/swarm-plugin/pull/102[#102], https://github.com/jenkinsci/swarm-plugin/pull/106[#106], link:docs/logging.md[Documentation])
+** Fix https://issues.jenkins.io/browse/JENKINS-50970[JENKINS-50970] SLF4J logging not working in Swarm client (https://github.com/jenkinsci/swarm-plugin/pull/98[#98], https://github.com/jenkinsci/swarm-plugin/pull/99[#99], https://github.com/jenkinsci/swarm-plugin/pull/102[#102], https://github.com/jenkinsci/swarm-plugin/pull/106[#106], link:docs/logging.adoc[Documentation])
 ** Fix invalid exit code (https://github.com/jenkinsci/swarm-plugin/pull/103[#103])
 ** Remove deprecated `-logFile` parameter (https://github.com/jenkinsci/swarm-plugin/pull/107[#107])
 
@@ -213,7 +213,7 @@
 
 * Swarm 1.9 can't connect to current LTS as `slave.jar` too old (https://issues.jenkins.io/browse/JENKINS-20138[JENKINS-20138])
 
-=== Version 1.9 (May 18), 2013)
+=== Version 1.9 (May 18, 2013)
 
 * Add option for specifying `Node.Mode` (https://github.com/jenkinsci/swarm-plugin/pull/3[#3])
 
