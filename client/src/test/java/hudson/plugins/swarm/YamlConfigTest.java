@@ -201,6 +201,18 @@ public class YamlConfigTest {
     }
 
     @Test
+    public void enumsAreCaseInsensitive() throws ConfigurationException {
+        final Options upperCase = loadYaml("url: ignore\nretryBackOffStrategy: LINEAR\n");
+        assertThat(upperCase.retryBackOffStrategy, equalTo(RetryBackOffStrategy.LINEAR));
+
+        final Options lowerCase = loadYaml("url: ignore\nretryBackOffStrategy: exponential\n");
+        assertThat(lowerCase.retryBackOffStrategy, equalTo(RetryBackOffStrategy.EXPONENTIAL));
+
+        final Options mixedCase = loadYaml("url: ignore\nretryBackOffStrategy: eXPONenTiaL\n");
+        assertThat(mixedCase.retryBackOffStrategy, equalTo(RetryBackOffStrategy.EXPONENTIAL));
+    }
+
+    @Test
     public void failsIfDeprecatedOptionIsUsed() {
         final Throwable ex =
                 assertThrows(

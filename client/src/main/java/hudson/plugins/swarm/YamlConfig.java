@@ -1,6 +1,7 @@
 package hudson.plugins.swarm;
 
 import org.kohsuke.args4j.Option;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
@@ -14,7 +15,9 @@ public class YamlConfig {
     private final Yaml yaml;
 
     public YamlConfig() {
-        this.yaml = new Yaml(new Constructor(Options.class));
+        final LoaderOptions loaderOptions = new LoaderOptions();
+        loaderOptions.setEnumCaseSensitive(false);
+        this.yaml = new Yaml(new Constructor(Options.class, loaderOptions));
     }
 
     public Options loadOptions(InputStream inputStream) throws ConfigurationException {
