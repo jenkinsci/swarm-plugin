@@ -155,7 +155,7 @@
         <dependency>
             <groupId>org.kohsuke</groupId>
             <artifactId>access-modifier-annotation</artifactId>
-            <version>1.21</version>
+            <version>1.22</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
