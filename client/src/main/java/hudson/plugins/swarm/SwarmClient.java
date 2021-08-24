@@ -36,11 +36,14 @@ import org.apache.hc.client5.http.ssl.HttpsSupport;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.ssl.SSLInitializationException;
+import org.apache.http.entity.StringEntity;
 import org.jenkinsci.remoting.util.VersionNumber;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -444,7 +447,10 @@ public class SwarmClient {
                                         "deleteExistingClients",
                                         Boolean.toString(options.deleteExistingClients)));
 
-        post.addHeader("Connection", "close");
+        post.addHeader(HttpHeaders.CONNECTION, "close");
+
+        // Add an empty body, as without it, some servers return a HTTP 411 response.
+        post.setEntity((HttpEntity) new StringEntity(""));
 
         Crumb csrfCrumb = getCsrfCrumb(client, context, url);
         if (csrfCrumb != null) {
@@ -513,7 +519,10 @@ public class SwarmClient {
                                 + name
                                 + SwarmClient.param("labels", labels));
 
-        post.addHeader("Connection", "close");
+        post.addHeader(HttpHeaders.CONNECTION, "close");
+
+        // Add an empty body, as without it, some servers return a HTTP 411 response.
+        post.setEntity((HttpEntity) new StringEntity(""));
 
         Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, context, url);
         if (csrfCrumb != null) {
@@ -546,7 +555,10 @@ public class SwarmClient {
                 new HttpPost(
                         url + "plugin/swarm/addSlaveLabels?name=" + name + param("labels", labels));
 
-        post.addHeader("Connection", "close");
+        post.addHeader(HttpHeaders.CONNECTION, "close");
+
+        // Add an empty body, as without it, some servers return a HTTP 411 response.
+        post.setEntity((HttpEntity) new StringEntity(""));
 
         Crumb csrfCrumb = getCsrfCrumb(client, context, url);
         if (csrfCrumb != null) {
