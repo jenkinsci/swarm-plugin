@@ -561,7 +561,7 @@ public class SwarmClient {
 
         // Add an empty body, as without it, some servers return a HTTP 411 response
         // due to the lack of a `Content-Length` header on the request
-        post.setEntity((HttpEntity) new StringEntity(""));
+        post.setEntity(new StringEntity(""));
 
         Crumb csrfCrumb = getCsrfCrumb(client, context, url);
         if (csrfCrumb != null) {
