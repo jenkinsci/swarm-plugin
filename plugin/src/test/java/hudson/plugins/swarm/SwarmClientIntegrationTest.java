@@ -222,6 +222,8 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void pidFileForStaleProcessIsIgnored() throws Exception {
+        Assume.assumeFalse(
+                "TODO Windows container agents cannot run this test", Functions.isWindows());
         Path pidFile = getPidFile();
         Files.write(pidFile, "66000".getBytes(StandardCharsets.UTF_8));
 
