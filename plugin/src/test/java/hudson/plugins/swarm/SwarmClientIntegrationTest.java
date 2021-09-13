@@ -203,6 +203,8 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void pidFilePreventsStart() throws Exception {
+        Assume.assumeFalse(
+                "TODO Windows container agents cannot run this test", Functions.isWindows());
         Path pidFile = getPidFile();
         // Start the first client with a PID file and ensure it's up.
         swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
@@ -220,6 +222,8 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void pidFileForStaleProcessIsIgnored() throws Exception {
+        Assume.assumeFalse(
+                "TODO Windows container agents cannot run this test", Functions.isWindows());
         Path pidFile = getPidFile();
         Files.write(pidFile, "66000".getBytes(StandardCharsets.UTF_8));
 
