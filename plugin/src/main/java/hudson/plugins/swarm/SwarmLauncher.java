@@ -24,6 +24,9 @@ import java.io.IOException;
  */
 public class SwarmLauncher extends JNLPLauncher {
 
+    // Property name: `hudson.plugins.swarm.SwarmLauncher.removeAfterDisconnect`
+    private boolean removeAfterDisconnect = Boolean.parseBoolean(System.getProperty(SwarmLauncher.class.getName() + ".removeAfterDisconnect", "true"));
+
     public SwarmLauncher() {
         super(false);
     }
@@ -31,6 +34,13 @@ public class SwarmLauncher extends JNLPLauncher {
     @Override
     public void afterDisconnect(SlaveComputer computer, TaskListener listener) {
         super.afterDisconnect(computer, listener);
+
+        // Don't remove the node object if we've disconnected
+        if(!removeAfterDisconnect) {
+            listener.getLogger()
+                    .printf("Skipping removal of Node for computer \"%s\".%n", computer);
+            return;
+        }
 
         Slave node = computer.getNode();
         if (node != null) {
