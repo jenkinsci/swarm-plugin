@@ -43,6 +43,7 @@ public class LabelFileWatcher implements Runnable {
     private final String[] args;
     private final URL url;
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public LabelFileWatcher(URL url, Options options, String name, String... args)
             throws IOException {
         logger.config(
