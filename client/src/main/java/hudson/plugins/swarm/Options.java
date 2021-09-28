@@ -113,6 +113,11 @@ public class Options {
     public boolean deleteExistingClients;
 
     @Option(
+            name = "-keepDisconnectedClients",
+            usage = "Do not remove clients from the controller when the agent becomes disconnected.")
+    public boolean keepDisconnectedClients;
+
+    @Option(
             name = "-mode",
             usage =
                     "The mode controlling how Jenkins allocates jobs to agents. Can be either '"
