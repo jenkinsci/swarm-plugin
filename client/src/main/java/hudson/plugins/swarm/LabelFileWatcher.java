@@ -43,6 +43,7 @@ public class LabelFileWatcher implements Runnable {
     private final String[] args;
     private final URL url;
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public LabelFileWatcher(URL url, Options options, String name, String... args)
             throws IOException {
         logger.config(
@@ -79,7 +80,7 @@ public class LabelFileWatcher implements Runnable {
 
         Document xml;
 
-        HttpGet get = new HttpGet(url + "/plugin/swarm/getSlaveLabels?name=" + name);
+        HttpGet get = new HttpGet(url + "plugin/swarm/getSlaveLabels?name=" + name);
         try (CloseableHttpResponse response = client.execute(get, context)) {
             if (response.getCode() != HttpStatus.SC_OK) {
                 logger.log(
