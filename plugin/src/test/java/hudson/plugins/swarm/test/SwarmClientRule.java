@@ -448,6 +448,21 @@ public class SwarmClientRule extends ExternalResource {
         }
     }
 
+    public synchronized void tearDownAll() {
+        if (isActive) {
+            throw new IllegalStateException(
+                    "Must be called after a tearDown() to fully clean up disconnected nodes");
+        }
+
+        try {
+            for(Computer comp : j.get().jenkins.getComputers()) {
+                j.get().jenkins.removeNode(comp.getNode());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /** Override to tear down your specific external resource. */
     @Override
     protected synchronized void after() {
