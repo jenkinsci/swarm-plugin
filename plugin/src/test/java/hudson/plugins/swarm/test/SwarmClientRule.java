@@ -340,7 +340,7 @@ public class SwarmClientRule extends ExternalResource {
      * the final agent name, so we have to keep iterating until we find the agent that starts with
      * the proposed name.
      */
-    public synchronized Computer getComputer(String agentName) {
+    private Computer getComputer(String agentName) {
         List<Computer> candidates = new ArrayList<>();
         for (Computer candidate : j.get().jenkins.getComputers()) {
             if (candidate.getName().equals(agentName)) {
