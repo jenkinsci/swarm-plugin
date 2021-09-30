@@ -3,9 +3,11 @@ package hudson.plugins.swarm;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import hudson.Functions;
+import hudson.model.Computer;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
@@ -632,5 +634,52 @@ public class SwarmClientIntegrationTest {
         assertTrue(process.waitFor(30, TimeUnit.SECONDS));
         assertFalse(process.isAlive());
         assertEquals(1, process.exitValue());
+    }
+
+    @Test
+    public void keepDisconnectedClients() throws Exception {
+        SwarmSlave swarmNode = (SwarmSlave)swarmClientRule.createSwarmClientWithName(
+            "keepagent",
+            "-keepDisconnectedClients",
+            "-deleteExistingClients",
+            "-disableClientsUniqueId"
+        );
+
+        assertNotNull(swarmNode);
+        assertNotNull(swarmNode.getNodeProperty(KeepSwarmClientNodeProperty.class));
+        
+        swarmClientRule.tearDown();
+
+        //Check that the agent was not removed
+        Node node = j.getInstance().getNode("keepagent");
+        assertNotNull(node);
+
+        // Properly cleanup everything
+        swarmClientRule.tearDownAll();
+
+        // Verify the cleanup worked
+        assertEquals(j.getInstance().getNodes().size(), 0);
+    }
+
+    @Test
+    public void removeDisconnectedClients() throws Exception {
+        SwarmSlave swarmNode = (SwarmSlave)swarmClientRule.createSwarmClientWithName(
+            "deleteagent",
+            "-deleteExistingClients",
+            "-disableClientsUniqueId"
+        );
+
+        assertNotNull(swarmNode);
+        assertNull(swarmNode.getNodeProperty(KeepSwarmClientNodeProperty.class));
+
+        swarmClientRule.tearDown();
+
+        //Check that the agent was successfully removed
+        Node node = j.getInstance().getNode("deleteagent");
+        assertNull(node);
+
+        // Verify the cleanup worked
+        assertEquals(j.getInstance().getNodes().size(), 0);
+        
     }
 }
