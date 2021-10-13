@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -187,6 +188,34 @@ public class Client {
      */
     static void run(SwarmClient swarmClient, Options options, String... args)
             throws InterruptedException {
+
+        // Gracefully handle TERM request
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                logger.info("Interrupting threads");
+                Set<Thread> runningThreads = Thread.getAllStackTraces().keySet();
+                for (Thread th : runningThreads) {
+                    if (th != Thread.currentThread() && !th.isDaemon()
+                            && th.getClass().getName().startsWith("hudson.plugins.swarm")) {
+                        logger.info("Interrupting '" + th.getClass() + "' termination");
+                        th.interrupt();
+                    }
+                }
+                for (Thread th : runningThreads) {
+                    try {
+                        if (th != Thread.currentThread() && !th.isDaemon() && th.isInterrupted()) {
+                            logger.info("Waiting '" + th.getName() + "' termination");
+                            th.join();
+                        }
+                    } catch (InterruptedException ex) {
+                        logger.info("Shutdown interrupted");
+                    }
+                }
+                logger.info("Shutdown finished");
+            }
+        });
+
         logger.info("Connecting to Jenkins controller");
         URL url = swarmClient.getUrl();
 
