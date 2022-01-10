@@ -24,7 +24,7 @@
     <version>3.30-SNAPSHOT</version>
 
     <properties>
-        <jenkins.version>2.235.5</jenkins.version>
+        <jenkins.version>2.249.1</jenkins.version>
         <java.level>8</java.level>
     </properties>
 
