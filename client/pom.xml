@@ -27,7 +27,7 @@
         <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <slf4j.version>1.7.32</slf4j.version>
+        <slf4j.version>1.7.33</slf4j.version>
         <spotbugs.excludeFilterFile>${project.basedir}/../src/spotbugs/excludesFilter.xml</spotbugs.excludeFilterFile>
     </properties>
 
