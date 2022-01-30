@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci</groupId>
         <artifactId>jenkins</artifactId>
-        <version>1.67</version>
+        <version>1.70</version>
         <relativePath />
     </parent>
 
@@ -12,7 +12,7 @@
     <groupId>org.jenkins-ci.plugins</groupId>
     <packaging>jar</packaging>
     <name>Swarm Client</name>
-    <version>3.29-SNAPSHOT</version>
+    <version>3.30-SNAPSHOT</version>
 
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/swarm-plugin.git</connection>
@@ -23,11 +23,11 @@
 
     <properties>
         <java.level>8</java.level>
-        <micrometer.version>1.7.4</micrometer.version>
+        <micrometer.version>1.8.2</micrometer.version>
         <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <slf4j.version>1.7.32</slf4j.version>
+        <slf4j.version>1.7.35</slf4j.version>
         <spotbugs.excludeFilterFile>${project.basedir}/../src/spotbugs/excludesFilter.xml</spotbugs.excludeFilterFile>
     </properties>
 
@@ -124,12 +124,12 @@
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>remoting</artifactId>
-            <version>4.10</version>
+            <version>4.11.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
-            <version>5.1</version>
+            <version>5.1.2</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -145,17 +145,17 @@
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs-annotations</artifactId>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>3.0.2</version>
-            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.kohsuke</groupId>
             <artifactId>access-modifier-annotation</artifactId>
-            <version>1.25</version>
+            <version>1.27</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -165,7 +165,7 @@
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core</artifactId>
-            <version>5.8.2</version>
+            <version>6.1.0</version>
         </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>
@@ -180,7 +180,7 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.29</version>
+            <version>1.30</version>
         </dependency>
     </dependencies>
 </project>
