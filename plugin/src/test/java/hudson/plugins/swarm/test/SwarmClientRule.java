@@ -459,7 +459,7 @@ public class SwarmClientRule extends ExternalResource {
                 j.get().jenkins.removeNode(comp.getNode());
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new UncheckedIOException(e);
         }
     }
 
