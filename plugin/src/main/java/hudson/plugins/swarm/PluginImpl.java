@@ -149,7 +149,8 @@ public class PluginImpl extends Plugin {
             @QueryParameter String labels,
             @QueryParameter Node.Mode mode,
             @QueryParameter(fixEmpty = true) String hash,
-            @QueryParameter boolean deleteExistingClients)
+            @QueryParameter boolean deleteExistingClients,
+            @QueryParameter boolean keepDisconnectedClients)
             throws IOException {
         Jenkins jenkins = Jenkins.get();
 
@@ -168,6 +169,11 @@ public class PluginImpl extends Plugin {
             List<EnvironmentVariablesNodeProperty.Entry> parsedEnvironmentVariables =
                     parseEnvironmentVariables(environmentVariables);
             nodeProperties.add(new EnvironmentVariablesNodeProperty(parsedEnvironmentVariables));
+        }
+
+        // We use the existance of the node property itself as the boolean flag
+        if (keepDisconnectedClients) {
+            nodeProperties.add(new KeepSwarmClientNodeProperty());
         }
 
         if (hash == null && jenkins.getNode(name) != null && !deleteExistingClients) {

@@ -30,6 +30,7 @@ public class YamlConfigTest {
                         + "mode: exclusive\n"
                         + "failIfWorkDirIsMissing: false\n"
                         + "deleteExistingClients: true\n"
+                        + "keepDisconnectedClients: false\n"
                         + "labelsFile: ~/l.conf\n"
                         + "pidFile: ~/s.pid\n"
                         + "prometheusPort: 112233\n";
@@ -43,6 +44,7 @@ public class YamlConfigTest {
         assertThat(options.mode, equalTo(ModeOptionHandler.EXCLUSIVE));
         assertThat(options.failIfWorkDirIsMissing, equalTo(false));
         assertThat(options.deleteExistingClients, equalTo(true));
+        assertThat(options.keepDisconnectedClients, equalTo(false));
         assertThat(options.labelsFile, equalTo("~/l.conf"));
         assertThat(options.pidFile, equalTo("~/s.pid"));
         assertThat(options.prometheusPort, equalTo(112233));
