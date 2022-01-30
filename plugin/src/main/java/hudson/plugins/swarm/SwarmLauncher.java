@@ -17,7 +17,6 @@ import jenkins.slaves.DefaultJnlpSlaveReceiver;
 import org.jenkinsci.remoting.engine.JnlpConnectionState;
 
 import java.io.IOException;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,21 +40,28 @@ public class SwarmLauncher extends JNLPLauncher {
         if (node != null) {
             String nodeName = node.getNodeName();
             try {
-                // Don't remove the node object if we've disconnected, if the node doesn't want to be removed
-                KeepSwarmClientNodeProperty keepClientProp = node.getNodeProperty(KeepSwarmClientNodeProperty.class);
-                
+                // Don't remove the node object if we've disconnected, if the node doesn't want to
+                // be removed
+                KeepSwarmClientNodeProperty keepClientProp =
+                        node.getNodeProperty(KeepSwarmClientNodeProperty.class);
+
                 // We use the existance of the node property on the node itself as a boolean check
-                if(keepClientProp == null) {
+                if (keepClientProp == null) {
                     LOGGER.log(Level.INFO, "Removing Swarm Node for computer [{0}]", nodeName);
                     Jenkins.get().removeNode(node);
                 } else {
-                    listener.getLogger().printf("Skipping removal of Node for computer [%1$s]", nodeName);
+                    listener.getLogger()
+                            .printf("Skipping removal of Node for computer [%1$s]", nodeName);
                     LOGGER.log(Level.INFO, "Skipping removal of Node for computer [{0}]", nodeName);
                 }
             } catch (IOException e) {
                 Functions.printStackTrace(
                         e, listener.error("Failed to remove node [%1$s]", nodeName));
-                LOGGER.log(Level.WARNING, String.format("Failed to remove node [%1$s] %n%2$s", nodeName, Functions.printThrowable(e).trim()));
+                LOGGER.log(
+                        Level.WARNING,
+                        String.format(
+                                "Failed to remove node [%1$s] %n%2$s",
+                                nodeName, Functions.printThrowable(e).trim()));
             }
         } else {
             listener.getLogger()

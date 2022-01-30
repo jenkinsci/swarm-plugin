@@ -172,7 +172,7 @@ public class PluginImpl extends Plugin {
         }
 
         // We use the existance of the node property itself as the boolean flag
-        if(keepDisconnectedClients) {
+        if (keepDisconnectedClients) {
             nodeProperties.add(new KeepSwarmClientNodeProperty());
         }
 

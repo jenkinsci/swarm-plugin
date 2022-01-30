@@ -7,7 +7,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import hudson.Functions;
-import hudson.model.Computer;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
@@ -638,19 +637,20 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void keepDisconnectedClients() throws Exception {
-        SwarmSlave swarmNode = (SwarmSlave)swarmClientRule.createSwarmClientWithName(
-            "keepagent",
-            "-keepDisconnectedClients",
-            "-deleteExistingClients",
-            "-disableClientsUniqueId"
-        );
+        SwarmSlave swarmNode =
+                (SwarmSlave)
+                        swarmClientRule.createSwarmClientWithName(
+                                "keepagent",
+                                "-keepDisconnectedClients",
+                                "-deleteExistingClients",
+                                "-disableClientsUniqueId");
 
         assertNotNull(swarmNode);
         assertNotNull(swarmNode.getNodeProperty(KeepSwarmClientNodeProperty.class));
-        
+
         swarmClientRule.tearDown();
 
-        //Check that the agent was not removed
+        // Check that the agent was not removed
         Node node = j.getInstance().getNode("keepagent");
         assertNotNull(node);
 
@@ -663,23 +663,21 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void removeDisconnectedClients() throws Exception {
-        SwarmSlave swarmNode = (SwarmSlave)swarmClientRule.createSwarmClientWithName(
-            "deleteagent",
-            "-deleteExistingClients",
-            "-disableClientsUniqueId"
-        );
+        SwarmSlave swarmNode =
+                (SwarmSlave)
+                        swarmClientRule.createSwarmClientWithName(
+                                "deleteagent", "-deleteExistingClients", "-disableClientsUniqueId");
 
         assertNotNull(swarmNode);
         assertNull(swarmNode.getNodeProperty(KeepSwarmClientNodeProperty.class));
 
         swarmClientRule.tearDown();
 
-        //Check that the agent was successfully removed
+        // Check that the agent was successfully removed
         Node node = j.getInstance().getNode("deleteagent");
         assertNull(node);
 
         // Verify the cleanup worked
         assertEquals(j.getInstance().getNodes().size(), 0);
-        
     }
 }

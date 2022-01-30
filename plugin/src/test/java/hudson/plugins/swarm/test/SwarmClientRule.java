@@ -455,7 +455,7 @@ public class SwarmClientRule extends ExternalResource {
         }
 
         try {
-            for(Computer comp : j.get().jenkins.getComputers()) {
+            for (Computer comp : j.get().jenkins.getComputers()) {
                 j.get().jenkins.removeNode(comp.getNode());
             }
         } catch (IOException e) {

@@ -445,9 +445,9 @@ public class SwarmClient {
                                 + param(
                                         "deleteExistingClients",
                                         Boolean.toString(options.deleteExistingClients))
-                                + param("keepDisconnectedClients",
-                                        Boolean.toString(options.keepDisconnectedClients))
-                );
+                                + param(
+                                        "keepDisconnectedClients",
+                                        Boolean.toString(options.keepDisconnectedClients)));
 
         post.addHeader(HttpHeaders.CONNECTION, "close");
 
