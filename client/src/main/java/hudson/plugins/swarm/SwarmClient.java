@@ -135,6 +135,12 @@ public class SwarmClient {
         return name;
     }
 
+    public List<String> getOptionsLabels() {
+        /* Note: these labels might differ from run-time values assigned
+         * to an actual agent, if someone edits it via configure page */
+        return options.labels;
+    }
+
     public URL getUrl() {
         logger.config("getUrl() invoked");
 
