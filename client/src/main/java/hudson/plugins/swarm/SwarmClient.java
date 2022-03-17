@@ -115,13 +115,11 @@ public class SwarmClient {
                         new String(
                                 Files.readAllBytes(Paths.get(options.labelsFile)),
                                 StandardCharsets.UTF_8);
-                options.labels.addAll(Arrays.asList(labels.split(" ")));
+                options.labels.addAll(Arrays.asList(labels.trim().split("\\s+")));
                 logger.info("Labels found in file: " + labels);
                 logger.info(
                         "Effective label list: "
-                                + Arrays.toString(options.labels.toArray())
-                                        .replaceAll("\n", "")
-                                        .replaceAll("\r", ""));
+                                + Arrays.toString(options.labels.toArray()));
             } catch (IOException e) {
                 throw new UncheckedIOException(
                         "Problem reading labels from file " + options.labelsFile, e);
