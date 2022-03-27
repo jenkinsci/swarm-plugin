@@ -41,7 +41,7 @@
     </modules>
 
     <scm>
-        <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}.git</connection>
+        <connection>scm:git:https://github.com/jenkinsci/${project.artifactId}.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}.git</developerConnection>
         <url>https://github.com/jenkinsci/${project.artifactId}</url>
         <tag>HEAD</tag>
