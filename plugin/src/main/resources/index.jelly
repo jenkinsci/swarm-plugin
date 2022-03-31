@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+    The Swarm plugin enables nodes to join a nearby Jenkins controller, thereby forming an ad-hoc cluster.
+</div>
