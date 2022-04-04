@@ -22,7 +22,6 @@
     </scm>
 
     <properties>
-        <java.level>8</java.level>
         <micrometer.version>1.8.4</micrometer.version>
         <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
