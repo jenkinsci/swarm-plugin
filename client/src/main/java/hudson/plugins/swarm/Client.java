@@ -86,7 +86,7 @@ public class Client {
 
     private static void validateOptions(Options options) {
         if (options.url == null) {
-            throw new RuntimeException("Missing 'url' option.");
+            throw new IllegalArgumentException("Missing 'url' option.");
         }
         if (options.pidFile != null) {
             /*
@@ -112,7 +112,7 @@ public class Client {
                 if (oldPid > 0) {
                     OSProcess oldProcess = new SystemInfo().getOperatingSystem().getProcess(oldPid);
                     if (oldProcess != null) {
-                        throw new RuntimeException(
+                        throw new IllegalStateException(
                                 String.format(
                                         "Refusing to start because PID file '%s' already exists"
                                                 + " and the previous process %d (%s) is still"
