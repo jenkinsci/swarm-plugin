@@ -66,7 +66,7 @@ public class YamlConfig {
                 checkDepends(options, field, annotation.depends());
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+            throw new AssertionError(e);
         }
     }
 

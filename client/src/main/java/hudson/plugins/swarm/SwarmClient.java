@@ -181,7 +181,7 @@ public class SwarmClient {
             try {
                 launcher.setNoCertificateCheck(true);
             } catch (KeyManagementException | NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
+                throw new AssertionError(e);
             }
         }
 
