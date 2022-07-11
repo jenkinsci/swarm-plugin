@@ -24,7 +24,7 @@
     <version>3.34-SNAPSHOT</version>
 
     <properties>
-        <jenkins.version>2.249.1</jenkins.version>
+        <jenkins.version>2.303.3</jenkins.version>
     </properties>
 
     <licenses>
