@@ -11,7 +11,6 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -21,6 +20,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -56,9 +56,9 @@ public class Client {
             }
             logger.log(Level.INFO, "Load configuration from {0}", options.config.getPath());
 
-            try (InputStream is = new FileInputStream(options.config)) {
+            try (InputStream is = Files.newInputStream(options.config.toPath())) {
                 options = new YamlConfig().loadOptions(is);
-            } catch (IOException | ConfigurationException e) {
+            } catch (InvalidPathException | IOException | ConfigurationException e) {
                 fail(e.getMessage());
             }
         }

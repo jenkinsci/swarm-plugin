@@ -14,6 +14,9 @@ import hudson.security.csrf.DefaultCrumbIssuer;
 
 import jenkins.model.Jenkins;
 
+import org.jenkinsci.plugins.matrixauth.AuthorizationType;
+import org.jenkinsci.plugins.matrixauth.PermissionEntry;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -104,14 +107,14 @@ public class GlobalSecurityConfigurationBuilder {
             GlobalMatrixAuthorizationStrategy strategy =
                     (GlobalMatrixAuthorizationStrategy) authorizationStrategy;
             // Not needed for testing, but is helpful when debugging test failures.
-            strategy.add(Jenkins.ADMINISTER, adminUsername);
+            strategy.add(Jenkins.ADMINISTER, new PermissionEntry(AuthorizationType.EITHER, adminUsername));
 
             // Needed for the [optional] Jenkins version check as well as CSRF.
-            strategy.add(Jenkins.READ, "authenticated");
+            strategy.add(Jenkins.READ, new PermissionEntry(AuthorizationType.EITHER, "authenticated"));
 
             // Needed to create and connect the agent.
-            strategy.add(Computer.CREATE, swarmUsername);
-            strategy.add(Computer.CONNECT, swarmUsername);
+            strategy.add(Computer.CREATE, new PermissionEntry(AuthorizationType.EITHER, swarmUsername));
+            strategy.add(Computer.CONNECT, new PermissionEntry(AuthorizationType.EITHER, swarmUsername));
 
             /*
              * The following is necessary because
@@ -120,7 +123,7 @@ public class GlobalSecurityConfigurationBuilder {
              */
             if (!(authorizationStrategy instanceof ProjectMatrixAuthorizationStrategy)) {
                 // Needed to add/remove labels after the fact.
-                strategy.add(Computer.CONFIGURE, swarmUsername);
+                strategy.add(Computer.CONFIGURE, new PermissionEntry(AuthorizationType.EITHER, swarmUsername));
             }
         } else if (authorizationStrategy instanceof RoleBasedAuthorizationStrategy) {
             Role admin =
