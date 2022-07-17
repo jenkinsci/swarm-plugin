@@ -22,7 +22,7 @@
     </scm>
 
     <properties>
-        <micrometer.version>1.9.1</micrometer.version>
+        <micrometer.version>1.9.2</micrometer.version>
         <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
