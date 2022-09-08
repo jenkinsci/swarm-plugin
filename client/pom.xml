@@ -46,25 +46,6 @@
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
-            <!-- TODO When the minimum Jenkins baseline is bumped past 2.357, this can be deleted. -->
-            <plugin>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>display-info</id>
-                        <configuration>
-                            <rules>
-                                <requireJavaVersion>
-                                    <version>[1.8.0,]</version>
-                                </requireJavaVersion>
-                                <enforceBytecodeVersion>
-                                    <maxJdkVersion>1.8</maxJdkVersion>
-                                </enforceBytecodeVersion>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -142,7 +123,7 @@
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>remoting</artifactId>
-            <version>3028.va_a_436db_35078</version>
+            <version>3046.v38db_38a_b_7a_86</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
@@ -201,59 +182,4 @@
             <version>1.31</version>
         </dependency>
     </dependencies>
-
-    <!-- TODO When the minimum Jenkins baseline is bumped past 2.357, this can be deleted. -->
-    <profiles>
-        <profile>
-            <id>jdk-9-and-above</id>
-            <activation>
-                <jdk>[9,)</jdk>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <configuration>
-                            <release>8</release>
-                            <testRelease>8</testRelease>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <configuration>
-                            <release>8</release>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>jdk-8-and-below</id>
-            <activation>
-                <jdk>(,1.8]</jdk>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <configuration>
-                            <source>1.8</source>
-                            <target>1.8</target>
-                            <testSource>1.8</testSource>
-                            <testTarget>1.8</testTarget>
-                            <release combine.self="override" />
-                            <testRelease combine.self="override" />
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <configuration>
-                            <source>1.8</source>
-                            <release combine.self="override" />
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>
