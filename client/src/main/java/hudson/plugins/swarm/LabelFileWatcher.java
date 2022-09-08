@@ -54,9 +54,7 @@ public class LabelFileWatcher implements Runnable {
         this.url = url;
         this.options = options;
         this.name = name;
-        this.labels =
-                new String(
-                        Files.readAllBytes(Paths.get(options.labelsFile)), StandardCharsets.UTF_8);
+        this.labels = Files.readString(Paths.get(options.labelsFile), StandardCharsets.UTF_8);
         this.args = args;
         logger.config("Labels loaded: " + labels);
     }
@@ -242,9 +240,7 @@ public class LabelFileWatcher implements Runnable {
             }
             try {
                 sTempLabels =
-                        new String(
-                                Files.readAllBytes(Paths.get(options.labelsFile)),
-                                StandardCharsets.UTF_8);
+                        Files.readString(Paths.get(options.labelsFile), StandardCharsets.UTF_8);
                 if (sTempLabels.equalsIgnoreCase(labels)) {
                     logger.log(
                             Level.FINEST,
@@ -255,9 +251,8 @@ public class LabelFileWatcher implements Runnable {
                         // through the plugin APIs
                         softLabelUpdate(sTempLabels);
                         labels =
-                                new String(
-                                        Files.readAllBytes(Paths.get(options.labelsFile)),
-                                        StandardCharsets.UTF_8);
+                                Files.readString(
+                                        Paths.get(options.labelsFile), StandardCharsets.UTF_8);
                     } catch (SoftLabelUpdateException e) {
                         // if we're unable to
                         logger.log(

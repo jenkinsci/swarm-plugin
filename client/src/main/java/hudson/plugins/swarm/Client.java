@@ -102,9 +102,7 @@ public class Client {
                 int oldPid;
                 try {
                     oldPid =
-                            NumberUtils.toInt(
-                                    new String(Files.readAllBytes(pidFile), StandardCharsets.UTF_8),
-                                    0);
+                            NumberUtils.toInt(Files.readString(pidFile, StandardCharsets.UTF_8), 0);
                 } catch (IOException e) {
                     throw new UncheckedIOException("Failed to read PID file " + pidFile, e);
                 }
@@ -146,9 +144,7 @@ public class Client {
         if (options.password == null && options.passwordFile != null) {
             try {
                 options.password =
-                        new String(
-                                        Files.readAllBytes(Paths.get(options.passwordFile)),
-                                        StandardCharsets.UTF_8)
+                        Files.readString(Paths.get(options.passwordFile), StandardCharsets.UTF_8)
                                 .trim();
             } catch (IOException e) {
                 throw new UncheckedIOException("Failed to read password from file", e);
