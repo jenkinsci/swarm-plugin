@@ -14,9 +14,6 @@ import hudson.plugins.swarm.test.SwarmClientRule;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
-import hudson.util.VersionNumber;
-
-import jenkins.model.Jenkins;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
@@ -49,7 +46,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -246,7 +242,6 @@ public class SwarmClientIntegrationTest {
     @Test
     @Issue("JENKINS-61969")
     public void webSocket() throws Exception {
-        Assume.assumeTrue(hasWebSocketSupport());
         Node node = swarmClientRule.createSwarmClient("-webSocket");
 
         FreeStyleProject project = j.createFreeStyleProject();
@@ -260,7 +255,6 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void webSocketHeaders() throws IOException, InterruptedException {
-        Assume.assumeTrue(hasWebSocketSupport());
         swarmClientRule.createSwarmClient(
                 "-webSocket", "-webSocketHeader", "WS_HEADER=HEADER_VALUE");
     }
@@ -268,14 +262,8 @@ public class SwarmClientIntegrationTest {
     @Test
     public void webSocketHeadersFailsIfNoWebSocketArgument()
             throws IOException, InterruptedException {
-        Assume.assumeTrue(hasWebSocketSupport());
         startFailingSwarmClient(
                 j.getURL(), "should_fail", "-webSocketHeader", "WS_HEADER=HEADER_VALUE");
-    }
-
-    private boolean hasWebSocketSupport() {
-        return Objects.requireNonNull(Jenkins.getVersion())
-                .isNewerThanOrEqualTo(new VersionNumber("2.222.4"));
     }
 
     @Test
