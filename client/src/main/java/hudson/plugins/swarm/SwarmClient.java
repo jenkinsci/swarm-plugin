@@ -112,9 +112,7 @@ public class SwarmClient {
             logger.info("Loading labels from " + options.labelsFile + "...");
             try {
                 String labels =
-                        new String(
-                                Files.readAllBytes(Paths.get(options.labelsFile)),
-                                StandardCharsets.UTF_8);
+                        Files.readString(Paths.get(options.labelsFile), StandardCharsets.UTF_8);
                 options.labels.addAll(Arrays.asList(labels.trim().split("\\s+")));
                 logger.info("Labels found in file: " + labels);
                 logger.info(
@@ -355,7 +353,8 @@ public class SwarmClient {
                         url
                                 + "crumbIssuer/api/xml?xpath="
                                 + URLEncoder.encode(
-                                        "concat(//crumbRequestField,\":\",//crumb)", "UTF-8"));
+                                        "concat(//crumbRequestField,\":\",//crumb)",
+                                        StandardCharsets.UTF_8));
         try (CloseableHttpResponse response = client.execute(httpGet, context)) {
             if (response.getCode() != HttpStatus.SC_OK) {
                 logger.log(
@@ -589,7 +588,7 @@ public class SwarmClient {
     private static synchronized String encode(String value) throws UnsupportedEncodingException {
         logger.finer("encode() invoked");
 
-        return URLEncoder.encode(value, "UTF-8");
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     private static synchronized String param(String name, String value)
