@@ -2,8 +2,6 @@ package hudson.plugins.swarm;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -18,7 +16,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-@Restricted(NoExternalUse.class)
 public final class XmlUtils {
 
     private static final Logger logger =

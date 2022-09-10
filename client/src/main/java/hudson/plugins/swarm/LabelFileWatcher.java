@@ -2,7 +2,6 @@ package hudson.plugins.swarm;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
@@ -50,7 +49,7 @@ public class LabelFileWatcher implements Runnable {
                 "LabelFileWatcher() constructed with: "
                         + options.labelsFile
                         + " and "
-                        + StringUtils.join(args));
+                        + String.join(", ", args));
         this.url = url;
         this.options = options;
         this.name = name;

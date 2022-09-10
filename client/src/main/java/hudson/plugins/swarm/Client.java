@@ -1,6 +1,5 @@
 package hudson.plugins.swarm;
 
-import org.apache.commons.lang.math.NumberUtils;
 import org.apache.hc.core5.http.ParseException;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -101,8 +100,9 @@ public class Client {
             if (Files.exists(pidFile)) {
                 int oldPid;
                 try {
-                    oldPid =
-                            NumberUtils.toInt(Files.readString(pidFile, StandardCharsets.UTF_8), 0);
+                    oldPid = Integer.parseInt(Files.readString(pidFile, StandardCharsets.UTF_8));
+                } catch (NumberFormatException e) {
+                    oldPid = 0;
                 } catch (IOException e) {
                     throw new UncheckedIOException("Failed to read PID file " + pidFile, e);
                 }
