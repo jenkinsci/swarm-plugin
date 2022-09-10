@@ -19,7 +19,6 @@ import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hc.client5.http.auth.AuthCache;
 import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
@@ -400,7 +399,7 @@ public class SwarmClient {
                             url, jenkinsVersion));
         }
 
-        String labelStr = StringUtils.join(options.labels, ' ');
+        String labelStr = String.join(" ", options.labels);
         StringBuilder toolLocationBuilder = new StringBuilder();
         if (options.toolLocations != null) {
             for (Map.Entry<String, String> toolLocation : options.toolLocations.entrySet()) {
@@ -786,7 +785,7 @@ public class SwarmClient {
             }
 
             for (String fingerprint : fingerprints.split("\\s+")) {
-                String unified = StringUtils.remove(fingerprint.toLowerCase(), ':');
+                String unified = fingerprint.toLowerCase().replace(":", "");
                 logger.fine("Add allowed fingerprint: " + unified);
                 allowedFingerprints.add(unified);
             }
