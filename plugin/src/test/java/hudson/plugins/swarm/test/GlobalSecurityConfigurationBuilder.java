@@ -18,9 +18,7 @@ import org.jenkinsci.plugins.matrixauth.AuthorizationType;
 import org.jenkinsci.plugins.matrixauth.PermissionEntry;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -130,34 +128,28 @@ public class GlobalSecurityConfigurationBuilder {
                     new Role(
                             "admin",
                             ".*",
-                            Collections.singleton(Jenkins.ADMINISTER.getId()),
+                            Set.of(Jenkins.ADMINISTER.getId()),
                             "Jenkins administrators");
             Role readOnly =
-                    new Role(
-                            "readonly",
-                            ".*",
-                            Collections.singleton(Jenkins.READ.getId()),
-                            "Read-only users");
+                    new Role("readonly", ".*", Set.of(Jenkins.READ.getId()), "Read-only users");
             Role swarm =
                     new Role(
                             "swarm",
                             ".*",
-                            new HashSet<>(
-                                    Arrays.asList(
-                                            Computer.CREATE.getId(),
-                                            Computer.CONNECT.getId(),
-                                            Computer.CONFIGURE.getId())),
+                            Set.of(
+                                    Computer.CREATE.getId(),
+                                    Computer.CONNECT.getId(),
+                                    Computer.CONFIGURE.getId()),
                             "Swarm users");
 
             SortedMap<Role, Set<String>> roleMap = new TreeMap<>();
-            roleMap.put(admin, Collections.singleton(adminUsername));
-            roleMap.put(readOnly, Collections.singleton("authenticated"));
-            roleMap.put(swarm, Collections.singleton(swarmUsername));
+            roleMap.put(admin, Set.of(adminUsername));
+            roleMap.put(readOnly, Set.of("authenticated"));
+            roleMap.put(swarm, Set.of(swarmUsername));
 
             authorizationStrategy =
                     new RoleBasedAuthorizationStrategy(
-                            Collections.singletonMap(
-                                    RoleBasedAuthorizationStrategy.GLOBAL, new RoleMap(roleMap)));
+                            Map.of(RoleBasedAuthorizationStrategy.GLOBAL, new RoleMap(roleMap)));
         }
         swarmClientRule.j.get().jenkins.setAuthorizationStrategy(authorizationStrategy);
 

@@ -112,11 +112,9 @@ public class SwarmClient {
             try {
                 String labels =
                         Files.readString(Paths.get(options.labelsFile), StandardCharsets.UTF_8);
-                options.labels.addAll(Arrays.asList(labels.trim().split("\\s+")));
+                options.labels.addAll(List.of(labels.trim().split("\\s+")));
                 logger.info("Labels found in file: " + labels);
-                logger.info(
-                        "Effective label list: "
-                                + Arrays.toString(options.labels.toArray()));
+                logger.info("Effective label list: " + Arrays.toString(options.labels.toArray()));
             } catch (IOException e) {
                 throw new UncheckedIOException(
                         "Problem reading labels from file " + options.labelsFile, e);
@@ -223,9 +221,7 @@ public class SwarmClient {
 
         if (!options.disableWorkDir) {
             String workDirPath =
-                    options.workDir != null
-                            ? options.workDir.getPath()
-                            : options.fsroot.getPath();
+                    options.workDir != null ? options.workDir.getPath() : options.fsroot.getPath();
             args.add("-workDir");
             args.add(workDirPath);
 

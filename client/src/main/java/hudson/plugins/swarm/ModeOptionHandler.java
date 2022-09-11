@@ -6,7 +6,6 @@ import org.kohsuke.args4j.OptionDef;
 import org.kohsuke.args4j.spi.OneArgumentOptionHandler;
 import org.kohsuke.args4j.spi.Setter;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -19,7 +18,7 @@ public class ModeOptionHandler extends OneArgumentOptionHandler<String> {
     public static final String NORMAL = "normal";
     public static final String EXCLUSIVE = "exclusive";
 
-    private static final List<String> ACCEPTABLE_VALUES = Arrays.asList(NORMAL, EXCLUSIVE);
+    private static final List<String> ACCEPTABLE_VALUES = List.of(NORMAL, EXCLUSIVE);
 
     public ModeOptionHandler(
             CmdLineParser parser, OptionDef option, Setter<? super String> setter) {

@@ -106,7 +106,7 @@ public class LabelFileWatcher implements Runnable {
         logger.log(Level.CONFIG, "Labels to be removed: " + labelStr);
 
         // remove the labels in 1000 char blocks
-        List<String> lLabels = Arrays.asList(labelStr.split("\\s+"));
+        List<String> lLabels = List.of(labelStr.split("\\s+"));
         StringBuilder sb = new StringBuilder();
         for (String s : lLabels) {
             sb.append(s);
@@ -134,7 +134,7 @@ public class LabelFileWatcher implements Runnable {
 
         // now add the labels back on
         logger.log(Level.CONFIG, "Labels to be added: " + sNewLabels);
-        lLabels = Arrays.asList(sNewLabels.split("\\s+"));
+        lLabels = List.of(sNewLabels.split("\\s+"));
         sb = new StringBuilder();
         for (String s : lLabels) {
             sb.append(s);

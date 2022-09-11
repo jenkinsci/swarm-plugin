@@ -43,12 +43,13 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class SwarmClientIntegrationTest {
 
@@ -132,8 +133,9 @@ public class SwarmClientIntegrationTest {
     }
 
     private void addLabels(String... labels) throws Exception {
-        Set<String> expected = new HashSet<>(Arrays.asList(labels));
-        Node node = swarmClientRule.createSwarmClient("-labels", encode(expected));
+        Node node = swarmClientRule.createSwarmClient("-labels", encode(Set.of(labels)));
+        Set<String> expected = new HashSet<>();
+        Collections.addAll(expected, labels);
         expected.add("swarm");
         assertEquals(expected, decode(node.getLabelString()));
     }
@@ -285,7 +287,9 @@ public class SwarmClientIntegrationTest {
         assertFalse("PID file removed", Files.isRegularFile(pidFile));
     }
 
-    /** @return a dedicated unique PID file object for an as yet non-existent file. */
+    /**
+     * @return a dedicated unique PID file object for an as yet non-existent file.
+     */
     private Path getPidFile() throws IOException {
         Path pidFile =
                 Files.createTempFile(temporaryFolder.getRoot().toPath(), "swarm-client", ".pid");
@@ -344,7 +348,7 @@ public class SwarmClientIntegrationTest {
     }
 
     private static Set<String> decode(String labels) {
-        return new HashSet<>(Arrays.asList(labels.split("\\s+")));
+        return Set.of(labels.split("\\s+"));
     }
 
     @Test
@@ -576,12 +580,12 @@ public class SwarmClientIntegrationTest {
     }
 
     private static void assertDirectories(File... paths) {
-        Arrays.stream(paths)
+        Stream.of(paths)
                 .forEach(path -> assertTrue(path.getPath() + " exists", path.isDirectory()));
     }
 
     private static void assertNoDirectories(File... paths) {
-        Arrays.stream(paths)
+        Stream.of(paths)
                 .forEach(path -> assertFalse(path.getPath() + " not exists", path.isDirectory()));
     }
 

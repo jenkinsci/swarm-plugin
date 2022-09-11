@@ -23,7 +23,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -153,6 +152,6 @@ public class AuthorizationStrategyTest {
     }
 
     private static Set<String> decode(String labels) {
-        return new HashSet<>(Arrays.asList(labels.split("\\s+")));
+        return Set.of(labels.split("\\s+"));
     }
 }
