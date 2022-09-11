@@ -43,6 +43,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -132,8 +133,9 @@ public class SwarmClientIntegrationTest {
     }
 
     private void addLabels(String... labels) throws Exception {
-        Set<String> expected = Set.of(labels);
-        Node node = swarmClientRule.createSwarmClient("-labels", encode(expected));
+        Node node = swarmClientRule.createSwarmClient("-labels", encode(Set.of(labels)));
+        Set<String> expected = new HashSet<>();
+        Collections.addAll(expected, labels);
         expected.add("swarm");
         assertEquals(expected, decode(node.getLabelString()));
     }
