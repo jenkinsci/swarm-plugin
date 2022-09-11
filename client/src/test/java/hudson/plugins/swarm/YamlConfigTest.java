@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.stream.Stream;
 
 public class YamlConfigTest {
     @Test
@@ -56,7 +56,7 @@ public class YamlConfigTest {
         defaultOptions.url = "ignore";
         final Options options = loadYaml("url: ignore\n");
 
-        Arrays.stream(Options.class.getDeclaredFields())
+        Stream.of(Options.class.getDeclaredFields())
                 .forEach(
                         f -> {
                             try {

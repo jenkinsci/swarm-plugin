@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
@@ -108,7 +107,7 @@ public class PluginImpl extends Plugin {
     }
 
     private static LinkedHashSet<String> stringToSet(String labels) {
-        return new LinkedHashSet<>(Arrays.asList(labels.split("\\s+")));
+        return new LinkedHashSet<>(List.of(labels.split("\\s+")));
     }
 
     /** Remove labels from an agent. */
