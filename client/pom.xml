@@ -107,7 +107,7 @@
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>remoting</artifactId>
-            <version>3063.v26e24490f041</version>
+            <version>3068.v09b_895d8da_14</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
