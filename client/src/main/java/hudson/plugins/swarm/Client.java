@@ -108,16 +108,30 @@ public class Client {
                 }
                 // check if this process is running
                 if (oldPid > 0) {
+                    OSProcess thisProcess = new SystemInfo().getOperatingSystem().getProcess(Integer.parseInt(pid));
                     OSProcess oldProcess = new SystemInfo().getOperatingSystem().getProcess(oldPid);
                     if (oldProcess != null) {
-                        throw new IllegalStateException(
-                                String.format(
-                                        "Refusing to start because PID file '%s' already exists"
-                                                + " and the previous process %d (%s) is still"
-                                                + " running.",
-                                        pidFile.toAbsolutePath(),
-                                        oldPid,
-                                        oldProcess.getCommandLine()));
+                        // If the old process is running, then compare its path to the path of this process as a quick
+                        // sanity check. If they are the same, we can assume that it is probably another Swarm Client
+                        // instance, in which case the service should not be started. However, if the previous Swarm
+                        // Client instance failed to exit cleanly (because of a crash/reboot/etc.) and another process
+                        // is now using that PID, then we should consider the PID file stale and continue execution.
+                        if (thisProcess.getPath().equals(oldProcess.getPath())) {
+                            throw new IllegalStateException(
+                                    String.format(
+                                            "Refusing to start because PID file '%s' already exists"
+                                                    + " and the previous process %d (%s) is still"
+                                                    + " running.",
+                                            pidFile.toAbsolutePath(),
+                                            oldPid,
+                                            oldProcess.getCommandLine()));
+                        } else {
+                            logger.fine(
+                                    String.format(
+                                            "Ignoring stale PID file '%s' because the process %d is"
+                                                    + " not a Swarm Client.",
+                                            pidFile.toAbsolutePath(), oldPid));
+                        }
                     } else {
                         logger.fine(
                                 String.format(

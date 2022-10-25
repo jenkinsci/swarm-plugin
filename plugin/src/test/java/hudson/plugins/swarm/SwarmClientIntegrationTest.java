@@ -220,6 +220,28 @@ public class SwarmClientIntegrationTest {
     }
 
     @Test
+    public void pidFileForOtherProcessIsIgnored() throws Exception {
+        Assume.assumeFalse(
+                "TODO Windows container agents cannot run this test", Functions.isWindows());
+        Path pidFile = getPidFile();
+        // Init process on all Unix platforms
+        Files.write(pidFile, "1".getBytes(StandardCharsets.UTF_8));
+
+        // PID file should be ignored since the process isn't running.
+        swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
+
+        int newPid = readPidFromFile(pidFile);
+
+        // Java Process doesn't provide the PID, so we have to work around it. Find all of our child
+        // processes, one of them must be the client we just started, and thus would match the PID
+        // in the PID file.
+        List<OSProcess> childProcesses = os.getChildProcesses(os.getProcessId(), null, null, 0);
+        assertTrue(
+                "PID in PID file must match our new PID",
+                childProcesses.stream().anyMatch(proc -> proc.getProcessID() == newPid));
+    }
+
+    @Test
     public void pidFileForStaleProcessIsIgnored() throws Exception {
         Assume.assumeFalse(
                 "TODO Windows container agents cannot run this test", Functions.isWindows());
