@@ -123,11 +123,17 @@ public class Client {
                                                     .commandLine()
                                                     .orElse("unknown")));
                         } else {
-                            logger.fine(
+                            logger.warning(
                                     String.format(
-                                            "Ignoring stale PID file '%s' because the process %d is"
-                                                    + " not a Swarm Client.",
-                                            pidFile.toAbsolutePath(), oldPid));
+                                            "Ignoring stale PID file '%s' because the process %d"
+                                                + " (%s) is not a Swarm Client.",
+                                            pidFile.toAbsolutePath(),
+                                            oldPid,
+                                            oldProcess
+                                                    .get()
+                                                    .info()
+                                                    .commandLine()
+                                                    .orElse("unknown")));
                         }
                     } else {
                         logger.fine(
