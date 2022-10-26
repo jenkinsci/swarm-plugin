@@ -117,7 +117,7 @@ public class Client {
                                                     + " running.",
                                             pidFile.toAbsolutePath(),
                                             oldPid,
-                                            oldProcess.get().info().commandLine().orElse("")));
+                                            oldProcess.get().info().commandLine().orElse("unknown")));
                         } else {
                             logger.fine(
                                     String.format(
