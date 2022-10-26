@@ -18,7 +18,6 @@ import io.micrometer.core.instrument.binder.system.UptimeMetrics;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hc.client5.http.auth.AuthCache;
 import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
@@ -67,6 +66,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
@@ -687,7 +687,22 @@ public class SwarmClient {
             // oh well we tried
             logger.log(Level.FINEST, "hash() SocketException - 'oh well we tried'", e);
         }
-        return DigestUtils.md5Hex(buf.toString()).substring(0, 8);
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+        byte[] digest = md.digest(buf.toString().getBytes(StandardCharsets.UTF_8));
+        return encodeHex(digest).substring(0, 8);
+    }
+
+    private static String encodeHex(byte[] data) {
+        StringBuilder sb = new StringBuilder(data.length * 2);
+        for (byte b : data) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 
     public void exitWithStatus(int status) {
@@ -755,7 +770,14 @@ public class SwarmClient {
             List<X509Certificate> list = new ArrayList<>();
 
             for (X509Certificate cert : x509Certificates) {
-                String fingerprint = DigestUtils.sha256Hex(cert.getEncoded());
+                MessageDigest md;
+                try {
+                    md = MessageDigest.getInstance("SHA-256");
+                } catch (NoSuchAlgorithmException e) {
+                    throw new IllegalStateException(e);
+                }
+                byte[] digest = md.digest(cert.getEncoded());
+                String fingerprint = encodeHex(digest);
                 logger.fine("Check fingerprint: " + fingerprint);
                 if (allowedFingerprints.contains(fingerprint)) {
                     list.add(cert);
