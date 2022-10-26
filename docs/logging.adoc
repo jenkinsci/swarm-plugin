@@ -14,7 +14,7 @@ java.util.logging.ConsoleHandler.level = INFO
 java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
 ----
 
-The default handler, https://docs.oracle.com/javase/8/docs/api/java/util/logging/ConsoleHandler.html[`ConsoleHandler`], sends `INFO`-level log records to `System.err`, using https://docs.oracle.com/javase/8/docs/api/java/util/logging/SimpleFormatter.html[`SimpleFormatter`].
+The default handler, https://docs.oracle.com/en/java/javase/11/docs/api/java.logging/java/util/logging/ConsoleHandler.html[`ConsoleHandler`], sends `INFO`-level log records to `System.err`, using https://docs.oracle.com/en/java/javase/11/docs/api/java.logging/java/util/logging/SimpleFormatter.html[`SimpleFormatter`].
 
 == Configuration
 

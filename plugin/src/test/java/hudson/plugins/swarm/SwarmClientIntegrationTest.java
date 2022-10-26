@@ -15,9 +15,7 @@ import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.math.NumberUtils;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -29,16 +27,11 @@ import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import oshi.SystemInfo;
-import oshi.software.os.OSProcess;
-import oshi.software.os.OperatingSystem;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Writer;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -46,6 +39,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -67,8 +61,6 @@ public class SwarmClientIntegrationTest {
 
     @Rule(order = 30)
     public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder);
-
-    private final OperatingSystem os = new SystemInfo().getOperatingSystem();
 
     @Before
     public void configureGlobalSecurity() throws IOException {
@@ -208,14 +200,16 @@ public class SwarmClientIntegrationTest {
         // Start the first client with a PID file and ensure it's up.
         swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
 
-        int firstClientPid = readPidFromFile(pidFile);
+        long firstClientPid = readPidFromFile(pidFile);
 
         // Try to start a second and ensure it fails to run.
         startFailingSwarmClient(
                 j.getURL(), "agent_fail", "-pidFile", pidFile.toAbsolutePath().toString());
 
         // Now ensure that the original process is still OK and so is its PID file.
-        assertNotNull("Original client should still be running", os.getProcess(firstClientPid));
+        Optional<ProcessHandle> firstClient = ProcessHandle.of(firstClientPid);
+        assertTrue("Original client should still be running", firstClient.isPresent());
+        assertTrue("Original client should still be running", firstClient.get().isAlive());
         assertEquals("PID in PID file should not change", firstClientPid, readPidFromFile(pidFile));
     }
 
@@ -224,21 +218,22 @@ public class SwarmClientIntegrationTest {
         Assume.assumeFalse(
                 "TODO Windows container agents cannot run this test", Functions.isWindows());
         Path pidFile = getPidFile();
-        // Init process on all Unix platforms
-        Files.write(pidFile, "1".getBytes(StandardCharsets.UTF_8));
+        Process sleep = new ProcessBuilder().command("sleep", "60").start();
+        try {
+            Files.writeString(pidFile, Long.toString(sleep.pid()), StandardCharsets.US_ASCII);
 
-        // PID file should be ignored since the process isn't running.
-        swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
+            // PID file should be ignored since the process command doesn't match our own.
+            swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
 
-        int newPid = readPidFromFile(pidFile);
+            long newPid = readPidFromFile(pidFile);
 
-        // Java Process doesn't provide the PID, so we have to work around it. Find all of our child
-        // processes, one of them must be the client we just started, and thus would match the PID
-        // in the PID file.
-        List<OSProcess> childProcesses = os.getChildProcesses(os.getProcessId(), null, null, 0);
-        assertTrue(
-                "PID in PID file must match our new PID",
-                childProcesses.stream().anyMatch(proc -> proc.getProcessID() == newPid));
+            assertTrue(
+                    "PID in PID file must match our new PID",
+                    ProcessHandle.current().descendants().anyMatch(proc -> proc.pid() == newPid));
+        } finally {
+            sleep.destroyForcibly();
+            sleep.waitFor();
+        }
     }
 
     @Test
@@ -246,20 +241,16 @@ public class SwarmClientIntegrationTest {
         Assume.assumeFalse(
                 "TODO Windows container agents cannot run this test", Functions.isWindows());
         Path pidFile = getPidFile();
-        Files.write(pidFile, "66000".getBytes(StandardCharsets.UTF_8));
+        Files.writeString(pidFile, Long.toString(66000), StandardCharsets.US_ASCII);
 
         // PID file should be ignored since the process isn't running.
         swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
 
-        int newPid = readPidFromFile(pidFile);
+        long newPid = readPidFromFile(pidFile);
 
-        // Java Process doesn't provide the PID, so we have to work around it. Find all of our child
-        // processes, one of them must be the client we just started, and thus would match the PID
-        // in the PID file.
-        List<OSProcess> childProcesses = os.getChildProcesses(os.getProcessId(), null, null, 0);
         assertTrue(
                 "PID in PID file must match our new PID",
-                childProcesses.stream().anyMatch(proc -> proc.getProcessID() == newPid));
+                ProcessHandle.current().descendants().anyMatch(proc -> proc.pid() == newPid));
     }
 
     /** Ensures that a node can be created with the WebSocket protocol. */
@@ -320,8 +311,8 @@ public class SwarmClientIntegrationTest {
         return pidFile;
     }
 
-    private static int readPidFromFile(Path pidFile) throws IOException {
-        return NumberUtils.toInt(new String(Files.readAllBytes(pidFile), StandardCharsets.UTF_8));
+    private static long readPidFromFile(Path pidFile) throws IOException {
+        return Long.parseLong(Files.readString(pidFile, StandardCharsets.US_ASCII));
     }
 
     private void addRemoveLabelsViaFile(
@@ -350,9 +341,7 @@ public class SwarmClientIntegrationTest {
 
         String origLabels = node.getLabelString();
 
-        try (Writer writer = Files.newBufferedWriter(labelsFile, StandardCharsets.UTF_8)) {
-            writer.write(encode(labelsToAdd));
-        }
+        Files.writeString(labelsFile, encode(labelsToAdd), StandardCharsets.UTF_8);
 
         // TODO: This is a bit racy, since updates are not atomic.
         while (node.getLabelString().equals(origLabels)
@@ -537,10 +526,10 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void configFromYaml() throws Exception {
-        final File pwFile = temporaryFolder.newFile("pw");
-        FileUtils.writeStringToFile(pwFile, "honeycomb", StandardCharsets.UTF_8);
-        final File config = temporaryFolder.newFile("swarm.yml");
-        FileUtils.writeStringToFile(
+        final Path pwFile = temporaryFolder.newFile("pw").toPath();
+        Files.writeString(pwFile, "honeycomb", StandardCharsets.UTF_8);
+        final Path config = temporaryFolder.newFile("swarm.yml").toPath();
+        Files.writeString(
                 config,
                 "name: node-yml\n"
                         + "disableClientsUniqueId: true\n"
@@ -550,7 +539,7 @@ public class SwarmClientIntegrationTest {
                         + "\n"
                         + "username: swarm\n"
                         + "passwordFile: "
-                        + pwFile.getAbsolutePath()
+                        + pwFile.toAbsolutePath()
                         + "\n"
                         + "executors: 5\n"
                         + "retry: 0\n",
@@ -558,7 +547,7 @@ public class SwarmClientIntegrationTest {
 
         Node node =
                 swarmClientRule.createSwarmClientWithoutDefaultArgs(
-                        "node-yml", "-config", config.getAbsolutePath());
+                        "node-yml", "-config", config.toAbsolutePath().toString());
         assertEquals("node-yml", node.getNodeName());
         assertEquals(5, node.getNumExecutors());
         assertTrue(node.getNodeDescription().endsWith("yaml config node"));
@@ -571,17 +560,17 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void configFromYamlFailsIfNoUrl() throws Exception {
-        final File config = temporaryFolder.newFile("swarm.yml");
-        FileUtils.writeStringToFile(config, "name: node-without-url\n", StandardCharsets.UTF_8);
-        startFailingSwarmClient(null, null, "-config", config.getAbsolutePath());
+        final Path config = temporaryFolder.newFile("swarm.yml").toPath();
+        Files.writeString(config, "name: node-without-url\n", StandardCharsets.UTF_8);
+        startFailingSwarmClient(null, null, "-config", config.toAbsolutePath().toString());
     }
 
     @Test
     public void configFromYamlFailsIfUsedWithOtherOption() throws Exception {
-        final File pwFile = temporaryFolder.newFile("pw");
-        FileUtils.writeStringToFile(pwFile, "honeycomb", StandardCharsets.UTF_8);
-        final File config = temporaryFolder.newFile("swarm.yml");
-        FileUtils.writeStringToFile(
+        final Path pwFile = temporaryFolder.newFile("pw").toPath();
+        Files.writeString(pwFile, "honeycomb", StandardCharsets.UTF_8);
+        final Path config = temporaryFolder.newFile("swarm.yml").toPath();
+        Files.writeString(
                 config,
                 "name: failing-node\n"
                         + "url: "
@@ -589,11 +578,15 @@ public class SwarmClientIntegrationTest {
                         + "\n"
                         + "username: swarm\n"
                         + "passwordFile: "
-                        + pwFile.getAbsolutePath()
+                        + pwFile.toAbsolutePath()
                         + "\n",
                 StandardCharsets.UTF_8);
         startFailingSwarmClient(
-                j.getURL(), "failing-node", "-webSocket", "-config", config.getAbsolutePath());
+                j.getURL(),
+                "failing-node",
+                "-webSocket",
+                "-config",
+                config.toAbsolutePath().toString());
     }
 
     @After

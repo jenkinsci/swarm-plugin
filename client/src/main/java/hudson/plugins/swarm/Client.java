@@ -7,13 +7,9 @@ import org.kohsuke.args4j.NamedOptionDef;
 import org.kohsuke.args4j.spi.FieldSetter;
 import org.kohsuke.args4j.spi.OptionHandler;
 
-import oshi.SystemInfo;
-import oshi.software.os.OSProcess;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -23,6 +19,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -88,19 +85,12 @@ public class Client {
             throw new IllegalArgumentException("Missing 'url' option.");
         }
         if (options.pidFile != null) {
-            /*
-             * This will return a string like 12345@hostname, so we need to do some string
-             * manipulation to get the actual process identifier. In Java 9, this can be replaced
-             * with: ProcessHandle.current().getPid();
-             */
-            String pidName = ManagementFactory.getRuntimeMXBean().getName();
-            String[] pidNameParts = pidName.split("@");
-            String pid = pidNameParts[0];
+            ProcessHandle current = ProcessHandle.current();
             Path pidFile = Paths.get(options.pidFile);
             if (Files.exists(pidFile)) {
-                int oldPid;
+                long oldPid;
                 try {
-                    oldPid = Integer.parseInt(Files.readString(pidFile, StandardCharsets.UTF_8));
+                    oldPid = Long.parseLong(Files.readString(pidFile, StandardCharsets.US_ASCII));
                 } catch (NumberFormatException e) {
                     oldPid = 0;
                 } catch (IOException e) {
@@ -108,15 +98,18 @@ public class Client {
                 }
                 // check if this process is running
                 if (oldPid > 0) {
-                    OSProcess thisProcess = new SystemInfo().getOperatingSystem().getProcess(Integer.parseInt(pid));
-                    OSProcess oldProcess = new SystemInfo().getOperatingSystem().getProcess(oldPid);
-                    if (oldProcess != null) {
-                        // If the old process is running, then compare its path to the path of this process as a quick
-                        // sanity check. If they are the same, we can assume that it is probably another Swarm Client
-                        // instance, in which case the service should not be started. However, if the previous Swarm
-                        // Client instance failed to exit cleanly (because of a crash/reboot/etc.) and another process
-                        // is now using that PID, then we should consider the PID file stale and continue execution.
-                        if (thisProcess.getPath().equals(oldProcess.getPath())) {
+                    Optional<ProcessHandle> oldProcess = ProcessHandle.of(oldPid);
+                    if (oldProcess.isPresent() && oldProcess.get().isAlive()) {
+                        // If the old process is running, then compare its path to the path of this
+                        // process as a quick sanity check. If they are the same, we can assume that
+                        // it is probably another Swarm Client instance, in which case the service
+                        // should not be started. However, if the previous Swarm Client instance
+                        // failed to exit cleanly (because of a crash/reboot/etc.) and another
+                        // process is now using that PID, then we should consider the PID file stale
+                        // and continue execution.
+                        String curCommand = current.info().command().orElse(null);
+                        String oldCommand = oldProcess.get().info().command().orElse(null);
+                        if (curCommand != null && curCommand.equals(oldCommand)) {
                             throw new IllegalStateException(
                                     String.format(
                                             "Refusing to start because PID file '%s' already exists"
@@ -124,7 +117,7 @@ public class Client {
                                                     + " running.",
                                             pidFile.toAbsolutePath(),
                                             oldPid,
-                                            oldProcess.getCommandLine()));
+                                            oldProcess.get().info().commandLine().orElse("")));
                         } else {
                             logger.fine(
                                     String.format(
@@ -143,7 +136,7 @@ public class Client {
             }
             pidFile.toFile().deleteOnExit();
             try {
-                Files.write(pidFile, pid.getBytes(StandardCharsets.UTF_8));
+                Files.writeString(pidFile, Long.toString(current.pid()), StandardCharsets.US_ASCII);
             } catch (IOException e) {
                 throw new UncheckedIOException("Failed to write PID file " + options.pidFile, e);
             }
@@ -170,7 +163,7 @@ public class Client {
          * cases this lookup might fail (e.g., querying an external DNS server which might not be
          * informed of a newly created agent from a DHCP server).
          *
-         * From https://docs.oracle.com/javase/8/docs/api/java/net/InetAddress.html#getCanonicalHostName--
+         * From https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/InetAddress.html#getCanonicalHostName()
          *
          * "Gets the fully qualified domain name for this IP address. Best effort method, meaning we
          * may not be able to return the FQDN depending on the underlying system configuration."
