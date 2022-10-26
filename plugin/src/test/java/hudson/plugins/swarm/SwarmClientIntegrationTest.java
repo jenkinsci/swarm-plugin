@@ -241,7 +241,7 @@ public class SwarmClientIntegrationTest {
         Assume.assumeFalse(
                 "TODO Windows container agents cannot run this test", Functions.isWindows());
         Path pidFile = getPidFile();
-        Files.writeString(pidFile, Long.toString(66000), StandardCharsets.US_ASCII);
+        Files.writeString(pidFile, "66000", StandardCharsets.US_ASCII);
 
         // PID file should be ignored since the process isn't running.
         swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
