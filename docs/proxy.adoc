@@ -19,4 +19,4 @@ $ java \
     -jar swarm-client.jar
 ----
 
-For more information about these properties, see https://docs.oracle.com/javase/8/docs/technotes/guides/net/proxies.html[the Java documentation].
+For more information about these properties, see https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/doc-files/net-properties.html[the Java documentation].

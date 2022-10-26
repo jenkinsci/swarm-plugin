@@ -154,7 +154,7 @@ public class Client {
          * cases this lookup might fail (e.g., querying an external DNS server which might not be
          * informed of a newly created agent from a DHCP server).
          *
-         * From https://docs.oracle.com/javase/8/docs/api/java/net/InetAddress.html#getCanonicalHostName--
+         * From https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/InetAddress.html#getCanonicalHostName()
          *
          * "Gets the fully qualified domain name for this IP address. Best effort method, meaning we
          * may not be able to return the FQDN depending on the underlying system configuration."
