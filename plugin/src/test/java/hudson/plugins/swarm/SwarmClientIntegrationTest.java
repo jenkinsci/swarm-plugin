@@ -29,10 +29,6 @@ import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import oshi.SystemInfo;
-import oshi.software.os.OSProcess;
-import oshi.software.os.OperatingSystem;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +42,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -67,8 +64,6 @@ public class SwarmClientIntegrationTest {
 
     @Rule(order = 30)
     public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder);
-
-    private final OperatingSystem os = new SystemInfo().getOperatingSystem();
 
     @Before
     public void configureGlobalSecurity() throws IOException {
@@ -215,7 +210,9 @@ public class SwarmClientIntegrationTest {
                 j.getURL(), "agent_fail", "-pidFile", pidFile.toAbsolutePath().toString());
 
         // Now ensure that the original process is still OK and so is its PID file.
-        assertNotNull("Original client should still be running", os.getProcess(firstClientPid));
+        Optional<ProcessHandle> firstClient = ProcessHandle.of(firstClientPid);
+        assertTrue("Original client should still be running", firstClient.isPresent());
+        assertTrue("Original client should still be running", firstClient.get().isAlive());
         assertEquals("PID in PID file should not change", firstClientPid, readPidFromFile(pidFile));
     }
 
@@ -234,10 +231,9 @@ public class SwarmClientIntegrationTest {
         // Java Process doesn't provide the PID, so we have to work around it. Find all of our child
         // processes, one of them must be the client we just started, and thus would match the PID
         // in the PID file.
-        List<OSProcess> childProcesses = os.getChildProcesses(os.getProcessId(), null, null, 0);
         assertTrue(
                 "PID in PID file must match our new PID",
-                childProcesses.stream().anyMatch(proc -> proc.getProcessID() == newPid));
+                ProcessHandle.current().descendants().anyMatch(proc -> proc.pid() == newPid));
     }
 
     /** Ensures that a node can be created with the WebSocket protocol. */

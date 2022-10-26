@@ -7,9 +7,6 @@ import org.kohsuke.args4j.NamedOptionDef;
 import org.kohsuke.args4j.spi.FieldSetter;
 import org.kohsuke.args4j.spi.OptionHandler;
 
-import oshi.SystemInfo;
-import oshi.software.os.OSProcess;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -23,6 +20,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -108,8 +106,8 @@ public class Client {
                 }
                 // check if this process is running
                 if (oldPid > 0) {
-                    OSProcess oldProcess = new SystemInfo().getOperatingSystem().getProcess(oldPid);
-                    if (oldProcess != null) {
+                    Optional<ProcessHandle> oldProcess = ProcessHandle.of(oldPid);
+                    if (oldProcess.isPresent() && oldProcess.get().isAlive()) {
                         throw new IllegalStateException(
                                 String.format(
                                         "Refusing to start because PID file '%s' already exists"
@@ -117,7 +115,7 @@ public class Client {
                                                 + " running.",
                                         pidFile.toAbsolutePath(),
                                         oldPid,
-                                        oldProcess.getCommandLine()));
+                                        oldProcess.get().info().commandLine().orElse("")));
                     } else {
                         logger.fine(
                                 String.format(
