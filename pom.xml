@@ -19,13 +19,9 @@
     </parent>
 
     <artifactId>swarm-plugin</artifactId>
+    <version>3.37-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Swarm Plugin Parent POM</name>
-    <version>3.37-SNAPSHOT</version>
-
-    <properties>
-        <jenkins.version>2.361.1</jenkins.version>
-    </properties>
 
     <licenses>
         <license>
@@ -42,9 +38,13 @@
     <scm>
         <connection>scm:git:https://github.com/jenkinsci/${project.artifactId}.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}.git</developerConnection>
-        <url>https://github.com/jenkinsci/${project.artifactId}</url>
         <tag>HEAD</tag>
+        <url>https://github.com/jenkinsci/${project.artifactId}</url>
     </scm>
+
+    <properties>
+        <jenkins.version>2.361.1</jenkins.version>
+    </properties>
 
     <repositories>
         <repository>
@@ -52,6 +52,7 @@
             <url>https://repo.jenkins-ci.org/public/</url>
         </repository>
     </repositories>
+
     <pluginRepositories>
         <pluginRepository>
             <id>repo.jenkins-ci.org</id>
