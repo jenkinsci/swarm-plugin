@@ -8,7 +8,7 @@ import hudson.plugins.swarm.test.SwarmClientRule;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.jenkinsci.plugins.workflow.support.pickles.ExecutorPickle;
+import org.jenkinsci.plugins.workflow.support.steps.ExecutorStepExecution;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -43,7 +43,7 @@ public class PipelineJobRestartTest {
     @Test
     public void buildShellScriptAfterRestart() throws Throwable {
         // Extend the timeout to make flaky tests less flaky.
-        ExecutorPickle.TIMEOUT_WAITING_FOR_NODE_MILLIS = TimeUnit.MINUTES.toMillis(1);
+        ExecutorStepExecution.TIMEOUT_WAITING_FOR_NODE_MILLIS = TimeUnit.MINUTES.toMillis(1);
 
         sessions.then(
                 r -> {
