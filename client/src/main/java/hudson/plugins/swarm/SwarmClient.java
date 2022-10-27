@@ -2,8 +2,6 @@ package hudson.plugins.swarm;
 
 import com.sun.net.httpserver.HttpServer;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
 
@@ -18,30 +16,6 @@ import io.micrometer.core.instrument.binder.system.UptimeMetrics;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 
-import org.apache.hc.client5.http.auth.AuthCache;
-import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
-import org.apache.hc.client5.http.impl.auth.BasicScheme;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.apache.hc.client5.http.io.HttpClientConnectionManager;
-import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.client5.http.ssl.HttpsSupport;
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
-import org.apache.hc.core5.http.Header;
-import org.apache.hc.core5.http.HttpHeaders;
-import org.apache.hc.core5.http.HttpHost;
-import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.ParseException;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.apache.hc.core5.ssl.SSLInitializationException;
-import org.jenkinsci.remoting.util.VersionNumber;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
@@ -53,6 +27,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
+import java.net.CookieManager;
+import java.net.HttpURLConnection;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -60,11 +36,16 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -73,6 +54,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -82,7 +64,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -266,11 +247,13 @@ public class SwarmClient {
         }
     }
 
-    static CloseableHttpClient createHttpClient(Options clientOptions) {
+    static HttpClient createHttpClient(Options clientOptions) {
         logger.fine("createHttpClient() invoked");
 
-        HttpClientBuilder builder = HttpClientBuilder.create();
-        builder.useSystemProperties();
+        HttpClient.Builder builder = HttpClient.newBuilder();
+
+        // Set a cookie handler for storing the session associated with the CSRF crumb.
+        builder.cookieHandler(new CookieManager());
 
         if (clientOptions.disableSslVerification || !clientOptions.sslFingerprints.isEmpty()) {
             // Set the default SSL context for Remoting.
@@ -283,117 +266,76 @@ public class SwarmClient {
                         new KeyManager[0],
                         new TrustManager[] {new DefaultTrustManager(trusted)},
                         new SecureRandom());
-            } catch (KeyManagementException | NoSuchAlgorithmException e) {
+            } catch (GeneralSecurityException e) {
                 logger.log(Level.SEVERE, "An error occurred", e);
-                throw new SSLInitializationException(e.getMessage(), e);
+                throw new IllegalStateException(e);
             }
+            builder.sslContext(sslContext);
             SSLContext.setDefault(sslContext);
 
-            // HttpComponents Client does not use the default SSL context, so explicitly configure
-            // it with the SSL context we created above.
-            HostnameVerifier hostnameVerifier =
-                    clientOptions.disableSslVerification
-                            ? NoopHostnameVerifier.INSTANCE
-                            : HttpsSupport.getDefaultHostnameVerifier();
-            SSLConnectionSocketFactory sslSocketFactory =
-                    new SSLConnectionSocketFactory(sslContext, hostnameVerifier);
-            HttpClientConnectionManager connectionManager =
-                    PoolingHttpClientConnectionManagerBuilder.create()
-                            .setSSLSocketFactory(sslSocketFactory)
-                            .build();
-            builder.setConnectionManager(connectionManager);
+            if (clientOptions.disableSslVerification) {
+                System.setProperty(
+                        "jdk.internal.httpclient.disableHostnameVerification",
+                        Boolean.toString(true));
+            }
         }
 
         return builder.build();
     }
 
-    static HttpClientContext createHttpClientContext(Options clientOptions, URL urlForAuth) {
-        logger.fine("createHttpClientContext() invoked");
-
-        HttpClientContext context = HttpClientContext.create();
+    static void addAuthorizationHeader(HttpRequest.Builder builder, Options clientOptions) {
+        logger.fine("addAuthorizationHeader() invoked");
 
         if (clientOptions.username != null && clientOptions.password != null) {
             logger.fine("Setting HttpClient credentials based on options passed");
 
-            BasicScheme basicScheme = new BasicScheme();
-            basicScheme.initPreemptive(
-                    new UsernamePasswordCredentials(
-                            clientOptions.username, clientOptions.password.toCharArray()));
-
-            HttpHost host =
-                    new HttpHost(
-                            urlForAuth.getProtocol(), urlForAuth.getHost(), urlForAuth.getPort());
-            context.resetAuthExchange(host, basicScheme);
-
-            AuthCache authCache = new BasicAuthCache();
-            authCache.put(host, basicScheme);
-            context.setAuthCache(authCache);
+            String auth = clientOptions.username + ":" + clientOptions.password;
+            String encoded =
+                    "Basic "
+                            + Base64.getEncoder()
+                                    .encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+            builder.header("Authorization", encoded);
         }
-
-        return context;
     }
 
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification = "False positive for try-with-resources in Java 11")
-    private static synchronized Crumb getCsrfCrumb(
-            CloseableHttpClient client, HttpClientContext context, URL url)
-            throws IOException, ParseException {
+    private static synchronized Crumb getCsrfCrumb(HttpClient client, Options options, URL url)
+            throws IOException, InterruptedException {
         logger.finer("getCsrfCrumb() invoked");
 
         String[] crumbResponse;
 
-        HttpGet httpGet =
-                new HttpGet(
+        URI uri =
+                URI.create(
                         url
                                 + "crumbIssuer/api/xml?xpath="
                                 + URLEncoder.encode(
                                         "concat(//crumbRequestField,\":\",//crumb)",
                                         StandardCharsets.UTF_8));
-        try (CloseableHttpResponse response = client.execute(httpGet, context)) {
-            if (response.getCode() != HttpStatus.SC_OK) {
-                logger.log(
-                        Level.SEVERE,
-                        String.format(
-                                "Could not obtain CSRF crumb. Response code: %s%n%s",
-                                response.getCode(),
-                                EntityUtils.toString(
-                                        response.getEntity(), StandardCharsets.UTF_8)));
-                return null;
-            }
+        HttpRequest.Builder builder = HttpRequest.newBuilder(uri).GET();
+        SwarmClient.addAuthorizationHeader(builder, options);
+        HttpRequest request = builder.build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != HttpURLConnection.HTTP_OK) {
+            logger.log(
+                    Level.SEVERE,
+                    String.format(
+                            "Could not obtain CSRF crumb. Response code: %s%n%s",
+                            response.statusCode(), response.body()));
+            return null;
+        }
 
-            String crumbResponseString =
-                    EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-            crumbResponse = crumbResponseString.split(":");
-            if (crumbResponse.length != 2) {
-                logger.log(Level.SEVERE, "Unexpected CSRF crumb response: " + crumbResponseString);
-                return null;
-            }
+        String crumbResponseString = response.body();
+        crumbResponse = crumbResponseString.split(":");
+        if (crumbResponse.length != 2) {
+            logger.log(Level.SEVERE, "Unexpected CSRF crumb response: " + crumbResponseString);
+            return null;
         }
 
         return new Crumb(crumbResponse[0], crumbResponse[1]);
     }
 
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification = "False positive for try-with-resources in Java 11")
-    void createSwarmAgent(URL url) throws IOException, ParseException, RetryException {
+    void createSwarmAgent(URL url) throws IOException, InterruptedException, RetryException {
         logger.fine("createSwarmAgent() invoked");
-
-        CloseableHttpClient client = createHttpClient(options);
-        HttpClientContext context = createHttpClientContext(options, url);
-
-        VersionNumber jenkinsVersion = getJenkinsVersion(client, context, url);
-        if (options.webSocket
-                && jenkinsVersion.isOlderThan(new VersionNumber("2.229"))
-                && !(jenkinsVersion.getDigitAt(0) == 2
-                        && jenkinsVersion.getDigitAt(1) == 222
-                        && jenkinsVersion.getDigitAt(2) >= 4)) {
-            throw new RetryException(
-                    String.format(
-                            "\"%s\" running Jenkins %s does not support the WebSocket protocol.",
-                            url, jenkinsVersion));
-        }
 
         String labelStr = String.join(" ", options.labels);
         StringBuilder toolLocationBuilder = new StringBuilder();
@@ -426,8 +368,9 @@ public class SwarmClient {
 
         Properties props = new Properties();
 
-        HttpPost post =
-                new HttpPost(
+        HttpClient client = createHttpClient(options);
+        URI uri =
+                URI.create(
                         url
                                 + "plugin/swarm/createSlave?name="
                                 + options.name
@@ -446,31 +389,27 @@ public class SwarmClient {
                                 + param(
                                         "keepDisconnectedClients",
                                         Boolean.toString(options.keepDisconnectedClients)));
-
-        post.addHeader(HttpHeaders.CONNECTION, "close");
-
-        // Add an empty body, as without it, some servers return a HTTP 411 response
-        // due to the lack of a `Content-Length` header on the request
-        post.setEntity(new StringEntity(""));
-
-        Crumb csrfCrumb = getCsrfCrumb(client, context, url);
+        HttpRequest.Builder builder =
+                HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
+        SwarmClient.addAuthorizationHeader(builder, options);
+        Crumb csrfCrumb = getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
-            post.addHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+            builder.header(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+        }
+        HttpRequest request = builder.build();
+
+        HttpResponse<InputStream> response =
+                client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        if (response.statusCode() != HttpURLConnection.HTTP_OK) {
+            throw new RetryException(
+                    String.format(
+                            "Failed to create a Swarm agent on Jenkins. Response code: %s%n%s",
+                            response.statusCode(),
+                            new String(response.body().readAllBytes(), StandardCharsets.UTF_8)));
         }
 
-        try (CloseableHttpResponse response = client.execute(post, context)) {
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new RetryException(
-                        String.format(
-                                "Failed to create a Swarm agent on Jenkins. Response code: %s%n%s",
-                                response.getCode(),
-                                EntityUtils.toString(
-                                        response.getEntity(), StandardCharsets.UTF_8)));
-            }
-
-            try (InputStream stream = response.getEntity().getContent()) {
-                props.load(stream);
-            }
+        try (InputStream stream = response.body()) {
+            props.load(stream);
         }
 
         String name = props.getProperty("name");
@@ -493,90 +432,64 @@ public class SwarmClient {
                 sb.append(s);
                 sb.append(" ");
                 if (sb.length() > 1000) {
-                    postLabelAppend(name, sb.toString(), client, context, url);
+                    postLabelAppend(name, sb.toString(), client, options, url);
                     sb = new StringBuilder();
                 }
             }
             if (sb.length() > 0) {
-                postLabelAppend(name, sb.toString(), client, context, url);
+                postLabelAppend(name, sb.toString(), client, options, url);
             }
         }
     }
 
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification = "False positive for try-with-resources in Java 11")
     static synchronized void postLabelRemove(
-            String name,
-            String labels,
-            CloseableHttpClient client,
-            HttpClientContext context,
-            URL url)
-            throws IOException, ParseException, RetryException {
-        HttpPost post =
-                new HttpPost(
+            String name, String labels, HttpClient client, Options options, URL url)
+            throws IOException, InterruptedException, RetryException {
+        URI uri =
+                URI.create(
                         url
                                 + "plugin/swarm/removeSlaveLabels?name="
                                 + name
                                 + SwarmClient.param("labels", labels));
-
-        post.addHeader(HttpHeaders.CONNECTION, "close");
-
-        // Add an empty body, as without it, some servers return a HTTP 411 response
-        // due to the lack of a `Content-Length` header on the request
-        post.setEntity(new StringEntity(""));
-
-        Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, context, url);
+        HttpRequest.Builder builder =
+                HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
+        SwarmClient.addAuthorizationHeader(builder, options);
+        Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
-            post.addHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+            builder.header(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
         }
+        HttpRequest request = builder.build();
 
-        try (CloseableHttpResponse response = client.execute(post, context)) {
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new RetryException(
-                        String.format(
-                                "Failed to remove agent labels. Response code: %s%n%s",
-                                response.getCode(),
-                                EntityUtils.toString(
-                                        response.getEntity(), StandardCharsets.UTF_8)));
-            }
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != HttpURLConnection.HTTP_OK) {
+            throw new RetryException(
+                    String.format(
+                            "Failed to remove agent labels. Response code: %s%n%s",
+                            response.statusCode(), response.body()));
         }
     }
 
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification = "False positive for try-with-resources in Java 11")
     static synchronized void postLabelAppend(
-            String name,
-            String labels,
-            CloseableHttpClient client,
-            HttpClientContext context,
-            URL url)
-            throws IOException, ParseException, RetryException {
-        HttpPost post =
-                new HttpPost(
+            String name, String labels, HttpClient client, Options options, URL url)
+            throws IOException, InterruptedException, RetryException {
+        URI uri =
+                URI.create(
                         url + "plugin/swarm/addSlaveLabels?name=" + name + param("labels", labels));
-
-        post.addHeader(HttpHeaders.CONNECTION, "close");
-
-        // Add an empty body, as without it, some servers return a HTTP 411 response
-        // due to the lack of a `Content-Length` header on the request
-        post.setEntity(new StringEntity(""));
-
-        Crumb csrfCrumb = getCsrfCrumb(client, context, url);
+        HttpRequest.Builder builder =
+                HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
+        SwarmClient.addAuthorizationHeader(builder, options);
+        Crumb csrfCrumb = getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
-            post.addHeader(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+            builder.header(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
         }
+        HttpRequest request = builder.build();
 
-        try (CloseableHttpResponse response = client.execute(post, context)) {
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new RetryException(
-                        String.format(
-                                "Failed to update agent labels. Response code: %s%n%s",
-                                response.getCode(),
-                                EntityUtils.toString(
-                                        response.getEntity(), StandardCharsets.UTF_8)));
-            }
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != HttpURLConnection.HTTP_OK) {
+            throw new RetryException(
+                    String.format(
+                            "Failed to update agent labels. Response code: %s%n%s",
+                            response.statusCode(), response.body()));
         }
     }
 
@@ -594,39 +507,6 @@ public class SwarmClient {
             return "";
         }
         return "&" + name + "=" + encode(value);
-    }
-
-    /** Get the Jenkins version. */
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification = "False positive for try-with-resources in Java 11")
-    VersionNumber getJenkinsVersion(CloseableHttpClient client, HttpClientContext context, URL url)
-            throws IOException, ParseException, RetryException {
-        logger.fine("getJenkinsVersion() invoked");
-
-        HttpGet httpGet = new HttpGet(url + "api");
-        try (CloseableHttpResponse response = client.execute(httpGet, context)) {
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new RetryException(
-                        String.format(
-                                "Could not get Jenkins version. Response code: %s%n%s",
-                                response.getCode(),
-                                EntityUtils.toString(
-                                        response.getEntity(), StandardCharsets.UTF_8)));
-            }
-
-            Header[] headers = response.getHeaders("X-Jenkins");
-            if (headers.length != 1) {
-                throw new RetryException("This URL doesn't look like Jenkins.");
-            }
-
-            String versionStr = headers[0].getValue();
-            try {
-                return new VersionNumber(versionStr);
-            } catch (RuntimeException e) {
-                throw new RetryException("Unexpected Jenkins version: " + versionStr, e);
-            }
-        }
     }
 
     static String getChildElementString(Element parent, String tagName) {
