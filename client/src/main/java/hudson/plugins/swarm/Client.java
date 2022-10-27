@@ -10,7 +10,6 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -86,19 +85,12 @@ public class Client {
             throw new IllegalArgumentException("Missing 'url' option.");
         }
         if (options.pidFile != null) {
-            /*
-             * This will return a string like 12345@hostname, so we need to do some string
-             * manipulation to get the actual process identifier. In Java 9, this can be replaced
-             * with: ProcessHandle.current().getPid();
-             */
-            String pidName = ManagementFactory.getRuntimeMXBean().getName();
-            String[] pidNameParts = pidName.split("@");
-            String pid = pidNameParts[0];
+            ProcessHandle current = ProcessHandle.current();
             Path pidFile = Paths.get(options.pidFile);
             if (Files.exists(pidFile)) {
-                int oldPid;
+                long oldPid;
                 try {
-                    oldPid = Integer.parseInt(Files.readString(pidFile, StandardCharsets.UTF_8));
+                    oldPid = Long.parseLong(Files.readString(pidFile, StandardCharsets.US_ASCII));
                 } catch (NumberFormatException e) {
                     oldPid = 0;
                 } catch (IOException e) {
@@ -108,14 +100,41 @@ public class Client {
                 if (oldPid > 0) {
                     Optional<ProcessHandle> oldProcess = ProcessHandle.of(oldPid);
                     if (oldProcess.isPresent() && oldProcess.get().isAlive()) {
-                        throw new IllegalStateException(
-                                String.format(
-                                        "Refusing to start because PID file '%s' already exists"
-                                                + " and the previous process %d (%s) is still"
-                                                + " running.",
-                                        pidFile.toAbsolutePath(),
-                                        oldPid,
-                                        oldProcess.get().info().commandLine().orElse("")));
+                        // If the old process is running, then compare its path to the path of this
+                        // process as a quick sanity check. If they are the same, we can assume that
+                        // it is probably another Swarm Client instance, in which case the service
+                        // should not be started. However, if the previous Swarm Client instance
+                        // failed to exit cleanly (because of a crash/reboot/etc.) and another
+                        // process is now using that PID, then we should consider the PID file stale
+                        // and continue execution.
+                        String curCommand = current.info().command().orElse(null);
+                        String oldCommand = oldProcess.get().info().command().orElse(null);
+                        if (curCommand != null && curCommand.equals(oldCommand)) {
+                            throw new IllegalStateException(
+                                    String.format(
+                                            "Refusing to start because PID file '%s' already exists"
+                                                    + " and the previous process %d (%s) is still"
+                                                    + " running.",
+                                            pidFile.toAbsolutePath(),
+                                            oldPid,
+                                            oldProcess
+                                                    .get()
+                                                    .info()
+                                                    .commandLine()
+                                                    .orElse("unknown")));
+                        } else {
+                            logger.warning(
+                                    String.format(
+                                            "Ignoring stale PID file '%s' because the process %d"
+                                                + " (%s) is not a Swarm Client.",
+                                            pidFile.toAbsolutePath(),
+                                            oldPid,
+                                            oldProcess
+                                                    .get()
+                                                    .info()
+                                                    .commandLine()
+                                                    .orElse("unknown")));
+                        }
                     } else {
                         logger.fine(
                                 String.format(
@@ -127,7 +146,7 @@ public class Client {
             }
             pidFile.toFile().deleteOnExit();
             try {
-                Files.write(pidFile, pid.getBytes(StandardCharsets.UTF_8));
+                Files.writeString(pidFile, Long.toString(current.pid()), StandardCharsets.US_ASCII);
             } catch (IOException e) {
                 throw new UncheckedIOException("Failed to write PID file " + options.pidFile, e);
             }
