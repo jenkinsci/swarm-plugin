@@ -10,7 +10,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>swarm-plugin</artifactId>
-        <version>3.37</version>
+        <version>3.38-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -33,7 +33,7 @@
     <scm>
         <connection>scm:git:https://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-        <tag>swarm-plugin-3.37</tag>
+        <tag>HEAD</tag>
         <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
     </scm>
 
