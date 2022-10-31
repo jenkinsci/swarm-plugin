@@ -19,7 +19,7 @@
     </parent>
 
     <artifactId>swarm-plugin</artifactId>
-    <version>3.37-SNAPSHOT</version>
+    <version>3.37</version>
     <packaging>pom</packaging>
     <name>Swarm Plugin Parent POM</name>
 
@@ -38,7 +38,7 @@
     <scm>
         <connection>scm:git:https://github.com/jenkinsci/${project.artifactId}.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>swarm-plugin-3.37</tag>
         <url>https://github.com/jenkinsci/${project.artifactId}</url>
     </scm>
 
