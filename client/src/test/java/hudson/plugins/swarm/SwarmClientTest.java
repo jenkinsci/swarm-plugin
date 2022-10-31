@@ -5,13 +5,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,9 +32,8 @@ public class SwarmClientTest {
     @Test
     public void should_try_to_create_http_connection_on_default_options() throws IOException {
         Options options = new Options();
-        try (CloseableHttpClient client = SwarmClient.createHttpClient(options)) {
-            assertNotNull(client);
-        }
+        HttpClient client = SwarmClient.createHttpClient(options);
+        assertNotNull(client);
     }
 
     /* Below we have a series of tests which make sure that different ways
