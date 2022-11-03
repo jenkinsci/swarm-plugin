@@ -42,7 +42,6 @@ public class LabelFileWatcher implements Runnable {
     private final String[] args;
     private final URL url;
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public LabelFileWatcher(URL url, Options options, String name, String... args)
             throws IOException {
         logger.config(
@@ -221,7 +220,7 @@ public class LabelFileWatcher implements Runnable {
     }
 
     @Override
-    @SuppressFBWarnings("DM_EXIT")
+    @SuppressFBWarnings(value = "DM_EXIT", justification = "behavior is intentional")
     public void run() {
         String sTempLabels;
         isRunning = true;
