@@ -26,7 +26,6 @@
         <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <spotbugs.excludeFilterFile>${project.basedir}/../src/spotbugs/excludesFilter.xml</spotbugs.excludeFilterFile>
     </properties>
 
     <dependencies>
