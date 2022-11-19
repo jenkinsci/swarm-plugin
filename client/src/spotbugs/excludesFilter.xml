@@ -3,9 +3,7 @@
         <Or>
             <!-- TODO: Investigate and fix findsecbugs violations, then remove these exclusions. -->
             <Bug pattern="COMMAND_INJECTION"/>
-            <Bug pattern="HTTP_PARAMETER_POLLUTION"/>
             <Bug pattern="PATH_TRAVERSAL_IN"/>
-            <Bug pattern="URLCONNECTION_SSRF_FD"/>
             <Bug pattern="WEAK_MESSAGE_DIGEST_MD5"/>
             <Bug pattern="WEAK_TRUST_MANAGER"/>
             <Bug pattern="XXE_DOCUMENT"/>
