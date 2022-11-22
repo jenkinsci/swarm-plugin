@@ -1,7 +1,5 @@
 package hudson.plugins.swarm;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import hudson.Functions;
 import hudson.Plugin;
 import hudson.Util;
@@ -67,9 +65,6 @@ public class PluginImpl extends Plugin {
         normalResponse(req, rsp, node.getLabelString());
     }
 
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification = "False positive for try-with-resources in Java 11")
     private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList)
             throws IOException {
         rsp.setContentType("text/xml");
@@ -135,9 +130,6 @@ public class PluginImpl extends Plugin {
 
     /** Add a new Swarm agent. */
     @POST
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-            justification = "False positive for try-with-resources in Java 11")
     public void doCreateSlave(
             StaplerRequest req,
             StaplerResponse rsp,
