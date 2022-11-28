@@ -2,30 +2,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.jenkins-ci</groupId>
-        <artifactId>jenkins</artifactId>
-        <version>1.92</version>
-        <relativePath />
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>swarm-plugin</artifactId>
+        <version>${revision}${changelist}</version>
     </parent>
 
-    <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>swarm-client</artifactId>
-    <version>3.38-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Swarm Client</name>
 
-    <scm>
-        <connection>scm:git:https://github.com/jenkinsci/swarm-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:jenkinsci/swarm-plugin.git</developerConnection>
-        <tag>HEAD</tag>
-        <url>https://github.com/jenkinsci/swarm-plugin</url>
-    </scm>
-
     <properties>
+        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.testRelease>11</maven.compiler.testRelease>
         <micrometer.version>1.10.2</micrometer.version>
-        <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <slf4j.version>2.0.5</slf4j.version>
     </properties>
 
     <dependencies>
@@ -67,8 +57,13 @@
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
-            <version>2.0.5</version>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
@@ -81,20 +76,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <repositories>
-        <repository>
-            <id>repo.jenkins-ci.org</id>
-            <url>https://repo.jenkins-ci.org/public/</url>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>repo.jenkins-ci.org</id>
-            <url>https://repo.jenkins-ci.org/public/</url>
-        </pluginRepository>
-    </pluginRepositories>
 
     <build>
         <finalName>${project.artifactId}</finalName>
