@@ -10,6 +10,7 @@
     <artifactId>swarm</artifactId>
     <packaging>hpi</packaging>
     <name>Swarm Plugin</name>
+    <url>https://github.com/jenkinsci/swarm-plugin</url>
 
     <dependencyManagement>
         <dependencies>
