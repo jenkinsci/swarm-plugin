@@ -44,7 +44,7 @@
     <properties>
         <revision>3.40</revision>
         <changelist>-SNAPSHOT</changelist>
-        <jenkins.version>2.361.1</jenkins.version>
+        <jenkins.version>2.361.4</jenkins.version>
         <gitHubRepo>jenkinsci/swarm-plugin</gitHubRepo>
     </properties>
 
