@@ -92,30 +92,28 @@
                         <phase>package</phase>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>com.github.spotbugs:spotbugs-annotations</exclude>
+                                </excludes>
+                            </artifactSet>
                             <filters>
                                 <filter>
-                                    <artifact>*:*</artifact>
+                                    <artifact>args4j:args4j</artifact>
                                     <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>OSGI-OPT/**/*.html</exclude>
+                                        <exclude>OSGI-OPT/**/*.java</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
-                            <relocations>
-                                <!-- Be ware! there is org.xxx class in the fwk, do not relocate them! -->
-                                <!-- hudson remoting seems to check some class also, so cannot be shaded -->
-                                <relocation>
-                                    <pattern>org.apache</pattern>
-                                    <shadedPattern>shaded.org.apache</shadedPattern>
-                                </relocation>
-                            </relocations>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>hudson.plugins.swarm.Client</Main-Class>
                                     </manifestEntries>
                                 </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                             </transformers>
                         </configuration>
                     </execution>
