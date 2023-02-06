@@ -53,7 +53,7 @@
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>remoting</artifactId>
-            <version>3077.vd69cf116da_6f</version>
+            <version>3107.v665000b_51092</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
