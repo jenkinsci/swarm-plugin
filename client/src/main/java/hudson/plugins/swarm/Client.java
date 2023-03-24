@@ -29,6 +29,7 @@ public class Client {
             "hudson.remoting.Engine.nonFatalJnlpAgentEndpointResolutionExceptions";
 
     // TODO: Cleanup the encoding issue
+    @SuppressWarnings("lgtm[jenkins/unsafe-calls]")
     public static void main(String... args) throws InterruptedException {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
@@ -336,6 +337,7 @@ public class Client {
         return false;
     }
 
+    @SuppressWarnings("lgtm[jenkins/unsafe-calls]")
     private static void fail(String message) {
         System.err.println(message);
         System.exit(1);

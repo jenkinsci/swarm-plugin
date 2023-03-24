@@ -247,6 +247,7 @@ public class SwarmClient {
         }
     }
 
+    @SuppressWarnings("lgtm[jenkins/unsafe-calls]")
     static HttpClient createHttpClient(Options clientOptions) {
         logger.fine("createHttpClient() invoked");
 
@@ -585,6 +586,7 @@ public class SwarmClient {
         return sb.toString();
     }
 
+    @SuppressWarnings("lgtm[jenkins/unsafe-calls]")
     public void exitWithStatus(int status) {
         if (prometheusServer != null) {
             prometheusServer.stop(1);
