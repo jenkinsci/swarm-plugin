@@ -221,6 +221,7 @@ public class LabelFileWatcher implements Runnable {
 
     @Override
     @SuppressFBWarnings(value = "DM_EXIT", justification = "behavior is intentional")
+    @SuppressWarnings("lgtm[jenkins/unsafe-calls]")
     public void run() {
         String sTempLabels;
         isRunning = true;

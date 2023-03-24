@@ -153,6 +153,7 @@ public class Options {
     public String username;
 
     @Option(name = "-password", usage = "The Jenkins user API token or password.")
+    @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
     public String password;
 
     @Option(
@@ -165,11 +166,13 @@ public class Options {
     @Option(
             name = "-passwordEnvVariable",
             usage = "Environment variable containing the Jenkins user API token or password.")
+    @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
     public String passwordEnvVariable;
 
     @Option(
             name = "-passwordFile",
             usage = "File containing the Jenkins user API token or password.")
+    @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
     public String passwordFile;
 
     @Option(

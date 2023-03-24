@@ -35,6 +35,7 @@ public class DownloadClientAction implements UnprotectedRootAction {
 
     // serve static resources
     @Restricted(NoExternalUse.class)
+    @SuppressWarnings({"lgtm[jenkins/csrf]", "lgtm[jenkins/no-permission-check]"})
     public void doDynamic(StaplerRequest req, StaplerResponse rsp)
             throws IOException, ServletException {
         Plugin plugin = Jenkins.get().getPlugin("swarm");

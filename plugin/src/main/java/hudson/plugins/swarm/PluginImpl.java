@@ -54,6 +54,7 @@ public class PluginImpl extends Plugin {
     }
 
     /** Get the list of labels for an agent. */
+    @SuppressWarnings({"lgtm[jenkins/csrf]", "lgtm[jenkins/no-permission-check]"})
     public void doGetSlaveLabels(
             StaplerRequest req, StaplerResponse rsp, @QueryParameter String name)
             throws IOException {
