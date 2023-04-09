@@ -1,13 +1,12 @@
 package hudson.plugins.swarm;
 
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.Objects;
 import org.kohsuke.args4j.Option;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
-
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.util.Objects;
 
 /** Reads {@link Options} from a YAML file. */
 public class YamlConfig {
@@ -42,8 +41,7 @@ public class YamlConfig {
         }
     }
 
-    private boolean isSet(Options options, Field field)
-            throws NoSuchFieldException, IllegalAccessException {
+    private boolean isSet(Options options, Field field) throws NoSuchFieldException, IllegalAccessException {
         final Object defaultValue =
                 Options.class.getDeclaredField(field.getName()).get(defaultOptions);
         return !Objects.equals(field.get(options), defaultValue);
@@ -76,8 +74,7 @@ public class YamlConfig {
             final Field dependsOn = fieldForOption(dependsOnOption);
 
             if (isSet(options, field) && !isSet(options, dependsOn)) {
-                throw new ConfigurationException(
-                        "'" + field.getName() + "' depends on '" + dependsOn.getName() + "'");
+                throw new ConfigurationException("'" + field.getName() + "' depends on '" + dependsOn.getName() + "'");
             }
         }
     }
@@ -89,11 +86,7 @@ public class YamlConfig {
 
             if (isSet(options, field) && isSet(options, forbiddenField)) {
                 throw new ConfigurationException(
-                        "'"
-                                + field.getName()
-                                + "' can not be used with '"
-                                + forbiddenField.getName()
-                                + "'");
+                        "'" + field.getName() + "' can not be used with '" + forbiddenField.getName() + "'");
             }
         }
     }

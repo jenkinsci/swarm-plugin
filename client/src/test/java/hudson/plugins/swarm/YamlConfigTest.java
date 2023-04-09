@@ -8,32 +8,30 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
+import org.junit.Test;
 
 public class YamlConfigTest {
     @Test
     public void loadOptionsFromYaml() throws ConfigurationException {
-        final String yamlString =
-                "url: http://localhost:8080/jenkins\n"
-                        + "name: agent-name-0\n"
-                        + "description: Configured from yml\n"
-                        + "executors: 3\n"
-                        + "labels:\n"
-                        + "  - label-a\n"
-                        + "  - label-b\n"
-                        + "  - label-c\n"
-                        + "disableClientsUniqueId: true\n"
-                        + "mode: exclusive\n"
-                        + "failIfWorkDirIsMissing: false\n"
-                        + "deleteExistingClients: true\n"
-                        + "keepDisconnectedClients: false\n"
-                        + "labelsFile: ~/l.conf\n"
-                        + "pidFile: ~/s.pid\n"
-                        + "prometheusPort: 112233\n";
+        final String yamlString = "url: http://localhost:8080/jenkins\n"
+                + "name: agent-name-0\n"
+                + "description: Configured from yml\n"
+                + "executors: 3\n"
+                + "labels:\n"
+                + "  - label-a\n"
+                + "  - label-b\n"
+                + "  - label-c\n"
+                + "disableClientsUniqueId: true\n"
+                + "mode: exclusive\n"
+                + "failIfWorkDirIsMissing: false\n"
+                + "deleteExistingClients: true\n"
+                + "keepDisconnectedClients: false\n"
+                + "labelsFile: ~/l.conf\n"
+                + "pidFile: ~/s.pid\n"
+                + "prometheusPort: 112233\n";
 
         final Options options = loadYaml(yamlString);
         assertThat(options.url, equalTo("http://localhost:8080/jenkins"));
@@ -56,27 +54,21 @@ public class YamlConfigTest {
         defaultOptions.url = "ignore";
         final Options options = loadYaml("url: ignore\n");
 
-        Stream.of(Options.class.getDeclaredFields())
-                .forEach(
-                        f -> {
-                            try {
-                                assertThat(
-                                        "Field " + f.getName(),
-                                        f.get(options),
-                                        equalTo(f.get(defaultOptions)));
-                            } catch (IllegalAccessException e) {
-                                fail(e.getMessage());
-                            }
-                        });
+        Stream.of(Options.class.getDeclaredFields()).forEach(f -> {
+            try {
+                assertThat("Field " + f.getName(), f.get(options), equalTo(f.get(defaultOptions)));
+            } catch (IllegalAccessException e) {
+                fail(e.getMessage());
+            }
+        });
     }
 
     @Test
     public void toolLocationOption() throws ConfigurationException {
-        final String yamlString =
-                "url: http://localhost:8080/jenkins\n"
-                        + "toolLocations:\n"
-                        + "  tool-a: /tool/path/a\n"
-                        + "  tool-b: /tool/path/b\n";
+        final String yamlString = "url: http://localhost:8080/jenkins\n"
+                + "toolLocations:\n"
+                + "  tool-a: /tool/path/a\n"
+                + "  tool-b: /tool/path/b\n";
 
         final Options options = loadYaml(yamlString);
         assertThat(options.toolLocations.size(), equalTo(2));
@@ -86,12 +78,11 @@ public class YamlConfigTest {
 
     @Test
     public void errorHandlingOptions() throws ConfigurationException {
-        final String yamlString =
-                "url: http://localhost:8080/jenkins\n"
-                        + "retry: 0\n"
-                        + "noRetryAfterConnected: true\n"
-                        + "retryInterval: 12\n"
-                        + "maxRetryInterval: 9\n";
+        final String yamlString = "url: http://localhost:8080/jenkins\n"
+                + "retry: 0\n"
+                + "noRetryAfterConnected: true\n"
+                + "retryInterval: 12\n"
+                + "maxRetryInterval: 9\n";
 
         final Options options = loadYaml(yamlString);
         assertThat(options.url, equalTo("http://localhost:8080/jenkins"));
@@ -104,11 +95,10 @@ public class YamlConfigTest {
 
     @Test
     public void environmentVariablesOption() throws ConfigurationException {
-        final String yamlString =
-                "url: http://localhost:8080/jenkins\n"
-                        + "environmentVariables:\n"
-                        + "  ENV_1: env#1\n"
-                        + "  ENV_2: env#2\n";
+        final String yamlString = "url: http://localhost:8080/jenkins\n"
+                + "environmentVariables:\n"
+                + "  ENV_1: env#1\n"
+                + "  ENV_2: env#2\n";
 
         final Options options = loadYaml(yamlString);
         assertThat(options.environmentVariables.size(), equalTo(2));
@@ -118,13 +108,12 @@ public class YamlConfigTest {
 
     @Test
     public void authenticationOptions() throws ConfigurationException {
-        final String yamlString =
-                "url: http://localhost:8080/jenkins\n"
-                        + "disableSslVerification: false\n"
-                        + "sslFingerprints: fp0 fp1 fp2\n"
-                        + "username: swarm-user-name\n"
-                        + "passwordEnvVariable: PASS_ENV\n"
-                        + "passwordFile: ~/p.conf\n";
+        final String yamlString = "url: http://localhost:8080/jenkins\n"
+                + "disableSslVerification: false\n"
+                + "sslFingerprints: fp0 fp1 fp2\n"
+                + "username: swarm-user-name\n"
+                + "passwordEnvVariable: PASS_ENV\n"
+                + "passwordFile: ~/p.conf\n";
 
         final Options options = loadYaml(yamlString);
         assertThat(options.url, equalTo("http://localhost:8080/jenkins"));
@@ -137,7 +126,7 @@ public class YamlConfigTest {
 
     @Test
     public void webSocketOption() throws ConfigurationException {
-        final String yamlString = "url: http://localhost:8080/jenkins\n" + "webSocket: true\n";
+        final String yamlString = "url: http://localhost:8080/jenkins\nwebSocket: true\n";
 
         final Options options = loadYaml(yamlString);
         assertThat(options.webSocket, equalTo(true));
@@ -145,12 +134,11 @@ public class YamlConfigTest {
 
     @Test
     public void webSocketHeadersOption() throws ConfigurationException {
-        final String yamlString =
-                "url: http://localhost:8080/jenkins\n"
-                        + "webSocket: true\n"
-                        + "webSocketHeaders:\n"
-                        + "  WS_HEADER_0: WS_VALUE_0\n"
-                        + "  WS_HEADER_1: WS_VALUE_1\n";
+        final String yamlString = "url: http://localhost:8080/jenkins\n"
+                + "webSocket: true\n"
+                + "webSocketHeaders:\n"
+                + "  WS_HEADER_0: WS_VALUE_0\n"
+                + "  WS_HEADER_1: WS_VALUE_1\n";
 
         final Options options = loadYaml(yamlString);
         assertThat(options.webSocketHeaders.size(), equalTo(2));
@@ -160,16 +148,13 @@ public class YamlConfigTest {
 
     @Test
     public void webSocketHeadersFailsIfWebSocketOptionIsNotSet() {
-        final String yamlString =
-                "url: http://localhost:8080/jenkins\n"
-                        + "webSocketHeaders:\n"
-                        + "  WS_HEADER_0: WS_VALUE_0\n"
-                        + "  WS_HEADER_1: WS_VALUE_1\n";
+        final String yamlString = "url: http://localhost:8080/jenkins\n"
+                + "webSocketHeaders:\n"
+                + "  WS_HEADER_0: WS_VALUE_0\n"
+                + "  WS_HEADER_1: WS_VALUE_1\n";
 
         final Throwable ex = assertThrows(ConfigurationException.class, () -> loadYaml(yamlString));
-        assertThat(
-                ex.getMessage(),
-                allOf(containsString("webSocketHeaders"), containsString("webSocket")));
+        assertThat(ex.getMessage(), allOf(containsString("webSocketHeaders"), containsString("webSocket")));
     }
 
     @Test
@@ -188,17 +173,13 @@ public class YamlConfigTest {
     public void modeOptionValues() throws ConfigurationException {
         final Options normal = loadYaml("url: ignore\nmode: " + ModeOptionHandler.NORMAL + "\n");
         assertThat(normal.mode, equalTo(ModeOptionHandler.NORMAL));
-        final Options exclusive =
-                loadYaml("url: ignore\nmode: " + ModeOptionHandler.EXCLUSIVE + "\n");
+        final Options exclusive = loadYaml("url: ignore\nmode: " + ModeOptionHandler.EXCLUSIVE + "\n");
         assertThat(exclusive.mode, equalTo(ModeOptionHandler.EXCLUSIVE));
     }
 
     @Test
     public void failIfModeHasInvalidValue() {
-        final Throwable ex =
-                assertThrows(
-                        ConfigurationException.class,
-                        () -> loadYaml("url: ignore\nmode: invalid\n"));
+        final Throwable ex = assertThrows(ConfigurationException.class, () -> loadYaml("url: ignore\nmode: invalid\n"));
         assertThat(ex.getMessage(), containsString("mode"));
     }
 
@@ -216,44 +197,32 @@ public class YamlConfigTest {
 
     @Test
     public void failsIfDeprecatedOptionIsUsed() {
-        final Throwable ex =
-                assertThrows(
-                        ConfigurationException.class, () -> loadYaml("password: should-fail\n"));
+        final Throwable ex = assertThrows(ConfigurationException.class, () -> loadYaml("password: should-fail\n"));
         assertThat(ex.getMessage(), containsString("password"));
     }
 
     @Test
     public void failsOnConflictingOptions() {
-        final Throwable ex =
-                assertThrows(
-                        ConfigurationException.class,
-                        () ->
-                                loadYaml(
-                                        "url: ignore\n"
-                                                + "webSocket: true\n"
-                                                + "tunnel: excluded-by.ws:123\n"));
+        final Throwable ex = assertThrows(
+                ConfigurationException.class,
+                () -> loadYaml("url: ignore\nwebSocket: true\ntunnel: excluded-by.ws:123\n"));
         assertThat(ex.getMessage(), allOf(containsString("webSocket"), containsString("tunnel")));
     }
 
     @Test
     public void failsOnConfigOption() {
-        final Throwable ex =
-                assertThrows(
-                        ConfigurationException.class,
-                        () -> loadYaml("url: ignore\nconfig: no-other-config-allowed.yml\n"));
+        final Throwable ex = assertThrows(
+                ConfigurationException.class, () -> loadYaml("url: ignore\nconfig: no-other-config-allowed.yml\n"));
         assertThat(ex.getMessage(), containsString("config"));
     }
 
     @Test
     public void failsOnHelpOption() {
-        final Throwable ex =
-                assertThrows(
-                        ConfigurationException.class, () -> loadYaml("url: ignore\nhelp: true\n"));
+        final Throwable ex = assertThrows(ConfigurationException.class, () -> loadYaml("url: ignore\nhelp: true\n"));
         assertThat(ex.getMessage(), containsString("help"));
     }
 
     private Options loadYaml(String yamlString) throws ConfigurationException {
-        return new YamlConfig()
-                .loadOptions(new ByteArrayInputStream(yamlString.getBytes(StandardCharsets.UTF_8)));
+        return new YamlConfig().loadOptions(new ByteArrayInputStream(yamlString.getBytes(StandardCharsets.UTF_8)));
     }
 }

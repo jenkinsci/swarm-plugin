@@ -1,64 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>plugin</artifactId>
-        <version>4.58</version>
-        <relativePath />
-    </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.jenkins-ci.plugins</groupId>
+    <artifactId>plugin</artifactId>
+    <version>4.59</version>
+    <relativePath />
+  </parent>
 
-    <artifactId>swarm-plugin</artifactId>
-    <version>${revision}${changelist}</version>
-    <packaging>pom</packaging>
-    <name>Swarm Plugin Parent POM</name>
-    <description>The Swarm plugin enables nodes to join a nearby Jenkins controller, thereby forming an ad-hoc cluster.</description>
-    <url>https://github.com/jenkinsci/swarm-plugin</url>
+  <artifactId>swarm-plugin</artifactId>
+  <version>${revision}${changelist}</version>
+  <packaging>pom</packaging>
+  <name>Swarm Plugin Parent POM</name>
+  <description>The Swarm plugin enables nodes to join a nearby Jenkins controller, thereby forming an ad-hoc cluster.</description>
+  <url>https://github.com/jenkinsci/swarm-plugin</url>
 
-    <licenses>
-        <license>
-            <name>MIT License</name>
-            <url>https://opensource.org/licenses/MIT</url>
-        </license>
-    </licenses>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+    </license>
+  </licenses>
 
-    <developers>
-        <developer>
-            <id>basil</id>
-            <name>Basil Crow</name>
-        </developer>
-    </developers>
+  <developers>
+    <developer>
+      <id>basil</id>
+      <name>Basil Crow</name>
+    </developer>
+  </developers>
 
-    <modules>
-        <module>client</module>
-        <module>plugin</module>
-    </modules>
+  <modules>
+    <module>client</module>
+    <module>plugin</module>
+  </modules>
 
-    <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
-        <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
-        <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
-        <tag>${scmTag}</tag>
-        <url>https://github.com/${gitHubRepo}</url>
-    </scm>
+  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
+    <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
+    <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
+    <tag>${scmTag}</tag>
+    <url>https://github.com/${gitHubRepo}</url>
+  </scm>
 
-    <properties>
-        <revision>3.40</revision>
-        <changelist>-SNAPSHOT</changelist>
-        <jenkins.version>2.361.4</jenkins.version>
-        <gitHubRepo>jenkinsci/swarm-plugin</gitHubRepo>
-    </properties>
+  <properties>
+    <revision>3.40</revision>
+    <changelist>-SNAPSHOT</changelist>
+    <jenkins.version>2.361.4</jenkins.version>
+    <gitHubRepo>jenkinsci/swarm-plugin</gitHubRepo>
+  </properties>
 
-    <repositories>
-        <repository>
-            <id>repo.jenkins-ci.org</id>
-            <url>https://repo.jenkins-ci.org/public/</url>
-        </repository>
-    </repositories>
+  <repositories>
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </repository>
+  </repositories>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>repo.jenkins-ci.org</id>
-            <url>https://repo.jenkins-ci.org/public/</url>
-        </pluginRepository>
-    </pluginRepositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </pluginRepository>
+  </pluginRepositories>
 </project>

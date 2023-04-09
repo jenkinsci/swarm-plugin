@@ -7,7 +7,9 @@ import hudson.Functions;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.plugins.swarm.test.SwarmClientRule;
-
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -21,19 +23,17 @@ import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 public class PipelineJobTest {
 
-    @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
+    @ClassRule
+    public static BuildWatcher buildWatcher = new BuildWatcher();
 
     @Rule(order = 10)
     public JenkinsRule j = new JenkinsRule();
 
     @Rule(order = 20)
-    public TemporaryFolder temporaryFolder = TemporaryFolder.builder().assureDeletion().build();
+    public TemporaryFolder temporaryFolder =
+            TemporaryFolder.builder().assureDeletion().build();
 
     @Rule(order = 30)
     public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder);
@@ -81,8 +81,7 @@ public class PipelineJobTest {
     /** The same as the preceding test, but waits in "sh" rather than "node." */
     @Test
     public void buildShellScriptAcrossDisconnect() throws Exception {
-        Assume.assumeFalse(
-                "TODO not sure how to write a corresponding batch script", Functions.isWindows());
+        Assume.assumeFalse("TODO not sure how to write a corresponding batch script", Functions.isWindows());
         Node node = swarmClientRule.createSwarmClient("-disableClientsUniqueId");
 
         WorkflowJob project = j.createProject(WorkflowJob.class);
@@ -91,24 +90,23 @@ public class PipelineJobTest {
         new FileOutputStream(f1).close();
         project.setConcurrentBuild(false);
 
-        String script =
-                "node('"
-                        + node.getNodeName()
-                        + "') {\n"
-                        + "  sh '"
-                        + "touch \""
-                        + f2
-                        + "\";"
-                        + "while [ -f \""
-                        + f1
-                        + "\" ]; do echo waiting; sleep 1; done;"
-                        + "echo finished waiting;"
-                        + "rm \""
-                        + f2
-                        + "\""
-                        + "'\n"
-                        + "echo 'OK, done'\n"
-                        + "}";
+        String script = "node('"
+                + node.getNodeName()
+                + "') {\n"
+                + "  sh '"
+                + "touch \""
+                + f2
+                + "\";"
+                + "while [ -f \""
+                + f1
+                + "\" ]; do echo waiting; sleep 1; done;"
+                + "echo finished waiting;"
+                + "rm \""
+                + f2
+                + "\""
+                + "'\n"
+                + "echo 'OK, done'\n"
+                + "}";
         project.setDefinition(new CpsFlowDefinition(script, true));
 
         WorkflowRun build = project.scheduleBuild2(0).waitForStart();
@@ -145,9 +143,8 @@ public class PipelineJobTest {
         for (int i = 0; i < numSemaphores; i++) {
             sb.append("  semaphore 'wait-").append(i).append("'\n");
         }
-        sb.append(
-                "  isUnix() ? sh('echo ON_SWARM_CLIENT=$ON_SWARM_CLIENT') : bat('echo"
-                        + " ON_SWARM_CLIENT=%ON_SWARM_CLIENT%')");
+        sb.append("  isUnix() ? sh('echo ON_SWARM_CLIENT=$ON_SWARM_CLIENT') : bat('echo"
+                + " ON_SWARM_CLIENT=%ON_SWARM_CLIENT%')");
         sb.append("}\n");
 
         return sb.toString();

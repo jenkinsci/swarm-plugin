@@ -21,10 +21,6 @@ public final class RestrictiveEntityResolver implements EntityResolver {
     @Override
     public InputSource resolveEntity(String publicId, String systemId) throws SAXException {
         throw new SAXException(
-                "Refusing to resolve entity with publicId("
-                        + publicId
-                        + ") and systemId ("
-                        + systemId
-                        + ")");
+                "Refusing to resolve entity with publicId(" + publicId + ") and systemId (" + systemId + ")");
     }
 }

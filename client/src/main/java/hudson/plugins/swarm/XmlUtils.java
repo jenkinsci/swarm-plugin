@@ -1,25 +1,21 @@
 package hudson.plugins.swarm;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 public final class XmlUtils {
 
-    private static final Logger logger =
-            LogManager.getLogManager().getLogger(XmlUtils.class.getName());
+    private static final Logger logger = LogManager.getLogManager().getLogger(XmlUtils.class.getName());
 
     /**
      * Parse the supplied XML stream data to a {@link Document}.
@@ -31,8 +27,7 @@ public final class XmlUtils {
      * @throws SAXException Error parsing the XML stream data e.g. badly formed XML.
      * @throws IOException Error reading from the steam.
      */
-    public static @NonNull Document parse(@NonNull InputStream stream)
-            throws IOException, SAXException {
+    public static @NonNull Document parse(@NonNull InputStream stream) throws IOException, SAXException {
         DocumentBuilder docBuilder;
 
         try {
@@ -54,20 +49,13 @@ public final class XmlUtils {
         // but looks like there's no other choice.
         documentBuilderFactory.setXIncludeAware(false);
         documentBuilderFactory.setExpandEntityReferences(false);
+        setDocumentBuilderFactoryFeature(documentBuilderFactory, XMLConstants.FEATURE_SECURE_PROCESSING, true);
         setDocumentBuilderFactoryFeature(
-                documentBuilderFactory, XMLConstants.FEATURE_SECURE_PROCESSING, true);
+                documentBuilderFactory, "http://xml.org/sax/features/external-general-entities", false);
         setDocumentBuilderFactoryFeature(
-                documentBuilderFactory,
-                "http://xml.org/sax/features/external-general-entities",
-                false);
+                documentBuilderFactory, "http://xml.org/sax/features/external-parameter-entities", false);
         setDocumentBuilderFactoryFeature(
-                documentBuilderFactory,
-                "http://xml.org/sax/features/external-parameter-entities",
-                false);
-        setDocumentBuilderFactoryFeature(
-                documentBuilderFactory,
-                "http://apache.org/xml/features/disallow-doctype-decl",
-                true);
+                documentBuilderFactory, "http://apache.org/xml/features/disallow-doctype-decl", true);
 
         return documentBuilderFactory;
     }
@@ -79,9 +67,7 @@ public final class XmlUtils {
         } catch (Exception e) {
             logger.log(
                     Level.WARNING,
-                    String.format(
-                            "Failed to set the XML Document Builder factory feature %s to %s",
-                            feature, state),
+                    String.format("Failed to set the XML Document Builder factory feature %s to %s", feature, state),
                     e);
         }
     }

@@ -14,19 +14,6 @@ import hudson.plugins.swarm.test.SwarmClientRule;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
-
-import org.apache.commons.lang.RandomStringUtils;
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.BuildWatcher;
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -44,16 +31,29 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import org.apache.commons.lang.RandomStringUtils;
+import org.junit.After;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.BuildWatcher;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
 public class SwarmClientIntegrationTest {
 
-    @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
+    @ClassRule
+    public static BuildWatcher buildWatcher = new BuildWatcher();
 
     @Rule(order = 10)
     public JenkinsRule j = new JenkinsRule();
 
     @Rule(order = 20)
-    public TemporaryFolder temporaryFolder = TemporaryFolder.builder().assureDeletion().build();
+    public TemporaryFolder temporaryFolder =
+            TemporaryFolder.builder().assureDeletion().build();
 
     @Rule(order = 21)
     public TemporaryFolder temporaryRemotingFolder =
@@ -83,8 +83,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void environmentVariables() throws Exception {
-        Node node =
-                swarmClientRule.createSwarmClient("-e", "SWARM_VAR_1=foo", "-e", "SWARM_VAR_2=bar");
+        Node node = swarmClientRule.createSwarmClient("-e", "SWARM_VAR_1=foo", "-e", "SWARM_VAR_2=bar");
 
         FreeStyleProject project = j.createFreeStyleProject();
         project.setConcurrentBuild(false);
@@ -194,8 +193,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void pidFilePreventsStart() throws Exception {
-        Assume.assumeFalse(
-                "TODO Windows container agents cannot run this test", Functions.isWindows());
+        Assume.assumeFalse("TODO Windows container agents cannot run this test", Functions.isWindows());
         Path pidFile = getPidFile();
         // Start the first client with a PID file and ensure it's up.
         swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
@@ -215,15 +213,15 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void pidFileForOtherProcessIsIgnored() throws Exception {
-        Assume.assumeFalse(
-                "TODO Windows container agents cannot run this test", Functions.isWindows());
+        Assume.assumeFalse("TODO Windows container agents cannot run this test", Functions.isWindows());
         Path pidFile = getPidFile();
         Process sleep = new ProcessBuilder().command("sleep", "60").start();
         try {
             Files.writeString(pidFile, Long.toString(sleep.pid()), StandardCharsets.US_ASCII);
 
             // PID file should be ignored since the process command doesn't match our own.
-            swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
+            swarmClientRule.createSwarmClient(
+                    "-pidFile", pidFile.toAbsolutePath().toString());
 
             long newPid = readPidFromFile(pidFile);
 
@@ -238,8 +236,7 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void pidFileForStaleProcessIsIgnored() throws Exception {
-        Assume.assumeFalse(
-                "TODO Windows container agents cannot run this test", Functions.isWindows());
+        Assume.assumeFalse("TODO Windows container agents cannot run this test", Functions.isWindows());
         Path pidFile = getPidFile();
         Files.writeString(pidFile, "66000", StandardCharsets.US_ASCII);
 
@@ -270,22 +267,17 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void webSocketHeaders() throws IOException, InterruptedException {
-        swarmClientRule.createSwarmClient(
-                "-webSocket", "-webSocketHeader", "WS_HEADER=HEADER_VALUE");
+        swarmClientRule.createSwarmClient("-webSocket", "-webSocketHeader", "WS_HEADER=HEADER_VALUE");
     }
 
     @Test
-    public void webSocketHeadersFailsIfNoWebSocketArgument()
-            throws IOException, InterruptedException {
-        startFailingSwarmClient(
-                j.getURL(), "should_fail", "-webSocketHeader", "WS_HEADER=HEADER_VALUE");
+    public void webSocketHeadersFailsIfNoWebSocketArgument() throws IOException, InterruptedException {
+        startFailingSwarmClient(j.getURL(), "should_fail", "-webSocketHeader", "WS_HEADER=HEADER_VALUE");
     }
 
     @Test
     public void pidFileDeletedOnExit() throws Exception {
-        Assume.assumeFalse(
-                "TODO The PID file doesn't seem to be deleted on exit on Windows",
-                Functions.isWindows());
+        Assume.assumeFalse("TODO The PID file doesn't seem to be deleted on exit on Windows", Functions.isWindows());
 
         Path pidFile = getPidFile();
         swarmClientRule.createSwarmClient("-pidFile", pidFile.toAbsolutePath().toString());
@@ -304,8 +296,7 @@ public class SwarmClientIntegrationTest {
      * @return a dedicated unique PID file object for an as yet non-existent file.
      */
     private Path getPidFile() throws IOException {
-        Path pidFile =
-                Files.createTempFile(temporaryFolder.getRoot().toPath(), "swarm-client", ".pid");
+        Path pidFile = Files.createTempFile(temporaryFolder.getRoot().toPath(), "swarm-client", ".pid");
         // We want the process to create it, here we just want a unique name.
         Files.delete(pidFile);
         return pidFile;
@@ -315,28 +306,21 @@ public class SwarmClientIntegrationTest {
         return Long.parseLong(Files.readString(pidFile, StandardCharsets.US_ASCII));
     }
 
-    private void addRemoveLabelsViaFile(
-            Set<String> labelsToRemove, Set<String> labelsToAdd, boolean withUniqueId)
+    private void addRemoveLabelsViaFile(Set<String> labelsToRemove, Set<String> labelsToAdd, boolean withUniqueId)
             throws Exception {
-        Path labelsFile =
-                Files.createTempFile(temporaryFolder.getRoot().toPath(), "labelsFile", ".txt");
+        Path labelsFile = Files.createTempFile(temporaryFolder.getRoot().toPath(), "labelsFile", ".txt");
 
         Node node;
         if (withUniqueId) {
-            node =
-                    swarmClientRule.createSwarmClient(
-                            "-labelsFile",
-                            labelsFile.toAbsolutePath().toString(),
-                            "-labels",
-                            encode(labelsToRemove));
+            node = swarmClientRule.createSwarmClient(
+                    "-labelsFile", labelsFile.toAbsolutePath().toString(), "-labels", encode(labelsToRemove));
         } else {
-            node =
-                    swarmClientRule.createSwarmClient(
-                            "-disableClientsUniqueId",
-                            "-labelsFile",
-                            labelsFile.toAbsolutePath().toString(),
-                            "-labels",
-                            encode(labelsToRemove));
+            node = swarmClientRule.createSwarmClient(
+                    "-disableClientsUniqueId",
+                    "-labelsFile",
+                    labelsFile.toAbsolutePath().toString(),
+                    "-labels",
+                    encode(labelsToRemove));
         }
 
         String origLabels = node.getLabelString();
@@ -375,8 +359,7 @@ public class SwarmClientIntegrationTest {
         Node node = swarmClientRule.createSwarmClient("-description", "foobar");
         assertTrue(
                 node.getNodeDescription(),
-                Pattern.matches(
-                        "Swarm agent from ([a-zA-Z_0-9-.]+): foobar", node.getNodeDescription()));
+                Pattern.matches("Swarm agent from ([a-zA-Z_0-9-.]+): foobar", node.getNodeDescription()));
     }
 
     @Test
@@ -411,8 +394,7 @@ public class SwarmClientIntegrationTest {
     @Test
     public void disableWorkDirRunsInLegacyMode() throws Exception {
         File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
-        swarmClientRule.createSwarmClient(
-                "-fsroot", fsRootPath.getAbsolutePath(), "-disableWorkDir");
+        swarmClientRule.createSwarmClient("-fsroot", fsRootPath.getAbsolutePath(), "-disableWorkDir");
 
         assertDirectories(fsRootPath);
         assertNoDirectories(
@@ -432,11 +414,7 @@ public class SwarmClientIntegrationTest {
                 workDirPath.getParent(),
                 "-failIfWorkDirIsMissing");
 
-        assertDirectories(
-                fsRootPath,
-                workDirPath,
-                new File(workDirPath, "logs"),
-                new File(workDirPath, "jarCache"));
+        assertDirectories(fsRootPath, workDirPath, new File(workDirPath, "logs"), new File(workDirPath, "jarCache"));
     }
 
     @Test
@@ -480,8 +458,7 @@ public class SwarmClientIntegrationTest {
     @Test
     public void internalDirWithCustomPath() throws Exception {
         File fsRootPath = temporaryRemotingFolder.newFolder("fsrootdir");
-        swarmClientRule.createSwarmClient(
-                "-fsroot", fsRootPath.getAbsolutePath(), "-internalDir", "custominternaldir");
+        swarmClientRule.createSwarmClient("-fsroot", fsRootPath.getAbsolutePath(), "-internalDir", "custominternaldir");
 
         assertDirectories(
                 fsRootPath,
@@ -498,10 +475,7 @@ public class SwarmClientIntegrationTest {
                 "-fsroot", fsRootPath.getAbsolutePath(), "-jar-cache", jarCachePath.getPath());
 
         assertDirectories(
-                fsRootPath,
-                new File(fsRootPath, "remoting"),
-                new File(fsRootPath, "remoting/logs"),
-                jarCachePath);
+                fsRootPath, new File(fsRootPath, "remoting"), new File(fsRootPath, "remoting/logs"), jarCachePath);
     }
 
     @Test
@@ -545,9 +519,8 @@ public class SwarmClientIntegrationTest {
                         + "retry: 0\n",
                 StandardCharsets.UTF_8);
 
-        Node node =
-                swarmClientRule.createSwarmClientWithoutDefaultArgs(
-                        "node-yml", "-config", config.toAbsolutePath().toString());
+        Node node = swarmClientRule.createSwarmClientWithoutDefaultArgs(
+                "node-yml", "-config", config.toAbsolutePath().toString());
         assertEquals("node-yml", node.getNodeName());
         assertEquals(5, node.getNumExecutors());
         assertTrue(node.getNodeDescription().endsWith("yaml config node"));
@@ -595,13 +568,11 @@ public class SwarmClientIntegrationTest {
     }
 
     private static void assertDirectories(File... paths) {
-        Stream.of(paths)
-                .forEach(path -> assertTrue(path.getPath() + " exists", path.isDirectory()));
+        Stream.of(paths).forEach(path -> assertTrue(path.getPath() + " exists", path.isDirectory()));
     }
 
     private static void assertNoDirectories(File... paths) {
-        Stream.of(paths)
-                .forEach(path -> assertFalse(path.getPath() + " not exists", path.isDirectory()));
+        Stream.of(paths).forEach(path -> assertFalse(path.getPath() + " not exists", path.isDirectory()));
     }
 
     /**
@@ -613,13 +584,11 @@ public class SwarmClientIntegrationTest {
     private void startFailingSwarmClient(URL url, String agentName, String... args)
             throws IOException, InterruptedException {
         // Download the Swarm client JAR from the Jenkins controller.
-        Path swarmClientJar =
-                Files.createTempFile(temporaryFolder.getRoot().toPath(), "swarm-client", ".jar");
+        Path swarmClientJar = Files.createTempFile(temporaryFolder.getRoot().toPath(), "swarm-client", ".jar");
         swarmClientRule.download(swarmClientJar);
 
         // Form the list of command-line arguments.
-        List<String> command =
-                SwarmClientRule.getCommand(swarmClientJar, url, agentName, null, null, args);
+        List<String> command = SwarmClientRule.getCommand(swarmClientJar, url, agentName, null, null, args);
 
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.directory(temporaryFolder.newFolder());
@@ -644,13 +613,8 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void keepDisconnectedClients() throws Exception {
-        SwarmSlave swarmNode =
-                (SwarmSlave)
-                        swarmClientRule.createSwarmClientWithName(
-                                "keepagent",
-                                "-keepDisconnectedClients",
-                                "-deleteExistingClients",
-                                "-disableClientsUniqueId");
+        SwarmSlave swarmNode = (SwarmSlave) swarmClientRule.createSwarmClientWithName(
+                "keepagent", "-keepDisconnectedClients", "-deleteExistingClients", "-disableClientsUniqueId");
 
         assertNotNull(swarmNode);
         assertNotNull(swarmNode.getNodeProperty(KeepSwarmClientNodeProperty.class));
@@ -670,10 +634,8 @@ public class SwarmClientIntegrationTest {
 
     @Test
     public void removeDisconnectedClients() throws Exception {
-        SwarmSlave swarmNode =
-                (SwarmSlave)
-                        swarmClientRule.createSwarmClientWithName(
-                                "deleteagent", "-deleteExistingClients", "-disableClientsUniqueId");
+        SwarmSlave swarmNode = (SwarmSlave) swarmClientRule.createSwarmClientWithName(
+                "deleteagent", "-deleteExistingClients", "-disableClientsUniqueId");
 
         assertNotNull(swarmNode);
         assertNull(swarmNode.getNodeProperty(KeepSwarmClientNodeProperty.class));

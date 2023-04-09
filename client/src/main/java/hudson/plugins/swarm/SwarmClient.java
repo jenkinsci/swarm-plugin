@@ -1,10 +1,8 @@
 package hudson.plugins.swarm;
 
 import com.sun.net.httpserver.HttpServer;
-
 import hudson.remoting.Launcher;
 import hudson.remoting.jnlp.Main;
-
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmHeapPressureMetrics;
@@ -15,12 +13,6 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.binder.system.UptimeMetrics;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.Text;
-import org.xml.sax.SAXException;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,12 +55,15 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.Text;
+import org.xml.sax.SAXException;
 
 public class SwarmClient {
 
@@ -91,14 +86,12 @@ public class SwarmClient {
         if (options.labelsFile != null) {
             logger.info("Loading labels from " + options.labelsFile + "...");
             try {
-                String labels =
-                        Files.readString(Paths.get(options.labelsFile), StandardCharsets.UTF_8);
+                String labels = Files.readString(Paths.get(options.labelsFile), StandardCharsets.UTF_8);
                 options.labels.addAll(List.of(labels.trim().split("\\s+")));
                 logger.info("Labels found in file: " + labels);
                 logger.info("Effective label list: " + Arrays.toString(options.labels.toArray()));
             } catch (IOException e) {
-                throw new UncheckedIOException(
-                        "Problem reading labels from file " + options.labelsFile, e);
+                throw new UncheckedIOException("Problem reading labels from file " + options.labelsFile, e);
             }
         }
 
@@ -163,10 +156,7 @@ public class SwarmClient {
 
         try {
             return launcher.parseJnlpArguments();
-        } catch (InterruptedException
-                | ParserConfigurationException
-                | RuntimeException
-                | SAXException e) {
+        } catch (InterruptedException | ParserConfigurationException | RuntimeException | SAXException e) {
             throw new RetryException("Failed get JNLP arguments for " + url, e);
         }
     }
@@ -201,8 +191,7 @@ public class SwarmClient {
         }
 
         if (!options.disableWorkDir) {
-            String workDirPath =
-                    options.workDir != null ? options.workDir.getPath() : options.fsroot.getPath();
+            String workDirPath = options.workDir != null ? options.workDir.getPath() : options.fsroot.getPath();
             args.add("-workDir");
             args.add(workDirPath);
 
@@ -261,12 +250,9 @@ public class SwarmClient {
             SSLContext sslContext;
             try {
                 sslContext = SSLContext.getInstance("TLS");
-                String trusted =
-                        clientOptions.disableSslVerification ? "" : clientOptions.sslFingerprints;
+                String trusted = clientOptions.disableSslVerification ? "" : clientOptions.sslFingerprints;
                 sslContext.init(
-                        new KeyManager[0],
-                        new TrustManager[] {new DefaultTrustManager(trusted)},
-                        new SecureRandom());
+                        new KeyManager[0], new TrustManager[] {new DefaultTrustManager(trusted)}, new SecureRandom());
             } catch (GeneralSecurityException e) {
                 logger.log(Level.SEVERE, "An error occurred", e);
                 throw new IllegalStateException(e);
@@ -275,9 +261,7 @@ public class SwarmClient {
             SSLContext.setDefault(sslContext);
 
             if (clientOptions.disableSslVerification) {
-                System.setProperty(
-                        "jdk.internal.httpclient.disableHostnameVerification",
-                        Boolean.toString(true));
+                System.setProperty("jdk.internal.httpclient.disableHostnameVerification", Boolean.toString(true));
             }
         }
 
@@ -291,10 +275,7 @@ public class SwarmClient {
             logger.fine("Setting HttpClient credentials based on options passed");
 
             String auth = clientOptions.username + ":" + clientOptions.password;
-            String encoded =
-                    "Basic "
-                            + Base64.getEncoder()
-                                    .encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+            String encoded = "Basic " + Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
             builder.header("Authorization", encoded);
         }
     }
@@ -305,13 +286,9 @@ public class SwarmClient {
 
         String[] crumbResponse;
 
-        URI uri =
-                URI.create(
-                        url
-                                + "crumbIssuer/api/xml?xpath="
-                                + URLEncoder.encode(
-                                        "concat(//crumbRequestField,\":\",//crumb)",
-                                        StandardCharsets.UTF_8));
+        URI uri = URI.create(url
+                + "crumbIssuer/api/xml?xpath="
+                + URLEncoder.encode("concat(//crumbRequestField,\":\",//crumb)", StandardCharsets.UTF_8));
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri).GET();
         SwarmClient.addAuthorizationHeader(builder, options);
         HttpRequest request = builder.build();
@@ -343,22 +320,15 @@ public class SwarmClient {
         if (options.toolLocations != null) {
             for (Map.Entry<String, String> toolLocation : options.toolLocations.entrySet()) {
                 toolLocationBuilder.append(
-                        param(
-                                "toolLocation",
-                                toolLocation.getKey() + ":" + toolLocation.getValue()));
+                        param("toolLocation", toolLocation.getKey() + ":" + toolLocation.getValue()));
             }
         }
 
         StringBuilder environmentVariablesBuilder = new StringBuilder();
         if (options.environmentVariables != null) {
-            for (Map.Entry<String, String> environmentVariable :
-                    options.environmentVariables.entrySet()) {
-                environmentVariablesBuilder.append(
-                        param(
-                                "environmentVariable",
-                                environmentVariable.getKey()
-                                        + ":"
-                                        + environmentVariable.getValue()));
+            for (Map.Entry<String, String> environmentVariable : options.environmentVariables.entrySet()) {
+                environmentVariablesBuilder.append(param(
+                        "environmentVariable", environmentVariable.getKey() + ":" + environmentVariable.getValue()));
             }
         }
 
@@ -370,28 +340,21 @@ public class SwarmClient {
         Properties props = new Properties();
 
         HttpClient client = createHttpClient(options);
-        URI uri =
-                URI.create(
-                        url
-                                + "plugin/swarm/createSlave?name="
-                                + options.name
-                                + "&executors="
-                                + options.executors
-                                + param("remoteFsRoot", options.fsroot.getAbsolutePath())
-                                + param("description", options.description)
-                                + param("labels", sMyLabels)
-                                + toolLocationBuilder
-                                + environmentVariablesBuilder
-                                + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
-                                + param("hash", hash)
-                                + param(
-                                        "deleteExistingClients",
-                                        Boolean.toString(options.deleteExistingClients))
-                                + param(
-                                        "keepDisconnectedClients",
-                                        Boolean.toString(options.keepDisconnectedClients)));
-        HttpRequest.Builder builder =
-                HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
+        URI uri = URI.create(url
+                + "plugin/swarm/createSlave?name="
+                + options.name
+                + "&executors="
+                + options.executors
+                + param("remoteFsRoot", options.fsroot.getAbsolutePath())
+                + param("description", options.description)
+                + param("labels", sMyLabels)
+                + toolLocationBuilder
+                + environmentVariablesBuilder
+                + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
+                + param("hash", hash)
+                + param("deleteExistingClients", Boolean.toString(options.deleteExistingClients))
+                + param("keepDisconnectedClients", Boolean.toString(options.keepDisconnectedClients)));
+        HttpRequest.Builder builder = HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
         SwarmClient.addAuthorizationHeader(builder, options);
         Crumb csrfCrumb = getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
@@ -399,14 +362,11 @@ public class SwarmClient {
         }
         HttpRequest request = builder.build();
 
-        HttpResponse<InputStream> response =
-                client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
         if (response.statusCode() != HttpURLConnection.HTTP_OK) {
-            throw new RetryException(
-                    String.format(
-                            "Failed to create a Swarm agent on Jenkins. Response code: %s%n%s",
-                            response.statusCode(),
-                            new String(response.body().readAllBytes(), StandardCharsets.UTF_8)));
+            throw new RetryException(String.format(
+                    "Failed to create a Swarm agent on Jenkins. Response code: %s%n%s",
+                    response.statusCode(), new String(response.body().readAllBytes(), StandardCharsets.UTF_8)));
         }
 
         try (InputStream stream = response.body()) {
@@ -443,17 +403,10 @@ public class SwarmClient {
         }
     }
 
-    static synchronized void postLabelRemove(
-            String name, String labels, HttpClient client, Options options, URL url)
+    static synchronized void postLabelRemove(String name, String labels, HttpClient client, Options options, URL url)
             throws IOException, InterruptedException, RetryException {
-        URI uri =
-                URI.create(
-                        url
-                                + "plugin/swarm/removeSlaveLabels?name="
-                                + name
-                                + SwarmClient.param("labels", labels));
-        HttpRequest.Builder builder =
-                HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
+        URI uri = URI.create(url + "plugin/swarm/removeSlaveLabels?name=" + name + SwarmClient.param("labels", labels));
+        HttpRequest.Builder builder = HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
         SwarmClient.addAuthorizationHeader(builder, options);
         Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
@@ -463,21 +416,15 @@ public class SwarmClient {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != HttpURLConnection.HTTP_OK) {
-            throw new RetryException(
-                    String.format(
-                            "Failed to remove agent labels. Response code: %s%n%s",
-                            response.statusCode(), response.body()));
+            throw new RetryException(String.format(
+                    "Failed to remove agent labels. Response code: %s%n%s", response.statusCode(), response.body()));
         }
     }
 
-    static synchronized void postLabelAppend(
-            String name, String labels, HttpClient client, Options options, URL url)
+    static synchronized void postLabelAppend(String name, String labels, HttpClient client, Options options, URL url)
             throws IOException, InterruptedException, RetryException {
-        URI uri =
-                URI.create(
-                        url + "plugin/swarm/addSlaveLabels?name=" + name + param("labels", labels));
-        HttpRequest.Builder builder =
-                HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
+        URI uri = URI.create(url + "plugin/swarm/addSlaveLabels?name=" + name + param("labels", labels));
+        HttpRequest.Builder builder = HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
         SwarmClient.addAuthorizationHeader(builder, options);
         Crumb csrfCrumb = getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
@@ -487,10 +434,8 @@ public class SwarmClient {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != HttpURLConnection.HTTP_OK) {
-            throw new RetryException(
-                    String.format(
-                            "Failed to update agent labels. Response code: %s%n%s",
-                            response.statusCode(), response.body()));
+            throw new RetryException(String.format(
+                    "Failed to update agent labels. Response code: %s%n%s", response.statusCode(), response.body()));
         }
     }
 
@@ -500,8 +445,7 @@ public class SwarmClient {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
-    private static synchronized String param(String name, String value)
-            throws UnsupportedEncodingException {
+    private static synchronized String param(String name, String value) throws UnsupportedEncodingException {
         logger.finer("param() invoked");
 
         if (value == null) {
@@ -518,9 +462,7 @@ public class SwarmClient {
                 Element element = (Element) node;
                 if (element.getTagName().equals(tagName)) {
                     StringBuilder buf = new StringBuilder();
-                    for (node = element.getFirstChild();
-                            node != null;
-                            node = node.getNextSibling()) {
+                    for (node = element.getFirstChild(); node != null; node = node.getNextSibling()) {
                         if (node instanceof Text) {
                             buf.append(node.getTextContent());
                         }
@@ -600,8 +542,7 @@ public class SwarmClient {
 
     private void startPrometheusService(int port) {
         logger.fine("Starting Prometheus service on port " + port);
-        PrometheusMeterRegistry prometheusRegistry =
-                new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        PrometheusMeterRegistry prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
         // Add some standard metrics to the registry
         new ClassLoaderMetrics().bindTo(prometheusRegistry);
         new FileDescriptorMetrics().bindTo(prometheusRegistry);
@@ -614,16 +555,14 @@ public class SwarmClient {
 
         try {
             prometheusServer = HttpServer.create(new InetSocketAddress(port), 0);
-            prometheusServer.createContext(
-                    "/prometheus",
-                    httpExchange -> {
-                        String response = prometheusRegistry.scrape();
-                        byte[] responseContent = response.getBytes(StandardCharsets.UTF_8);
-                        httpExchange.sendResponseHeaders(200, responseContent.length);
-                        try (OutputStream os = httpExchange.getResponseBody()) {
-                            os.write(responseContent);
-                        }
-                    });
+            prometheusServer.createContext("/prometheus", httpExchange -> {
+                String response = prometheusRegistry.scrape();
+                byte[] responseContent = response.getBytes(StandardCharsets.UTF_8);
+                httpExchange.sendResponseHeaders(200, responseContent.length);
+                try (OutputStream os = httpExchange.getResponseBody()) {
+                    os.write(responseContent);
+                }
+            });
 
             new Thread(prometheusServer::start).start();
         } catch (IOException e) {
@@ -643,8 +582,7 @@ public class SwarmClient {
         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {}
 
         @Override
-        public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
-                throws CertificateException {
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
             if (allowedFingerprints.isEmpty()) {
                 return;
             }

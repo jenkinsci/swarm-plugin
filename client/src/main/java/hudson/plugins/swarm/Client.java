@@ -1,11 +1,5 @@
 package hudson.plugins.swarm;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.NamedOptionDef;
-import org.kohsuke.args4j.spi.FieldSetter;
-import org.kohsuke.args4j.spi.OptionHandler;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -21,6 +15,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.NamedOptionDef;
+import org.kohsuke.args4j.spi.FieldSetter;
+import org.kohsuke.args4j.spi.OptionHandler;
 
 public class Client {
 
@@ -71,13 +70,8 @@ public class Client {
 
     private static boolean hasConflictingOptions(CmdLineParser parser) {
         return parser.getOptions().stream()
-                .anyMatch(
-                        oh ->
-                                !getKey(oh).equals("-config")
-                                        && !isDefaultOption(
-                                                getKey(oh),
-                                                getValue(oh),
-                                                new CmdLineParser(new Options())));
+                .anyMatch(oh -> !getKey(oh).equals("-config")
+                        && !isDefaultOption(getKey(oh), getValue(oh), new CmdLineParser(new Options())));
     }
 
     private static void validateOptions(Options options) {
@@ -110,37 +104,25 @@ public class Client {
                         String curCommand = current.info().command().orElse(null);
                         String oldCommand = oldProcess.get().info().command().orElse(null);
                         if (curCommand != null && curCommand.equals(oldCommand)) {
-                            throw new IllegalStateException(
-                                    String.format(
-                                            "Refusing to start because PID file '%s' already exists"
-                                                    + " and the previous process %d (%s) is still"
-                                                    + " running.",
-                                            pidFile.toAbsolutePath(),
-                                            oldPid,
-                                            oldProcess
-                                                    .get()
-                                                    .info()
-                                                    .commandLine()
-                                                    .orElse("unknown")));
+                            throw new IllegalStateException(String.format(
+                                    "Refusing to start because PID file '%s' already exists"
+                                            + " and the previous process %d (%s) is still"
+                                            + " running.",
+                                    pidFile.toAbsolutePath(),
+                                    oldPid,
+                                    oldProcess.get().info().commandLine().orElse("unknown")));
                         } else {
-                            logger.warning(
-                                    String.format(
-                                            "Ignoring stale PID file '%s' because the process %d"
-                                                + " (%s) is not a Swarm Client.",
-                                            pidFile.toAbsolutePath(),
-                                            oldPid,
-                                            oldProcess
-                                                    .get()
-                                                    .info()
-                                                    .commandLine()
-                                                    .orElse("unknown")));
+                            logger.warning(String.format(
+                                    "Ignoring stale PID file '%s' because the process %d"
+                                            + " (%s) is not a Swarm Client.",
+                                    pidFile.toAbsolutePath(),
+                                    oldPid,
+                                    oldProcess.get().info().commandLine().orElse("unknown")));
                         }
                     } else {
-                        logger.fine(
-                                String.format(
-                                        "Ignoring PID file '%s' because the previous process %d is"
-                                                + " no longer running.",
-                                        pidFile.toAbsolutePath(), oldPid));
+                        logger.fine(String.format(
+                                "Ignoring PID file '%s' because the previous process %d is no longer running.",
+                                pidFile.toAbsolutePath(), oldPid));
                     }
                 }
             }
@@ -160,9 +142,8 @@ public class Client {
         // read pass from file if no other password was specified
         if (options.password == null && options.passwordFile != null) {
             try {
-                options.password =
-                        Files.readString(Paths.get(options.passwordFile), StandardCharsets.UTF_8)
-                                .trim();
+                options.password = Files.readString(Paths.get(options.passwordFile), StandardCharsets.UTF_8)
+                        .trim();
             } catch (IOException e) {
                 throw new UncheckedIOException("Failed to read password from file", e);
             }
@@ -182,12 +163,8 @@ public class Client {
             try {
                 options.name = InetAddress.getLocalHost().getCanonicalHostName();
             } catch (UnknownHostException e) {
-                logger.severe(
-                        "Failed to look up the canonical hostname of this agent. Check the system"
-                                + " DNS settings.");
-                logger.severe(
-                        "If it is not possible to resolve this host, specify a name using the"
-                                + " \"-name\" option.");
+                logger.severe("Failed to look up the canonical hostname of this agent. Check the system DNS settings.");
+                logger.severe("If it is not possible to resolve this host, specify a name using the \"-name\" option.");
                 throw new UncheckedIOException("Failed to set hostname", e);
             }
         }
@@ -198,8 +175,7 @@ public class Client {
      *
      * <p>This method never returns.
      */
-    static void run(SwarmClient swarmClient, Options options, String... args)
-            throws InterruptedException {
+    static void run(SwarmClient swarmClient, Options options, String... args) throws InterruptedException {
         logger.info("Connecting to Jenkins controller");
         URL url = swarmClient.getUrl();
 
@@ -224,8 +200,7 @@ public class Client {
                  */
                 if (options.labelsFile != null) {
                     logger.info("Setting up LabelFileWatcher");
-                    LabelFileWatcher l =
-                            new LabelFileWatcher(url, options, swarmClient.getName(), args);
+                    LabelFileWatcher l = new LabelFileWatcher(url, options, swarmClient.getName(), args);
                     Thread labelFileWatcherThread = new Thread(l, "LabelFileWatcher");
                     labelFileWatcherThread.setDaemon(true);
                     labelFileWatcherThread.start();
@@ -235,8 +210,7 @@ public class Client {
                  * Prevent Remoting from killing the process on JNLP agent endpoint resolution
                  * exceptions.
                  */
-                if (System.getProperty(NON_FATAL_JNLP_AGENT_ENDPOINT_RESOLUTION_EXCEPTIONS)
-                        == null) {
+                if (System.getProperty(NON_FATAL_JNLP_AGENT_ENDPOINT_RESOLUTION_EXCEPTIONS) == null) {
                     System.setProperty(NON_FATAL_JNLP_AGENT_ENDPOINT_RESOLUTION_EXCEPTIONS, "true");
                 }
 
@@ -255,8 +229,7 @@ public class Client {
             }
 
             int waitTime =
-                    options.retryBackOffStrategy.waitForRetry(
-                            retry++, options.retryInterval, options.maxRetryInterval);
+                    options.retryBackOffStrategy.waitForRetry(retry++, options.retryInterval, options.maxRetryInterval);
             if (options.retry >= 0) {
                 if (retry >= options.retry) {
                     logger.severe("Retry limit reached, exiting...");
@@ -286,8 +259,7 @@ public class Client {
         logger.info(sb.toString());
     }
 
-    private static void logValue(
-            StringBuilder sb, OptionHandler<?> handler, CmdLineParser defaultParser) {
+    private static void logValue(StringBuilder sb, OptionHandler<?> handler, CmdLineParser defaultParser) {
         String key = getKey(handler);
         Object value = getValue(handler);
 

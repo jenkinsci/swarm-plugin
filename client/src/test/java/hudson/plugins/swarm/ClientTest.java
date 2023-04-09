@@ -4,9 +4,8 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertThrows;
 
-import org.junit.Test;
-
 import java.net.URL;
+import org.junit.Test;
 
 public class ClientTest {
 
@@ -86,8 +85,7 @@ public class ClientTest {
 
         @Override
         public void exitWithStatus(int status) {
-            throw new IllegalStateException(
-                    "Exited with status " + status + " after " + totalWaitTime + " seconds");
+            throw new IllegalStateException("Exited with status " + status + " after " + totalWaitTime + " seconds");
         }
 
         @Override
