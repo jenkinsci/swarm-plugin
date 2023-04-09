@@ -3,7 +3,6 @@ package hudson.plugins.swarm.test;
 import com.michelin.cio.hudson.plugins.rolestrategy.Role;
 import com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy;
 import com.michelin.cio.hudson.plugins.rolestrategy.RoleMap;
-
 import hudson.model.Computer;
 import hudson.model.User;
 import hudson.security.AuthorizationStrategy;
@@ -11,17 +10,14 @@ import hudson.security.GlobalMatrixAuthorizationStrategy;
 import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
 import hudson.security.csrf.DefaultCrumbIssuer;
-
-import jenkins.model.Jenkins;
-
-import org.jenkinsci.plugins.matrixauth.AuthorizationType;
-import org.jenkinsci.plugins.matrixauth.PermissionEntry;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.matrixauth.AuthorizationType;
+import org.jenkinsci.plugins.matrixauth.PermissionEntry;
 
 /**
  * A helper class that configures the test Jenkins controller with various realistic global security
@@ -73,8 +69,7 @@ public class GlobalSecurityConfigurationBuilder {
         return this;
     }
 
-    public GlobalSecurityConfigurationBuilder setAuthorizationStrategy(
-            AuthorizationStrategy authorizationStrategy) {
+    public GlobalSecurityConfigurationBuilder setAuthorizationStrategy(AuthorizationStrategy authorizationStrategy) {
         this.authorizationStrategy = authorizationStrategy;
         return this;
     }
@@ -102,8 +97,7 @@ public class GlobalSecurityConfigurationBuilder {
 
         // Configure the authorization strategy.
         if (authorizationStrategy instanceof GlobalMatrixAuthorizationStrategy) {
-            GlobalMatrixAuthorizationStrategy strategy =
-                    (GlobalMatrixAuthorizationStrategy) authorizationStrategy;
+            GlobalMatrixAuthorizationStrategy strategy = (GlobalMatrixAuthorizationStrategy) authorizationStrategy;
             // Not needed for testing, but is helpful when debugging test failures.
             strategy.add(Jenkins.ADMINISTER, new PermissionEntry(AuthorizationType.EITHER, adminUsername));
 
@@ -124,32 +118,21 @@ public class GlobalSecurityConfigurationBuilder {
                 strategy.add(Computer.CONFIGURE, new PermissionEntry(AuthorizationType.EITHER, swarmUsername));
             }
         } else if (authorizationStrategy instanceof RoleBasedAuthorizationStrategy) {
-            Role admin =
-                    new Role(
-                            "admin",
-                            ".*",
-                            Set.of(Jenkins.ADMINISTER.getId()),
-                            "Jenkins administrators");
-            Role readOnly =
-                    new Role("readonly", ".*", Set.of(Jenkins.READ.getId()), "Read-only users");
-            Role swarm =
-                    new Role(
-                            "swarm",
-                            ".*",
-                            Set.of(
-                                    Computer.CREATE.getId(),
-                                    Computer.CONNECT.getId(),
-                                    Computer.CONFIGURE.getId()),
-                            "Swarm users");
+            Role admin = new Role("admin", ".*", Set.of(Jenkins.ADMINISTER.getId()), "Jenkins administrators");
+            Role readOnly = new Role("readonly", ".*", Set.of(Jenkins.READ.getId()), "Read-only users");
+            Role swarm = new Role(
+                    "swarm",
+                    ".*",
+                    Set.of(Computer.CREATE.getId(), Computer.CONNECT.getId(), Computer.CONFIGURE.getId()),
+                    "Swarm users");
 
             SortedMap<Role, Set<String>> roleMap = new TreeMap<>();
             roleMap.put(admin, Set.of(adminUsername));
             roleMap.put(readOnly, Set.of("authenticated"));
             roleMap.put(swarm, Set.of(swarmUsername));
 
-            authorizationStrategy =
-                    new RoleBasedAuthorizationStrategy(
-                            Map.of(RoleBasedAuthorizationStrategy.GLOBAL, new RoleMap(roleMap)));
+            authorizationStrategy = new RoleBasedAuthorizationStrategy(
+                    Map.of(RoleBasedAuthorizationStrategy.GLOBAL, new RoleMap(roleMap)));
         }
         swarmClientRule.j.get().jenkins.setAuthorizationStrategy(authorizationStrategy);
 

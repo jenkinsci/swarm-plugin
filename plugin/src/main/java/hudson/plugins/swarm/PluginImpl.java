@@ -12,15 +12,6 @@ import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolLocationNodeProperty.ToolLocation;
-
-import jenkins.model.Jenkins;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.verb.POST;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
@@ -29,8 +20,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-
 import javax.servlet.http.HttpServletResponse;
+import jenkins.model.Jenkins;
+import org.apache.commons.lang.ArrayUtils;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.verb.POST;
 
 /**
  * Exposes an entry point to add a new Swarm agent.
@@ -55,8 +51,7 @@ public class PluginImpl extends Plugin {
 
     /** Get the list of labels for an agent. */
     @SuppressWarnings({"lgtm[jenkins/csrf]", "lgtm[jenkins/no-permission-check]"})
-    public void doGetSlaveLabels(
-            StaplerRequest req, StaplerResponse rsp, @QueryParameter String name)
+    public void doGetSlaveLabels(StaplerRequest req, StaplerResponse rsp, @QueryParameter String name)
             throws IOException {
         Node node = getNodeByName(name, rsp);
         if (node == null) {
@@ -66,8 +61,7 @@ public class PluginImpl extends Plugin {
         normalResponse(req, rsp, node.getLabelString());
     }
 
-    private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList)
-            throws IOException {
+    private void normalResponse(StaplerRequest req, StaplerResponse rsp, String sLabelList) throws IOException {
         rsp.setContentType("text/xml");
 
         try (Writer writer = rsp.getCompressedWriter(req)) {
@@ -78,10 +72,7 @@ public class PluginImpl extends Plugin {
     /** Add labels to an agent. */
     @POST
     public void doAddSlaveLabels(
-            StaplerRequest req,
-            StaplerResponse rsp,
-            @QueryParameter String name,
-            @QueryParameter String labels)
+            StaplerRequest req, StaplerResponse rsp, @QueryParameter String name, @QueryParameter String labels)
             throws IOException {
         Node node = getNodeByName(name, rsp);
         if (node == null) {
@@ -109,10 +100,7 @@ public class PluginImpl extends Plugin {
     /** Remove labels from an agent. */
     @POST
     public void doRemoveSlaveLabels(
-            StaplerRequest req,
-            StaplerResponse rsp,
-            @QueryParameter String name,
-            @QueryParameter String labels)
+            StaplerRequest req, StaplerResponse rsp, @QueryParameter String name, @QueryParameter String labels)
             throws IOException {
         Node node = getNodeByName(name, rsp);
         if (node == null) {
@@ -208,15 +196,14 @@ public class PluginImpl extends Plugin {
             if (description != null) {
                 nodeDescription += ": " + description;
             }
-            SwarmSlave agent =
-                    new SwarmSlave(
-                            name,
-                            nodeDescription,
-                            remoteFsRoot,
-                            String.valueOf(executors),
-                            mode,
-                            "swarm " + Util.fixNull(labels),
-                            nodeProperties);
+            SwarmSlave agent = new SwarmSlave(
+                    name,
+                    nodeDescription,
+                    remoteFsRoot,
+                    String.valueOf(executors),
+                    mode,
+                    "swarm " + Util.fixNull(labels),
+                    nodeProperties);
             jenkins.addNode(agent);
 
             rsp.setContentType("text/plain; charset=iso-8859-1");
@@ -249,8 +236,7 @@ public class PluginImpl extends Plugin {
                         String location = toolLoc[1];
 
                         ToolLocationNodeProperty.ToolLocation toolLocation =
-                                new ToolLocationNodeProperty.ToolLocation(
-                                        desc, inst.getName(), location);
+                                new ToolLocationNodeProperty.ToolLocation(desc, inst.getName(), location);
                         result.add(toolLocation);
                     }
                 }

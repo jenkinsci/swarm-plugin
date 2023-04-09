@@ -9,17 +9,6 @@ import static org.junit.Assert.assertTrue;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.input.Tailer;
-import org.apache.commons.io.input.TailerListenerAdapter;
-import org.jenkinsci.plugins.matrixauth.AuthorizationMatrixNodeProperty;
-import org.jenkinsci.plugins.workflow.support.concurrent.Timeout;
-import org.junit.rules.ExternalResource;
-import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.JenkinsSessionRule;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -37,6 +26,15 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.input.Tailer;
+import org.apache.commons.io.input.TailerListenerAdapter;
+import org.jenkinsci.plugins.matrixauth.AuthorizationMatrixNodeProperty;
+import org.jenkinsci.plugins.workflow.support.concurrent.Timeout;
+import org.junit.rules.ExternalResource;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.JenkinsSessionRule;
 
 /**
  * A rule for starting the Swarm client. The rule does nothing before running the test method. The
@@ -112,8 +110,7 @@ public class SwarmClientRule extends ExternalResource {
      * Create a new Swarm agent on the local host and wait for it to come online before returning.
      * The agent will be named automatically.
      */
-    public synchronized Node createSwarmClient(String... args)
-            throws InterruptedException, IOException {
+    public synchronized Node createSwarmClient(String... args) throws InterruptedException, IOException {
         if (isActive) {
             throw new IllegalStateException(
                     "You must first tear down the existing Swarm client with \"tearDown()\" before"
@@ -136,27 +133,18 @@ public class SwarmClientRule extends ExternalResource {
         // Create the password file.
         Path passwordFile = null;
         if (swarmPassword != null) {
-            passwordFile =
-                    Files.createTempFile(temporaryFolder.getRoot().toPath(), "password", null);
+            passwordFile = Files.createTempFile(temporaryFolder.getRoot().toPath(), "password", null);
             Files.write(passwordFile, swarmPassword.getBytes(StandardCharsets.UTF_8));
         }
 
         final String passwordFilePath = passwordFile != null ? passwordFile.toString() : null;
-        return createSwarmClientWithCommand(
-                agentName,
-                swarmClientJar -> {
-                    try {
-                        return getCommand(
-                                swarmClientJar,
-                                j.get().getURL(),
-                                agentName,
-                                swarmUsername,
-                                passwordFilePath,
-                                args);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                });
+        return createSwarmClientWithCommand(agentName, swarmClientJar -> {
+            try {
+                return getCommand(swarmClientJar, j.get().getURL(), agentName, swarmUsername, passwordFilePath, args);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
     }
 
     /**
@@ -171,8 +159,7 @@ public class SwarmClientRule extends ExternalResource {
     public synchronized Node createSwarmClientWithoutDefaultArgs(String agentName, String... args)
             throws InterruptedException, IOException {
         return createSwarmClientWithCommand(
-                agentName,
-                swarmClientJar -> getCommand(swarmClientJar, null, null, null, null, args));
+                agentName, swarmClientJar -> getCommand(swarmClientJar, null, null, null, null, args));
     }
 
     /**
@@ -186,8 +173,7 @@ public class SwarmClientRule extends ExternalResource {
      * @param commandGenerator Generator of the client launch CLI
      * @return The online node
      */
-    private Node createSwarmClientWithCommand(
-            String agentName, Function<Path, List<String>> commandGenerator)
+    private Node createSwarmClientWithCommand(String agentName, Function<Path, List<String>> commandGenerator)
             throws InterruptedException, IOException {
         if (isActive) {
             throw new IllegalStateException(
@@ -196,8 +182,7 @@ public class SwarmClientRule extends ExternalResource {
         }
 
         // Download the Swarm client JAR from the Jenkins controller.
-        Path swarmClientJar =
-                Files.createTempFile(temporaryFolder.getRoot().toPath(), "swarm-client", ".jar");
+        Path swarmClientJar = Files.createTempFile(temporaryFolder.getRoot().toPath(), "swarm-client", ".jar");
         download(swarmClientJar);
 
         final List<String> command = commandGenerator.apply(swarmClientJar);
@@ -209,23 +194,17 @@ public class SwarmClientRule extends ExternalResource {
             pb.environment().put("ON_SWARM_CLIENT", "true");
 
             // Redirect standard out to a file and start a thread to tail its contents.
-            Path stdout =
-                    Files.createTempFile(temporaryFolder.getRoot().toPath(), "stdout", ".log");
+            Path stdout = Files.createTempFile(temporaryFolder.getRoot().toPath(), "stdout", ".log");
             pb.redirectOutput(stdout.toFile());
-            stdoutTailer =
-                    new Tailer(
-                            stdout.toFile(), new SwarmClientTailerListener("Standard out"), 200L);
+            stdoutTailer = new Tailer(stdout.toFile(), new SwarmClientTailerListener("Standard out"), 200L);
             stdoutThread = new Thread(stdoutTailer);
             stdoutThread.setDaemon(true);
             stdoutThread.start();
 
             // Redirect standard error to a file and start a thread to tail its contents.
-            Path stderr =
-                    Files.createTempFile(temporaryFolder.getRoot().toPath(), "stderr", ".log");
+            Path stderr = Files.createTempFile(temporaryFolder.getRoot().toPath(), "stderr", ".log");
             pb.redirectError(stderr.toFile());
-            stderrTailer =
-                    new Tailer(
-                            stderr.toFile(), new SwarmClientTailerListener("Standard error"), 200L);
+            stderrTailer = new Tailer(stderr.toFile(), new SwarmClientTailerListener("Standard error"), 200L);
             stderrThread = new Thread(stderrTailer);
             stderrThread.setDaemon(true);
             stderrThread.start();
@@ -241,8 +220,7 @@ public class SwarmClientRule extends ExternalResource {
         assertNotNull(computer);
         assertTrue(computer.isOnline());
         Node node = computer.getNode();
-        if (j.get().jenkins.getAuthorizationStrategy()
-                instanceof ProjectMatrixAuthorizationStrategy) {
+        if (j.get().jenkins.getAuthorizationStrategy() instanceof ProjectMatrixAuthorizationStrategy) {
             assertNotNull(node.getNodeProperty(AuthorizationMatrixNodeProperty.class));
         }
         assertNotNull(node);
@@ -260,15 +238,9 @@ public class SwarmClientRule extends ExternalResource {
      * @param args Any other desired arguments.
      */
     public static List<String> getCommand(
-            Path swarmClientJar,
-            URL url,
-            String agentName,
-            String username,
-            String passwordFile,
-            String... args) {
+            Path swarmClientJar, URL url, String agentName, String username, String passwordFile, String... args) {
         List<String> command = new ArrayList<>();
-        command.add(
-                System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
+        command.add(System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
         command.add("-Djava.awt.headless=true");
         command.add("-Xmx64m");
         command.add("-Xms64m");
@@ -299,19 +271,15 @@ public class SwarmClientRule extends ExternalResource {
     public void download(Path output) throws IOException {
         URL input;
         try {
-            input =
-                    j.get()
-                            .getURL()
-                            .toURI()
-                            .resolve(new URI(null, "swarm/swarm-client.jar", null))
-                            .toURL();
+            input = j.get()
+                    .getURL()
+                    .toURI()
+                    .resolve(new URI(null, "swarm/swarm-client.jar", null))
+                    .toURL();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
-        logger.log(
-                Level.INFO,
-                "Downloading Swarm client from \"{0}\" to \"{1}\".",
-                new Object[] {input, output});
+        logger.log(Level.INFO, "Downloading Swarm client from \"{0}\" to \"{1}\".", new Object[] {input, output});
         FileUtils.copyURLToFile(input, output.toFile());
 
         assertTrue(Files.isRegularFile(output));
@@ -358,8 +326,7 @@ public class SwarmClientRule extends ExternalResource {
 
     public synchronized void tearDown() {
         if (!isActive) {
-            throw new IllegalStateException(
-                    "Must first create a Swarm client before attempting to tear it down.");
+            throw new IllegalStateException("Must first create a Swarm client before attempting to tear it down.");
         }
         boolean interrupted = false;
         try {
@@ -368,10 +335,7 @@ public class SwarmClientRule extends ExternalResource {
                 try {
                     process.destroy();
                     assertTrue(process.waitFor(30, TimeUnit.SECONDS));
-                    logger.log(
-                            Level.INFO,
-                            "Swarm client exited with exit value {0}.",
-                            process.exitValue());
+                    logger.log(Level.INFO, "Swarm client exited with exit value {0}.", process.exitValue());
                 } catch (IllegalThreadStateException e) {
                     e.printStackTrace();
                     // ignore
@@ -425,9 +389,7 @@ public class SwarmClientRule extends ExternalResource {
 
             // Wait for the agent to be disconnected from the controller
             if (computer != null) {
-                logger.log(
-                        Level.INFO,
-                        "Waiting for the agent to be disconnected from the controller.");
+                logger.log(Level.INFO, "Waiting for the agent to be disconnected from the controller.");
                 try (Timeout t = Timeout.limit(60, TimeUnit.SECONDS)) {
                     computer.disconnect(null);
                     while (computer.isOnline()) {
@@ -450,8 +412,7 @@ public class SwarmClientRule extends ExternalResource {
 
     public synchronized void tearDownAll() {
         if (isActive) {
-            throw new IllegalStateException(
-                    "Must be called after a tearDown() to fully clean up disconnected nodes");
+            throw new IllegalStateException("Must be called after a tearDown() to fully clean up disconnected nodes");
         }
 
         try {

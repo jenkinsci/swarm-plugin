@@ -3,14 +3,18 @@ package hudson.plugins.swarm;
 import static org.junit.Assert.assertEquals;
 
 import com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy;
-
 import hudson.model.Node;
 import hudson.plugins.swarm.test.SwarmClientRule;
 import hudson.security.AuthorizationStrategy;
 import hudson.security.FullControlOnceLoggedInAuthorizationStrategy;
 import hudson.security.GlobalMatrixAuthorizationStrategy;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
-
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -19,22 +23,17 @@ import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-
 public class AuthorizationStrategyTest {
 
-    @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
+    @ClassRule
+    public static BuildWatcher buildWatcher = new BuildWatcher();
 
     @Rule(order = 10)
     public JenkinsRule j = new JenkinsRule();
 
     @Rule(order = 20)
-    public TemporaryFolder temporaryFolder = TemporaryFolder.builder().assureDeletion().build();
+    public TemporaryFolder temporaryFolder =
+            TemporaryFolder.builder().assureDeletion().build();
 
     @Rule(order = 30)
     public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder);
@@ -78,8 +77,7 @@ public class AuthorizationStrategyTest {
 
     @Test
     public void matrixBasedSecurity() throws Exception {
-        GlobalMatrixAuthorizationStrategy authorizationStrategy =
-                new GlobalMatrixAuthorizationStrategy();
+        GlobalMatrixAuthorizationStrategy authorizationStrategy = new GlobalMatrixAuthorizationStrategy();
         swarmClientRule
                 .globalSecurityConfigurationBuilder()
                 .setAuthorizationStrategy(authorizationStrategy)
@@ -89,8 +87,7 @@ public class AuthorizationStrategyTest {
 
     @Test
     public void projectBasedMatrixAuthorizationStrategy() throws Exception {
-        ProjectMatrixAuthorizationStrategy authorizationStrategy =
-                new ProjectMatrixAuthorizationStrategy();
+        ProjectMatrixAuthorizationStrategy authorizationStrategy = new ProjectMatrixAuthorizationStrategy();
         swarmClientRule
                 .globalSecurityConfigurationBuilder()
                 .setAuthorizationStrategy(authorizationStrategy)
@@ -120,15 +117,10 @@ public class AuthorizationStrategyTest {
         labelsToAdd.add(RandomStringUtils.randomAlphanumeric(350));
         labelsToAdd.add(RandomStringUtils.randomAlphanumeric(350));
 
-        Path labelsFile =
-                Files.createTempFile(temporaryFolder.getRoot().toPath(), "labelsFile", ".txt");
+        Path labelsFile = Files.createTempFile(temporaryFolder.getRoot().toPath(), "labelsFile", ".txt");
 
-        Node node =
-                swarmClientRule.createSwarmClient(
-                        "-labelsFile",
-                        labelsFile.toAbsolutePath().toString(),
-                        "-labels",
-                        encode(labelsToRemove));
+        Node node = swarmClientRule.createSwarmClient(
+                "-labelsFile", labelsFile.toAbsolutePath().toString(), "-labels", encode(labelsToRemove));
 
         String origLabels = node.getLabelString();
 

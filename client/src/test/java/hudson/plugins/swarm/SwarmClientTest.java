@@ -5,10 +5,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.net.http.HttpClient;
@@ -16,11 +12,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class SwarmClientTest {
 
     @ClassRule(order = 20)
-    public static TemporaryFolder temporaryFolder = TemporaryFolder.builder().assureDeletion().build();
+    public static TemporaryFolder temporaryFolder =
+            TemporaryFolder.builder().assureDeletion().build();
 
     @Test
     public void should_create_instance_on_default_options() {
@@ -48,15 +48,15 @@ public class SwarmClientTest {
     }
 
     private static void test_labelsFile(Options options, String labelsToAdd, String... expected) throws IOException {
-        Path labelsFile =
-                Files.createTempFile(temporaryFolder.getRoot().toPath(), "labelsFile", ".txt");
+        Path labelsFile = Files.createTempFile(temporaryFolder.getRoot().toPath(), "labelsFile", ".txt");
 
         try (Writer writer = Files.newBufferedWriter(labelsFile, StandardCharsets.UTF_8)) {
             writer.write(labelsToAdd);
         }
 
-        if (options == null)
+        if (options == null) {
             options = new Options();
+        }
 
         options.labelsFile = labelsFile.toString();
 
@@ -89,50 +89,31 @@ public class SwarmClientTest {
 
     @Test
     public void parse_options_separated_by_tabs_and_eols() throws IOException {
-        String labelsFileContent =
-            "  COMPILER=GCC\n" +
-            " COMPILER=CLANG\tARCH64=amd64 \n" +
-            " ARCH32=i386 \n";
+        String labelsFileContent = "  COMPILER=GCC\n COMPILER=CLANG\tARCH64=amd64 \n ARCH32=i386 \n";
         test_labelsFile(labelsFileContent, "COMPILER=GCC", "COMPILER=CLANG", "ARCH64=amd64", "ARCH32=i386");
     }
 
     @Test
     public void parse_options_multiline_indented_all() throws IOException {
-        String labelsFileContent =
-            " COMPILER=GCC\n" +
-            " COMPILER=CLANG\n" +
-            " ARCH64=amd64\n" +
-            " ARCH32=i386\n";
+        String labelsFileContent = " COMPILER=GCC\n COMPILER=CLANG\n ARCH64=amd64\n ARCH32=i386\n";
         test_labelsFile(labelsFileContent, "COMPILER=GCC", "COMPILER=CLANG", "ARCH64=amd64", "ARCH32=i386");
     }
 
     @Test
     public void parse_options_multiline_indented_all_but_first() throws IOException {
-        String labelsFileContent =
-            "COMPILER=GCC\n" +
-            " COMPILER=CLANG\n" +
-            " ARCH64=amd64\n" +
-            " ARCH32=i386\n";
+        String labelsFileContent = "COMPILER=GCC\n COMPILER=CLANG\n ARCH64=amd64\n ARCH32=i386\n";
         test_labelsFile(labelsFileContent, "COMPILER=GCC", "COMPILER=CLANG", "ARCH64=amd64", "ARCH32=i386");
     }
 
     @Test
     public void parse_options_multiline_not_indented() throws IOException {
-        String labelsFileContent =
-            "COMPILER=GCC\n" +
-            "COMPILER=CLANG\n" +
-            "ARCH64=amd64\n" +
-            "ARCH32=i386\n";
+        String labelsFileContent = "COMPILER=GCC\nCOMPILER=CLANG\nARCH64=amd64\nARCH32=i386\n";
         test_labelsFile(labelsFileContent, "COMPILER=GCC", "COMPILER=CLANG", "ARCH64=amd64", "ARCH32=i386");
     }
 
     @Test
     public void parse_options_multiline_trailins_whitespace() throws IOException {
-        String labelsFileContent =
-            "COMPILER=GCC\t\n" +
-            "COMPILER=CLANG \n" +
-            "ARCH64=amd64  \n\n" +
-            "ARCH32=i386\n";
+        String labelsFileContent = "COMPILER=GCC\t\nCOMPILER=CLANG \nARCH64=amd64  \n\nARCH32=i386\n";
         test_labelsFile(labelsFileContent, "COMPILER=GCC", "COMPILER=CLANG", "ARCH64=amd64", "ARCH32=i386");
     }
 }
