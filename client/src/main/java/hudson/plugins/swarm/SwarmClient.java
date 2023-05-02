@@ -71,6 +71,7 @@ public class SwarmClient {
 
     private final Options options;
     private final String hash;
+    private static boolean crumbHeaderNeeded = true;
     private String name;
     private HttpServer prometheusServer = null;
 
@@ -280,9 +281,14 @@ public class SwarmClient {
         }
     }
 
-    private static synchronized Crumb getCsrfCrumb(HttpClient client, Options options, URL url)
+    static synchronized Crumb getCsrfCrumb(HttpClient client, Options options, URL url)
             throws IOException, InterruptedException {
         logger.finer("getCsrfCrumb() invoked");
+
+        // return null if not needed
+        if (!crumbHeaderNeeded) {
+            return null;
+        }
 
         String[] crumbResponse;
 
@@ -356,13 +362,23 @@ public class SwarmClient {
                 + param("keepDisconnectedClients", Boolean.toString(options.keepDisconnectedClients)));
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
         SwarmClient.addAuthorizationHeader(builder, options);
-        Crumb csrfCrumb = getCsrfCrumb(client, options, url);
-        if (csrfCrumb != null) {
-            builder.header(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
-        }
         HttpRequest request = builder.build();
 
         HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        if (response.statusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
+            logger.info("Received HTTP_FORBIDDEN first time - retrying with Crumb...");
+            Crumb csrfCrumb = getCsrfCrumb(client, options, url);
+            if (csrfCrumb != null) {
+                builder.header(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+            }
+            request = builder.build();
+            response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            if (response.statusCode() != HttpURLConnection.HTTP_FORBIDDEN) {
+                logger.warning("It seems a password is being used to authenticate - please consider using an API token. Password authentication will eventually be DEPRECATED.");
+            }
+        } else {
+            crumbHeaderNeeded = false;
+        }
         if (response.statusCode() != HttpURLConnection.HTTP_OK) {
             throw new RetryException(String.format(
                     "Failed to create a Swarm agent on Jenkins. Response code: %s%n%s",
@@ -630,7 +646,7 @@ public class SwarmClient {
         }
     }
 
-    private static class Crumb {
+    protected static class Crumb {
         final String crumb;
         final String crumbRequestField;
 
