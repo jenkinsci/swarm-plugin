@@ -1,5 +1,6 @@
 package hudson.plugins.swarm;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
 import hudson.slaves.NodeProperty;
@@ -21,6 +22,7 @@ public class KeepSwarmClientNodeProperty extends NodeProperty<Node> {
     @Symbol("keepSwarmClient")
     public static class DescriptorImpl extends NodePropertyDescriptor {
 
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Keep Swarm client node after agent disconnect";
