@@ -299,7 +299,7 @@ public class SwarmClient {
                     String.format(
                             "Could not obtain CSRF crumb. Response code: %s%n%s",
                             response.statusCode(), response.body()));
-            if (response.statusCode() >= 500 && response.statusCode() < 600 && options.retry >= 0)
+            if (response.statusCode() >= 500 && response.statusCode() < 600)
                 throw new RetryException("Failed to obtain CSRF crumb due to an Internal Server "
                         + "Error or similar condition. Response code: " + response.statusCode());
             return null;
