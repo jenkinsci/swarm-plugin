@@ -14,7 +14,7 @@
   <properties>
     <maven.compiler.release>11</maven.compiler.release>
     <maven.compiler.testRelease>11</maven.compiler.testRelease>
-    <micrometer.version>1.11.2</micrometer.version>
+    <micrometer.version>1.11.3</micrometer.version>
     <slf4j.version>2.0.7</slf4j.version>
   </properties>
 
