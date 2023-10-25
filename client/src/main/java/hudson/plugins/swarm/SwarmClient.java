@@ -2,7 +2,6 @@ package hudson.plugins.swarm;
 
 import com.sun.net.httpserver.HttpServer;
 import hudson.remoting.Launcher;
-import hudson.remoting.jnlp.Main;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmHeapPressureMetrics;
@@ -38,7 +37,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
-import java.security.KeyManagementException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -142,17 +140,10 @@ public class SwarmClient {
         launcher.agentJnlpURL = new URL(url + "computer/" + name + "/slave-agent.jnlp");
 
         if (options.username != null && options.password != null) {
-            launcher.auth = options.username + ":" + options.password;
             launcher.agentJnlpCredentials = options.username + ":" + options.password;
         }
 
-        if (options.disableSslVerification) {
-            try {
-                launcher.setNoCertificateCheck(true);
-            } catch (KeyManagementException | NoSuchAlgorithmException e) {
-                throw new AssertionError(e);
-            }
-        }
+        launcher.noCertificateCheck = options.disableSslVerification;
 
         try {
             return launcher.parseJnlpArguments();
@@ -168,14 +159,18 @@ public class SwarmClient {
      */
     void connect(List<String> jnlpArgs, URL url) throws IOException, RetryException {
         List<String> args = new ArrayList<>();
-        args.add(jnlpArgs.get(0));
-        args.add(jnlpArgs.get(1));
 
         args.add("-url");
         args.add(url.toString());
 
+        args.add("-secret");
+        args.add(jnlpArgs.get(0));
+
+        args.add("-name");
+        args.add(name);
+
         if (options.disableSslVerification) {
-            args.add("-disableHttpsCertValidation");
+            args.add("-noCertificateCheck");
         }
 
         // if the tunnel option is set in the command line, use it
@@ -214,9 +209,9 @@ public class SwarmClient {
 
         /*
          * Swarm does its own retrying internally, so disable the retrying functionality in
-         * hudson.remoting.Engine.
+         * Remoting.
          */
-        args.add("-noreconnect");
+        args.add("-noReconnect");
 
         if (options.webSocket) {
             args.add("-webSocket");
@@ -230,9 +225,9 @@ public class SwarmClient {
         }
 
         try {
-            Main.main(args.toArray(new String[0]));
+            Launcher.main(args.toArray(new String[0]));
         } catch (InterruptedException | RuntimeException e) {
-            throw new RetryException("Failed to establish JNLP connection to " + url, e);
+            throw new RetryException("Failed to establish connection to " + url, e);
         }
     }
 

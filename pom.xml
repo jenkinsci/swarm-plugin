@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.73</version>
+    <version>4.74</version>
     <relativePath />
   </parent>
 
@@ -42,7 +42,7 @@
   </scm>
 
   <properties>
-    <revision>3.41</revision>
+    <revision>3.42</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.361.4</jenkins.version>
     <gitHubRepo>jenkinsci/swarm-plugin</gitHubRepo>
