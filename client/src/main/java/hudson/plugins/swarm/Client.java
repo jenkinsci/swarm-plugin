@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -216,10 +215,9 @@ public class Client {
 
                 /*
                  * Note that any instances of InterruptedException or RuntimeException thrown
-                 * internally by the next two lines get wrapped in RetryException.
+                 * internally by the next line get wrapped in RetryException.
                  */
-                List<String> jnlpArgs = swarmClient.getJnlpArgs(url);
-                swarmClient.connect(jnlpArgs, url);
+                swarmClient.connect(url);
                 if (options.noRetryAfterConnected) {
                     logger.warning("Connection closed, exiting...");
                     swarmClient.exitWithStatus(0);

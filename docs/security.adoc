@@ -29,20 +29,19 @@ Swarm requires a user with the following permissions:
 
 * *Overall/Read*
 * *Agent/Create*
-* *Agent/Connect*
 * *Agent/Configure* (_not_ required when using the project-based Matrix Authorization Strategy)
 
 == Examples
 
 === Matrix-based security
 
-A common practice is to grant *Overall/Read* permission to either anonymous or authenticated users, leaving the dedicated Swarm user with only *Agent/Create*, *Agent/Connect*, and *Agent/Configure* permissions:
+A common practice is to grant *Overall/Read* permission to either anonymous or authenticated users, leaving the dedicated Swarm user with only the *Agent/Create* and *Agent/Configure* permissions:
 
 image:images/matrixBasedSecurity.png[image]
 
 === Project-based Matrix Authorization Strategy
 
-A common practice is to grant *Overall/Read* permission to either anonymous or authenticated users, leaving the dedicated Swarm user with only *Agent/Create* and *Agent/Connect* permissions:
+A common practice is to grant *Overall/Read* permission to either anonymous or authenticated users, leaving the dedicated Swarm user with only the *Agent/Create* permission:
 
 image:images/projectBasedMatrixAuthorizationStrategy.png[image]
 
@@ -50,7 +49,7 @@ NOTE: Unlike matrix-based security, the project-based Matrix Authorization Strat
 
 === Role-Based Strategy
 
-A common practice is to create a read-only role with *Overall/Read* permission, leaving a dedicated Swarm role with only *Agent/Create*, *Agent/Connect*, and *Agent/Configure* permissions:
+A common practice is to create a read-only role with *Overall/Read* permission, leaving a dedicated Swarm role with only the *Agent/Create* and *Agent/Configure* permissions:
 
 image:images/roleBasedStrategyManage.png[image]
 
