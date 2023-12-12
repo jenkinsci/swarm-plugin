@@ -65,8 +65,12 @@ public class LabelFileWatcher implements Runnable {
                         URI.create(url + "plugin/swarm/getSlaveLabels?name=" + name))
                 .GET();
         SwarmClient.addAuthorizationHeader(builder, options);
-        HttpRequest request = builder.build();
         try {
+            SwarmClient.Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, options, url);
+            if (csrfCrumb != null) {
+                builder.header(csrfCrumb.crumbRequestField, csrfCrumb.crumb);
+            }
+            HttpRequest request = builder.build();
             HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
             if (response.statusCode() != HttpURLConnection.HTTP_OK) {
                 logger.log(
