@@ -22,6 +22,7 @@ import java.util.Properties;
 import java.util.Set;
 import javax.servlet.http.HttpServletResponse;
 import jenkins.model.Jenkins;
+import jenkins.slaves.JnlpAgentReceiver;
 import org.apache.commons.lang.ArrayUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -135,6 +136,7 @@ public class PluginImpl extends Plugin {
         Jenkins jenkins = Jenkins.get();
 
         jenkins.checkPermission(Computer.CREATE);
+        jenkins.checkPermission(Computer.CONNECT);
 
         List<NodeProperty<Node>> nodeProperties = new ArrayList<>();
 
@@ -210,6 +212,7 @@ public class PluginImpl extends Plugin {
             try (OutputStream outputStream = rsp.getCompressedOutputStream(req)) {
                 Properties props = new Properties();
                 props.put("name", name);
+                props.put("secret", JnlpAgentReceiver.SLAVE_SECRET.mac(name));
                 props.store(outputStream, "");
             }
         } catch (FormException e) {

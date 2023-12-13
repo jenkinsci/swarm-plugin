@@ -69,6 +69,7 @@ public class SwarmClient {
 
     private final Options options;
     private final String hash;
+    private String secret;
     private String name;
     private HttpServer prometheusServer = null;
 
@@ -125,8 +126,10 @@ public class SwarmClient {
     /**
      * @param url The URL
      * @return The JNLP arguments, as returned from {@link Launcher#parseJnlpArguments()}.
+     * @deprecated removed without replacement
      */
-    List<String> getJnlpArgs(URL url) throws IOException, RetryException {
+    @Deprecated
+    private List<String> getJnlpArgs(URL url) throws IOException, RetryException {
         logger.fine("connect() invoked");
 
         Launcher launcher = new Launcher();
@@ -157,14 +160,22 @@ public class SwarmClient {
      *
      * <p>Interrupt the thread to abort it and try connecting again.
      */
-    void connect(List<String> jnlpArgs, URL url) throws IOException, RetryException {
+    void connect(URL url) throws IOException, RetryException {
         List<String> args = new ArrayList<>();
 
         args.add("-url");
         args.add(url.toString());
 
-        args.add("-secret");
-        args.add(jnlpArgs.get(0));
+        if (secret == null) {
+            List<String> jnlpArgs = getJnlpArgs(url);
+            if (!jnlpArgs.isEmpty()) {
+                secret = jnlpArgs.get(0);
+            }
+        }
+        if (secret != null) {
+            args.add("-secret");
+            args.add(secret);
+        }
 
         args.add("-name");
         args.add(name);
@@ -366,6 +377,11 @@ public class SwarmClient {
 
         try (InputStream stream = response.body()) {
             props.load(stream);
+        }
+
+        String secret = props.getProperty("secret");
+        if (secret != null) {
+            this.secret = secret.trim();
         }
 
         String name = props.getProperty("name");
