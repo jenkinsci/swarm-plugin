@@ -136,6 +136,7 @@ public class PluginImpl extends Plugin {
         Jenkins jenkins = Jenkins.get();
 
         jenkins.checkPermission(Computer.CREATE);
+        jenkins.checkPermission(Computer.CONNECT);
 
         List<NodeProperty<Node>> nodeProperties = new ArrayList<>();
 

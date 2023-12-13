@@ -104,8 +104,9 @@ public class GlobalSecurityConfigurationBuilder {
             // Needed for the [optional] Jenkins version check as well as CSRF.
             strategy.add(Jenkins.READ, new PermissionEntry(AuthorizationType.EITHER, "authenticated"));
 
-            // Needed to create the agent.
+            // Needed to create and connect the agent.
             strategy.add(Computer.CREATE, new PermissionEntry(AuthorizationType.EITHER, swarmUsername));
+            strategy.add(Computer.CONNECT, new PermissionEntry(AuthorizationType.EITHER, swarmUsername));
 
             /*
              * The following is necessary because
@@ -119,8 +120,11 @@ public class GlobalSecurityConfigurationBuilder {
         } else if (authorizationStrategy instanceof RoleBasedAuthorizationStrategy) {
             Role admin = new Role("admin", ".*", Set.of(Jenkins.ADMINISTER.getId()), "Jenkins administrators");
             Role readOnly = new Role("readonly", ".*", Set.of(Jenkins.READ.getId()), "Read-only users");
-            Role swarm =
-                    new Role("swarm", ".*", Set.of(Computer.CREATE.getId(), Computer.CONFIGURE.getId()), "Swarm users");
+            Role swarm = new Role(
+                    "swarm",
+                    ".*",
+                    Set.of(Computer.CREATE.getId(), Computer.CONNECT.getId(), Computer.CONFIGURE.getId()),
+                    "Swarm users");
 
             SortedMap<Role, Set<String>> roleMap = new TreeMap<>();
             roleMap.put(admin, Set.of(adminUsername));
