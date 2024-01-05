@@ -57,11 +57,9 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
-import org.xml.sax.SAXException;
 
 public class SwarmClient {
 
@@ -124,38 +122,6 @@ public class SwarmClient {
     }
 
     /**
-     * @param url The URL
-     * @return The JNLP arguments, as returned from {@link Launcher#parseJnlpArguments()}.
-     * @deprecated removed without replacement
-     */
-    @Deprecated
-    private List<String> getJnlpArgs(URL url) throws IOException, RetryException {
-        logger.fine("connect() invoked");
-
-        Launcher launcher = new Launcher();
-
-        /*
-         * Swarm does its own retrying internally, so disable the retrying functionality in
-         * Launcher#parseJnlpArguments().
-         */
-        launcher.noReconnect = true;
-
-        launcher.agentJnlpURL = new URL(url + "computer/" + name + "/slave-agent.jnlp");
-
-        if (options.username != null && options.password != null) {
-            launcher.agentJnlpCredentials = options.username + ":" + options.password;
-        }
-
-        launcher.noCertificateCheck = options.disableSslVerification;
-
-        try {
-            return launcher.parseJnlpArguments();
-        } catch (InterruptedException | ParserConfigurationException | RuntimeException | SAXException e) {
-            throw new RetryException("Failed get JNLP arguments for " + url, e);
-        }
-    }
-
-    /**
      * This method blocks while the Swarm agent is connected.
      *
      * <p>Interrupt the thread to abort it and try connecting again.
@@ -166,12 +132,6 @@ public class SwarmClient {
         args.add("-url");
         args.add(url.toString());
 
-        if (secret == null) {
-            List<String> jnlpArgs = getJnlpArgs(url);
-            if (!jnlpArgs.isEmpty()) {
-                secret = jnlpArgs.get(0);
-            }
-        }
         if (secret != null) {
             args.add("-secret");
             args.add(secret);
