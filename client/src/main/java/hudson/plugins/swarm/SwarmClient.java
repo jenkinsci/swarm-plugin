@@ -176,8 +176,6 @@ public class SwarmClient {
             args.add(options.jarCache.getPath());
         }
 
-        args.add("-headless");
-
         /*
          * Swarm does its own retrying internally, so disable the retrying functionality in
          * Remoting.
