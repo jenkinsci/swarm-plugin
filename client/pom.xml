@@ -12,7 +12,7 @@
   <name>Swarm Client</name>
 
   <properties>
-    <micrometer.version>1.13.4</micrometer.version>
+    <micrometer.version>1.13.5</micrometer.version>
   </properties>
 
   <dependencyManagement>
