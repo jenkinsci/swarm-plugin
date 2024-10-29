@@ -65,7 +65,7 @@ public class PluginImpl extends Plugin {
     private void normalResponse(StaplerRequest2 req, StaplerResponse2 rsp, String sLabelList) throws IOException {
         rsp.setContentType("text/xml");
 
-        try (Writer writer = rsp.getCompressedWriter(req)) {
+        try (Writer writer = rsp.getWriter()) {
             writer.write("<labelResponse><labels>" + sLabelList + "</labels></labelResponse>");
         }
     }
@@ -209,7 +209,7 @@ public class PluginImpl extends Plugin {
             jenkins.addNode(agent);
 
             rsp.setContentType("text/plain; charset=iso-8859-1");
-            try (OutputStream outputStream = rsp.getCompressedOutputStream(req)) {
+            try (OutputStream outputStream = rsp.getOutputStream()) {
                 Properties props = new Properties();
                 props.put("name", name);
                 props.put("secret", JnlpAgentReceiver.SLAVE_SECRET.mac(name));
