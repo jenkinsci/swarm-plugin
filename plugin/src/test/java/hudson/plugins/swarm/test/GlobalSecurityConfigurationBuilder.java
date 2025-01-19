@@ -99,14 +99,14 @@ public class GlobalSecurityConfigurationBuilder {
         if (authorizationStrategy instanceof GlobalMatrixAuthorizationStrategy) {
             GlobalMatrixAuthorizationStrategy strategy = (GlobalMatrixAuthorizationStrategy) authorizationStrategy;
             // Not needed for testing, but is helpful when debugging test failures.
-            strategy.add(Jenkins.ADMINISTER, new PermissionEntry(AuthorizationType.EITHER, adminUsername));
+            strategy.add(Jenkins.ADMINISTER, new PermissionEntry(AuthorizationType.USER, adminUsername));
 
             // Needed for the [optional] Jenkins version check as well as CSRF.
-            strategy.add(Jenkins.READ, new PermissionEntry(AuthorizationType.EITHER, "authenticated"));
+            strategy.add(Jenkins.READ, new PermissionEntry(AuthorizationType.GROUP, "authenticated"));
 
             // Needed to create and connect the agent.
-            strategy.add(Computer.CREATE, new PermissionEntry(AuthorizationType.EITHER, swarmUsername));
-            strategy.add(Computer.CONNECT, new PermissionEntry(AuthorizationType.EITHER, swarmUsername));
+            strategy.add(Computer.CREATE, new PermissionEntry(AuthorizationType.USER, swarmUsername));
+            strategy.add(Computer.CONNECT, new PermissionEntry(AuthorizationType.USER, swarmUsername));
 
             /*
              * The following is necessary because
@@ -115,7 +115,7 @@ public class GlobalSecurityConfigurationBuilder {
              */
             if (!(authorizationStrategy instanceof ProjectMatrixAuthorizationStrategy)) {
                 // Needed to add/remove labels after the fact.
-                strategy.add(Computer.CONFIGURE, new PermissionEntry(AuthorizationType.EITHER, swarmUsername));
+                strategy.add(Computer.CONFIGURE, new PermissionEntry(AuthorizationType.USER, swarmUsername));
             }
         } else if (authorizationStrategy instanceof RoleBasedAuthorizationStrategy) {
             Role admin = new Role("admin", ".*", Set.of(Jenkins.ADMINISTER.getId()), "Jenkins administrators");
@@ -126,10 +126,20 @@ public class GlobalSecurityConfigurationBuilder {
                     Set.of(Computer.CREATE.getId(), Computer.CONNECT.getId(), Computer.CONFIGURE.getId()),
                     "Swarm users");
 
-            SortedMap<Role, Set<String>> roleMap = new TreeMap<>();
-            roleMap.put(admin, Set.of(adminUsername));
-            roleMap.put(readOnly, Set.of("authenticated"));
-            roleMap.put(swarm, Set.of(swarmUsername));
+            SortedMap<Role, Set<com.michelin.cio.hudson.plugins.rolestrategy.PermissionEntry>> roleMap =
+                    new TreeMap<>();
+            roleMap.put(
+                    admin,
+                    Set.of(new com.michelin.cio.hudson.plugins.rolestrategy.PermissionEntry(
+                            com.michelin.cio.hudson.plugins.rolestrategy.AuthorizationType.USER, adminUsername)));
+            roleMap.put(
+                    readOnly,
+                    Set.of(new com.michelin.cio.hudson.plugins.rolestrategy.PermissionEntry(
+                            com.michelin.cio.hudson.plugins.rolestrategy.AuthorizationType.GROUP, "authenticated")));
+            roleMap.put(
+                    swarm,
+                    Set.of(new com.michelin.cio.hudson.plugins.rolestrategy.PermissionEntry(
+                            com.michelin.cio.hudson.plugins.rolestrategy.AuthorizationType.USER, swarmUsername)));
 
             authorizationStrategy = new RoleBasedAuthorizationStrategy(
                     Map.of(RoleBasedAuthorizationStrategy.GLOBAL, new RoleMap(roleMap)));
