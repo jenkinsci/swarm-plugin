@@ -12,6 +12,10 @@
   <name>Swarm Plugin</name>
   <url>https://github.com/jenkinsci/swarm-plugin</url>
 
+  <properties>
+    <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
+  </properties>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
