@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>swarm-plugin</artifactId>
-  <version>3.51</version>
+  <version>${revision}${changelist}</version>
   <packaging>pom</packaging>
   <name>Swarm Plugin Parent POM</name>
   <description>The Swarm plugin enables nodes to join a nearby Jenkins controller, thereby forming an ad-hoc cluster.</description>
@@ -37,12 +37,12 @@
   <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
     <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
-    <tag>swarm-plugin-3.51</tag>
+    <tag>${scmTag}</tag>
     <url>https://github.com/${gitHubRepo}</url>
   </scm>
 
   <properties>
-    <revision>3.51</revision>
+    <revision>3.52</revision>
     <changelist>-SNAPSHOT</changelist>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.479</jenkins.baseline>
