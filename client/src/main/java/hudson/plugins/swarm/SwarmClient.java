@@ -177,8 +177,10 @@ public class SwarmClient {
         }
 
         /*
-         * Swarm does its own retrying internally, so disable the retrying functionality in
-         * Remoting.
+         * Swarm does its own retrying internally for initial connections or
+         * proper connection retries, and has the {@code keepAliveInterval}
+         * option to handle subsequent drops that happened outside the protocol,
+         * so we disable the native retrying functionality in Remoting.
          */
         args.add("-noReconnect");
 
@@ -277,6 +279,17 @@ public class SwarmClient {
         }
 
         return new Crumb(crumbResponse[0], crumbResponse[1]);
+    }
+
+    public boolean isCheckSlaveExistsSupported(URL url) throws IOException, InterruptedException {
+        HttpClient client = createHttpClient(options);
+        URI uri = URI.create(url + "plugin/swarm/checkSlaveExists?name=" + name);
+        HttpRequest.Builder builder = HttpRequest.newBuilder(uri).GET();
+        SwarmClient.addAuthorizationHeader(builder, options);
+        HttpRequest request = builder.build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        return response.statusCode() != HttpURLConnection.HTTP_NOT_FOUND;
     }
 
     void createSwarmAgent(URL url) throws IOException, InterruptedException, RetryException {

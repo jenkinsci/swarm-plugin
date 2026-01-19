@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.apache.commons.lang.RandomStringUtils;
@@ -61,6 +63,8 @@ public class SwarmClientIntegrationTest {
 
     @Rule(order = 30)
     public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder);
+
+    private static final Logger logger = Logger.getLogger(SwarmClientIntegrationTest.class.getName());
 
     @Before
     public void configureGlobalSecurity() throws IOException {
@@ -648,5 +652,39 @@ public class SwarmClientIntegrationTest {
 
         // Verify the cleanup worked
         assertEquals(j.getInstance().getNodes().size(), 0);
+    }
+
+    @Test
+    public void keepAliveReconnects() throws Exception {
+        String agentName = "keep-alive-agent";
+        Node agentNode = swarmClientRule.createSwarmClientWithName(
+                agentName,
+                "-deleteExistingClients",
+                "-disableClientsUniqueId",
+                "-keepAliveInterval", "2");
+        assertNotNull("Agent should be created before the test case", agentNode);
+
+        // Note: swarmClientRule.waitOnline() is included as part of creation
+        Node node = j.getInstance().getNode(agentName);
+        assertNotNull("Agent should be seen by server as connected before the test case", node);
+
+        assertEquals("Agent seen by server as connected and the one we created should be the same one", agentNode, node);
+
+        // Manually remove the node from Jenkins
+        logger.log(Level.INFO, "TEST-CASE keepAliveReconnects(): Removing node as seen by the server");
+        j.getInstance().removeNode(node);
+        assertNull("Agent should have been removed from the Jenkins controller as part of the test case", j.getInstance().getNode(agentName));
+
+        // Wait for the agent to reconnect.
+        // It should check every 2 seconds, find it's missing, and reconnect.
+        long start = System.currentTimeMillis();
+        logger.log(Level.INFO, "TEST-CASE keepAliveReconnects(): Waiting up to 30 seconds for swarm agent node to reconnect to the server and be seen again");
+        while (j.getInstance().getNode(agentName) == null
+                && System.currentTimeMillis() - start < 30000) {
+            Thread.sleep(1000);
+        }
+
+        logger.log(Level.INFO, "TEST-CASE keepAliveReconnects(): The sleep is over, one way or another...");
+        assertNotNull("Agent should have reconnected", j.getInstance().getNode(agentName));
     }
 }

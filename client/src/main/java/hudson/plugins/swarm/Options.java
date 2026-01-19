@@ -161,6 +161,14 @@ public class Options {
     public String pidFile;
 
     @Option(
+            name = "-keepAliveInterval",
+            usage = "Interval in seconds to check if the agent is still registered on the "
+                    + "Jenkins controller. If it is not, the agent will reconnect "
+                    + "(after waiting for retryInterval as configured)."
+                    + " Default is -1 (feature disabled).")
+    public int keepAliveInterval = -1;
+
+    @Option(
             name = "-disableWorkDir",
             usage = "Disable Remoting working directory support and run the agent in legacy mode.",
             forbids = {"-workDir", "-internalDir", "-failIfWorkDirIsMissing"})
