@@ -518,6 +518,7 @@ public class SwarmClient {
         if (prometheusServer != null) {
             prometheusServer.stop(1);
         }
+        logger.info("exit() requested with status: " + status);
         System.exit(status);
     }
 
