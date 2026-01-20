@@ -62,7 +62,7 @@ public class SwarmClientIntegrationTest {
             TemporaryFolder.builder().assureDeletion().build();
 
     @Rule(order = 30)
-    public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder);
+    public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder, Level.INFO, Level.FINE);
 
     private static final Logger logger = Logger.getLogger(SwarmClientIntegrationTest.class.getName());
 

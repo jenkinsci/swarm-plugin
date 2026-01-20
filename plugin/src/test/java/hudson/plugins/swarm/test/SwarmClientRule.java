@@ -68,6 +68,12 @@ public class SwarmClientRule extends ExternalResource {
     /** The password or API token to use when connecting to the Jenkins controller. */
     String swarmPassword;
 
+    /** Customized logging level for all java classes in the launched swarm client process. */
+    private final Level logLevelAll;
+
+    /** Customized logging level for hudson.plugins.swarm.* java classes in the launched swarm client process. */
+    private final Level logLevelSwarm;
+
     /**
      * The {@link Computer} object corresponding to the agent within Jenkins, if the client is
      * active.
@@ -100,6 +106,15 @@ public class SwarmClientRule extends ExternalResource {
     public SwarmClientRule(Supplier<JenkinsRule> j, TemporaryFolder temporaryFolder) {
         this.j = j;
         this.temporaryFolder = temporaryFolder;
+        this.logLevelAll = null;
+        this.logLevelSwarm = null;
+    }
+
+    public SwarmClientRule(Supplier<JenkinsRule> j, TemporaryFolder temporaryFolder, Level logLevelAll, Level logLevelSwarm) {
+        this.j = j;
+        this.temporaryFolder = temporaryFolder;
+        this.logLevelAll = logLevelAll;
+        this.logLevelSwarm = logLevelSwarm;
     }
 
     public GlobalSecurityConfigurationBuilder globalSecurityConfigurationBuilder() {
@@ -164,6 +179,8 @@ public class SwarmClientRule extends ExternalResource {
 
     /**
      * Create a new Swarm agent on the local host and wait for it to come online before returning.
+     * Ensure verbose logging of the client by injecting a JVM option to use a custom logging
+     * configuration file.
      *
      * <p>The function used to generate the launch CLI takes the client JAR path as an argument and
      * returns the list of commands, typically by invoking {@link #getCommand(Path, URL, String,
@@ -186,6 +203,22 @@ public class SwarmClientRule extends ExternalResource {
         download(swarmClientJar);
 
         final List<String> command = commandGenerator.apply(swarmClientJar);
+
+        if (this.logLevelAll != null && this.logLevelSwarm != null) {
+            Path loggingPropFile = Files.createTempFile(temporaryFolder.getRoot().toPath(), "logging", ".properties").toAbsolutePath();
+            logger.log(Level.INFO, "Setting up custom logging for client process: default=" + this.logLevelAll + ", swarm=" + this.logLevelSwarm + " via '" + loggingPropFile + "'");
+            Files.write(loggingPropFile,
+                    ( "handlers = java.util.logging.ConsoleHandler\n"
+                    + ".level = " + this.logLevelAll + "\n"
+                    + "java.util.logging.ConsoleHandler.level = ALL\n"
+                    + "java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter\n"
+                    + "hudson.plugins.swarm.level = " + this.logLevelSwarm + "\n"
+                    ).getBytes(StandardCharsets.UTF_8));
+            // Inject as a JVM option, somewhere after ".../bin/java" and
+            // before "-jar". See "client/logging.properties" example file,
+            // or logging docs, for more details about suggested contents:
+            command.add(2, "-Djava.util.logging.config.file=" + loggingPropFile);
+        }
 
         logger.log(Level.INFO, "Starting client process.");
         try {
