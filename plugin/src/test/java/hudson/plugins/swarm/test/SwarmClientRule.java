@@ -378,6 +378,7 @@ public class SwarmClientRule extends ExternalResource {
             // Stop the process.
             if (process != null) {
                 try {
+                    logger.log(Level.INFO, "Stopping Swarm client process.");
                     process.destroy();
                     assertTrue(process.waitFor(30, TimeUnit.SECONDS));
                     logger.log(Level.INFO, "Swarm client exited with exit value {0}.", process.exitValue());
