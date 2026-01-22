@@ -849,6 +849,17 @@ public class SwarmClientIntegrationTest {
                 "TEST-CASE keepAliveReconnectsRemoved(): Server says that agent reestablished the connection; waiting a bit for it to complete, for a clean finish of the test case");
         Thread.sleep(5000);
 
+        // Just curious... (so no assertion):
+        Node node2 = j.getInstance().getNode(agentName);
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsRemoved(): Is the new node object same as old? " + (node2 == agentNode));
+        Computer computer2 = node2.toComputer();
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsRemoved(): Is the new computer object same as old? "
+                        + (computer2 == computer));
+
         logger.log(Level.INFO, "TEST-CASE keepAliveReconnectsRemoved(): Remove agent to finish the test case");
         swarmClientRule.tearDown();
     }
