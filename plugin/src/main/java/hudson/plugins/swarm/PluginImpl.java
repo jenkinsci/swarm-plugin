@@ -72,7 +72,7 @@ public class PluginImpl extends Plugin {
      *  server side due to networking issues or Jenkins controller JVM or
      *  hardware/OS lags. Then they can end up being removed from the list
      *  of agents running current builds or available for new ones.
-     *  In the meanwhile, the actual agent ({@link hudson.plugins.swarm.SwarmClient}
+     *  In the meanwhile, the actual agent ({@code hudson.plugins.swarm.SwarmClient}
      *  in the {@code client} part of {@code swarm-plugin} code base) may still think
      *  that it is connected and available for new builds; it may still be running
      *  child processes it was requested to before the unilateral disconnection.<br/>
