@@ -27,7 +27,6 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListenerAdapter;
@@ -122,7 +121,8 @@ public class SwarmClientRule extends ExternalResource {
         this.logLevelSwarm = null;
     }
 
-    public SwarmClientRule(Supplier<JenkinsRule> j, TemporaryFolder temporaryFolder, Level logLevelAll, Level logLevelSwarm) {
+    public SwarmClientRule(
+            Supplier<JenkinsRule> j, TemporaryFolder temporaryFolder, Level logLevelAll, Level logLevelSwarm) {
         this.j = j;
         this.temporaryFolder = temporaryFolder;
         this.logLevelAll = logLevelAll;
@@ -217,15 +217,21 @@ public class SwarmClientRule extends ExternalResource {
         final List<String> command = commandGenerator.apply(swarmClientJar);
 
         if (this.logLevelAll != null && this.logLevelSwarm != null) {
-            Path loggingPropFile = Files.createTempFile(temporaryFolder.getRoot().toPath(), "logging", ".properties").toAbsolutePath();
-            logger.log(Level.INFO, "Setting up custom logging for client process: default=" + this.logLevelAll + ", swarm=" + this.logLevelSwarm + " via '" + loggingPropFile + "'");
-            Files.write(loggingPropFile,
-                    ( "handlers = java.util.logging.ConsoleHandler\n"
-                    + ".level = " + this.logLevelAll + "\n"
-                    + "java.util.logging.ConsoleHandler.level = ALL\n"
-                    + "java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter\n"
-                    + "hudson.plugins.swarm.level = " + this.logLevelSwarm + "\n"
-                    ).getBytes(StandardCharsets.UTF_8));
+            Path loggingPropFile = Files.createTempFile(
+                            temporaryFolder.getRoot().toPath(), "logging", ".properties")
+                    .toAbsolutePath();
+            logger.log(
+                    Level.INFO,
+                    "Setting up custom logging for client process: default=" + this.logLevelAll + ", swarm="
+                            + this.logLevelSwarm + " via '" + loggingPropFile + "'");
+            Files.write(
+                    loggingPropFile,
+                    ("handlers = java.util.logging.ConsoleHandler\n"
+                                    + ".level = " + this.logLevelAll + "\n"
+                                    + "java.util.logging.ConsoleHandler.level = ALL\n"
+                                    + "java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter\n"
+                                    + "hudson.plugins.swarm.level = " + this.logLevelSwarm + "\n")
+                            .getBytes(StandardCharsets.UTF_8));
             // Inject as a JVM option, somewhere after ".../bin/java" and
             // before "-jar". See "client/logging.properties" example file,
             // or logging docs, for more details about suggested contents:
@@ -489,8 +495,7 @@ public class SwarmClientRule extends ExternalResource {
     public boolean logContains(Pattern pat, Boolean inStderr, Boolean inStdout) {
         if (inStderr && stderrLogPath.toFile().exists()) {
             try {
-                if (Files.lines(stderrLogPath).anyMatch(pat.asMatchPredicate()))
-                    return true;    // else fall through
+                if (Files.lines(stderrLogPath).anyMatch(pat.asMatchPredicate())) return true; // else fall through
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -517,7 +522,7 @@ public class SwarmClientRule extends ExternalResource {
         if (inStderr && stderrLogPath.toFile().exists()) {
             try {
                 if (Files.lines(stderrLogPath).anyMatch(line -> line.contains(needle)))
-                    return true;    // else fall through
+                    return true; // else fall through
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
