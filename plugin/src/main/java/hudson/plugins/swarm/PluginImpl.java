@@ -62,10 +62,13 @@ public class PluginImpl extends Plugin {
         normalResponse(req, rsp, node.getLabelString());
     }
 
-    /** Check if an agent exists. The effect is to
-     *  {@link StaplerResponse2#setContentType}{@code ("text/plain; charset=UTF-8")}
-     *  into the response {@code rsp} and either write {@code "ok"} if it does,
-     *  or report the error in plain text per {@link #getNodeByName} and
+    /** Check if an agent exists (both is in the list of Nodes and has an
+     *  associated Computer object).<br/>
+     *
+     *  The effect is to {@link StaplerResponse2#setContentType}{@code
+     *  ("text/plain; charset=UTF-8")} into the response {@code rsp} and
+     *  either write {@code "ok"} if it does, or report the error in
+     *  plain text per {@link #getNodeByName} and
      *  {@link HttpServletResponse#setStatus}({@link HttpServletResponse#SC_NOT_FOUND}).<br/>
      *
      *  Rationale: In practice, agents may get lost on the Jenkins controller
@@ -85,7 +88,7 @@ public class PluginImpl extends Plugin {
     public void doCheckSlaveExists(StaplerRequest2 req, StaplerResponse2 rsp, @QueryParameter String name)
             throws IOException {
         Node node = getNodeByName(name, rsp);
-        if (node == null) {
+        if (node == null || node.toComputer() == null) {
             return;
         }
 
