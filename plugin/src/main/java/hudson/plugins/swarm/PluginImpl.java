@@ -88,7 +88,20 @@ public class PluginImpl extends Plugin {
     public void doCheckSlaveExists(StaplerRequest2 req, StaplerResponse2 rsp, @QueryParameter String name)
             throws IOException {
         Node node = getNodeByName(name, rsp);
-        if (node == null || node.toComputer() == null) {
+        if (node == null) {
+            // getNodeByName() sets SC_NOT_FOUND and issues a message itself
+            return;
+        }
+
+        if (node.toComputer() == null) {
+            // TOTHINK: Keep HTTP-404 here, or another status code to differentiate the two cases?
+            //  If any change would be applied in the future, take care about
+            //  SwarmClient.isCheckSlaveExistsSupported() to know about the
+            //  new status code too.
+            rsp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            rsp.setContentType("text/plain; UTF-8");
+            rsp.getWriter()
+                    .printf("Agent \"%s\" kind of exists, but is not associated with a Computer object.%n", name);
             return;
         }
 
