@@ -2,7 +2,7 @@ package hudson.plugins.swarm;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.Util;
+import hudson.model.Descriptor;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
 import hudson.model.Slave;
@@ -26,33 +26,12 @@ public class SwarmSlave extends Slave implements EphemeralNode {
 
     private static final long serialVersionUID = -1527777529814020243L;
 
-    public SwarmSlave(
-            String name,
-            String nodeDescription,
-            String remoteFS,
-            String numExecutors,
-            Mode mode,
-            String label,
-            List<? extends NodeProperty<?>> nodeProperties)
-            throws IOException, FormException {
-        this(
-                name,
-                nodeDescription,
-                remoteFS,
-                numExecutors,
-                mode,
-                label,
-                SELF_CLEANUP_LAUNCHER,
-                RetentionStrategy.NOOP,
-                nodeProperties);
-    }
-
     @DataBoundConstructor
     public SwarmSlave(
             String name,
             String nodeDescription,
             String remoteFS,
-            String numExecutors,
+            int numExecutors,
             Mode mode,
             String labelString,
             ComputerLauncher launcher,
@@ -65,9 +44,7 @@ public class SwarmSlave extends Slave implements EphemeralNode {
         setLabelString(labelString);
         setRetentionStrategy(retentionStrategy);
         setNodeProperties(nodeProperties);
-
-        final Number executors = Util.tryParseNumber(numExecutors, 1);
-        setNumExecutors(executors != null ? executors.intValue() : 1);
+        setNumExecutors(numExecutors);
     }
 
     @Override
@@ -88,6 +65,31 @@ public class SwarmSlave extends Slave implements EphemeralNode {
         @Override
         public boolean isInstantiable() {
             return false;
+        }
+    }
+
+    @Extension
+    public static final class DefaultSwarmSlaveFactory implements SwarmSlaveFactory {
+        @Override
+        public Slave createSlave(
+                String name,
+                String nodeDescription,
+                String remoteFS,
+                int numExecutors,
+                Node.Mode mode,
+                String labelString,
+                List<? extends NodeProperty<?>> nodeProperties)
+                throws IOException, Descriptor.FormException {
+            return new SwarmSlave(
+                    name,
+                    nodeDescription,
+                    remoteFS,
+                    numExecutors,
+                    mode,
+                    labelString,
+                    SELF_CLEANUP_LAUNCHER,
+                    RetentionStrategy.NOOP,
+                    nodeProperties);
         }
     }
 
