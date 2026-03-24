@@ -344,6 +344,7 @@ public class SwarmClient {
         formBody.append("&keepDisconnectedClients=").append(encode(Boolean.toString(options.keepDisconnectedClients)));
 
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
+                .version(HttpClient.Version.HTTP_1_1)
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .POST(HttpRequest.BodyPublishers.ofString(formBody.toString()));
         SwarmClient.addAuthorizationHeader(builder, options);
