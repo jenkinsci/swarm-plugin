@@ -1,5 +1,6 @@
 package hudson.plugins.swarm;
 
+import hudson.ExtensionList;
 import hudson.Functions;
 import hudson.Plugin;
 import hudson.Util;
@@ -198,14 +199,15 @@ public class PluginImpl extends Plugin {
             if (description != null) {
                 nodeDescription += ": " + description;
             }
-            SwarmSlave agent = new SwarmSlave(
-                    name,
-                    nodeDescription,
-                    remoteFsRoot,
-                    String.valueOf(executors),
-                    mode,
-                    "swarm " + Util.fixNull(labels),
-                    nodeProperties);
+            var agent = ExtensionList.lookupFirst(SwarmSlaveFactory.class)
+                    .createSlave(
+                            name,
+                            nodeDescription,
+                            remoteFsRoot,
+                            executors,
+                            mode,
+                            "swarm " + Util.fixNull(labels),
+                            nodeProperties);
             jenkins.addNode(agent);
 
             rsp.setContentType("text/plain; charset=iso-8859-1");
