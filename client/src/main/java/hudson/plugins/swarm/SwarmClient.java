@@ -204,7 +204,7 @@ public class SwarmClient {
     static HttpClient createHttpClient(Options clientOptions) {
         logger.fine("createHttpClient() invoked");
 
-        HttpClient.Builder builder = HttpClient.newBuilder();
+        HttpClient.Builder builder = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1);
 
         // Set a cookie handler for storing the session associated with the CSRF crumb.
         builder.cookieHandler(new CookieManager());
@@ -344,7 +344,6 @@ public class SwarmClient {
         formBody.append("&keepDisconnectedClients=").append(encode(Boolean.toString(options.keepDisconnectedClients)));
 
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
-                .version(HttpClient.Version.HTTP_1_1)
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .POST(HttpRequest.BodyPublishers.ofString(formBody.toString()));
         SwarmClient.addAuthorizationHeader(builder, options);
