@@ -209,8 +209,10 @@ public class SwarmClient {
             builder.version(HttpClient.Version.HTTP_1_1);
         }
 
-        // Set a cookie handler for storing the session associated with the CSRF crumb.
-        builder.cookieHandler(new CookieManager());
+        if (!clientOptions.noCrumb) {
+            // Set a cookie handler for storing the session associated with the CSRF crumb.
+            builder.cookieHandler(new CookieManager());
+        }
 
         if (clientOptions.disableSslVerification || !clientOptions.sslFingerprints.isEmpty()) {
             // Set the default SSL context for Remoting.
@@ -249,19 +251,10 @@ public class SwarmClient {
 
     private static synchronized Crumb getCsrfCrumb(HttpClient client, Options options, URL url)
             throws IOException, InterruptedException, RetryException {
-        if (options.password != null) {
-            if (options.password.startsWith("11")) {
-                logger.fine("skipping crumb: password looks like a personal API token");
-                return null;
-            }
-            if (options.password.startsWith("cloudbees_ci_sa_")) {
-                logger.fine("skipping crumb: password looks like a CloudBees SA token");
-                return null;
-            }
-            // TODO same for [A-Za-z0-9=_-]+[.][A-Za-z0-9=_-]+[.][A-Za-z0-9=_-]+ JWT, or just have option to skip crumb?
+        if (options.noCrumb) {
+            return null;
         }
-
-        logger.finer("getCsrfCrumb() invoked");
+        logger.warning("For security and efficiency, pass -noCrumb and use an API token rather than a password.");
 
         String[] crumbResponse;
 
