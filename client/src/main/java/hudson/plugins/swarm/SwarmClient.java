@@ -206,8 +206,10 @@ public class SwarmClient {
 
         HttpClient.Builder builder = HttpClient.newBuilder();
 
-        // Set a cookie handler for storing the session associated with the CSRF crumb.
-        builder.cookieHandler(new CookieManager());
+        if (!clientOptions.noCrumb) {
+            // Set a cookie handler for storing the session associated with the CSRF crumb.
+            builder.cookieHandler(new CookieManager());
+        }
 
         if (clientOptions.disableSslVerification || !clientOptions.sslFingerprints.isEmpty()) {
             // Set the default SSL context for Remoting.
@@ -246,7 +248,10 @@ public class SwarmClient {
 
     private static synchronized Crumb getCsrfCrumb(HttpClient client, Options options, URL url)
             throws IOException, InterruptedException, RetryException {
-        logger.finer("getCsrfCrumb() invoked");
+        if (options.noCrumb) {
+            return null;
+        }
+        logger.warning("For security and efficiency, pass -noCrumb and use an API token rather than a password.");
 
         String[] crumbResponse;
 

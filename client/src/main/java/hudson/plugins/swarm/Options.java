@@ -149,6 +149,12 @@ public class Options {
     public String passwordFile;
 
     @Option(
+            name = "-noCrumb",
+            usage = "Skip asking for a CSRF crumb, only required when using a real password."
+                    + " It is recommended to always use this option." + " Use API tokens, not passwords.")
+    public boolean noCrumb;
+
+    @Option(
             name = "-labelsFile",
             usage = "File location with space delimited list of labels.  If the file changes, the"
                     + " client is restarted.")
