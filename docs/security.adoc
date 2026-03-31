@@ -17,11 +17,10 @@ Swarm may be used with either a https://www.jenkins.io/blog/2018/07/02/new-api-t
 The following command-line options control authentication:
 
 `-username`:: The Jenkins username for authentication.
-`-password`:: The Jenkins user API token or password.
+`-password`:: The Jenkins user API token or password. CloudBees CI users are advised to use service accounts to authenticate rather than personal access tokens.
 `-passwordEnvVariable`:: Environment variable containing the Jenkins user API token or password.
 `-passwordFile`:: File containing the Jenkins user API token or password.
-
-NOTE: When using a password, the Swarm client will automatically obtain a valid https://support.cloudbees.com/hc/en-us/articles/219257077-CSRF-Protection-Explained[CSRF crumb] when making requests.
+`-noCrumb`:: Do not ask for a CSRF crumb. Recommended unless you are actually using a password, which is not recommended.
 
 === Authorization
 
