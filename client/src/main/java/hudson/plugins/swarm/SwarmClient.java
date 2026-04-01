@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.io.UnsupportedEncodingException;
 import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.Inet4Address;
@@ -244,6 +243,43 @@ public class SwarmClient {
         }
     }
 
+    /**
+     * Helper class for building POST requests with form body parameters.
+     * Treats null values as empty strings and converts non-null values via toString.
+     */
+    static class FormPostRequestBuilder {
+        private final URI uri;
+        private final StringBuilder formBody = new StringBuilder();
+        private boolean first = true;
+
+        FormPostRequestBuilder(URI uri) {
+            this.uri = uri;
+        }
+
+        /**
+         * Add a parameter with a value. Null values are converted to empty strings.
+         * Non-null values are converted via toString.
+         */
+        FormPostRequestBuilder add(String key, Object value) {
+            if (!first) {
+                formBody.append("&");
+            }
+            first = false;
+            String stringValue = value != null ? value.toString() : "";
+            formBody.append(key).append("=").append(URLEncoder.encode(stringValue, StandardCharsets.UTF_8));
+            return this;
+        }
+
+        /**
+         * Build the HttpRequest.Builder with the form body configured.
+         */
+        HttpRequest.Builder build() {
+            return HttpRequest.newBuilder(uri)
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .POST(HttpRequest.BodyPublishers.ofString(formBody.toString()));
+        }
+    }
+
     private static synchronized Crumb getCsrfCrumb(HttpClient client, Options options, URL url)
             throws IOException, InterruptedException, RetryException {
         logger.finer("getCsrfCrumb() invoked");
@@ -283,21 +319,6 @@ public class SwarmClient {
         logger.fine("createSwarmAgent() invoked");
 
         String labelStr = String.join(" ", options.labels);
-        List<String> toolLocationParams = new ArrayList<>();
-        if (options.toolLocations != null) {
-            for (Map.Entry<String, String> toolLocation : options.toolLocations.entrySet()) {
-                toolLocationParams.add("toolLocation=" + encode(toolLocation.getKey() + ":" + toolLocation.getValue()));
-            }
-        }
-
-        List<String> environmentVariableParams = new ArrayList<>();
-        if (options.environmentVariables != null) {
-            for (Map.Entry<String, String> environmentVariable : options.environmentVariables.entrySet()) {
-                environmentVariableParams.add("environmentVariable="
-                        + encode(environmentVariable.getKey() + ":" + environmentVariable.getValue()));
-            }
-        }
-
         String sMyLabels = labelStr;
         if (sMyLabels.length() > 1000) {
             sMyLabels = "";
@@ -308,32 +329,30 @@ public class SwarmClient {
         HttpClient client = createHttpClient(options);
         URI uri = URI.create(url + "plugin/swarm/createSlave");
 
-        StringBuilder formBody = new StringBuilder();
-        formBody.append("name=").append(encode(options.name));
-        formBody.append("&executors=").append(options.executors);
-        if (options.fsroot.getAbsolutePath() != null) {
-            formBody.append("&remoteFsRoot=").append(encode(options.fsroot.getAbsolutePath()));
+        FormPostRequestBuilder formBuilder = new FormPostRequestBuilder(uri)
+                .add("name", options.name)
+                .add("executors", options.executors)
+                .add("remoteFsRoot", options.fsroot.getAbsolutePath())
+                .add("description", options.description)
+                .add("labels", sMyLabels);
+        if (options.toolLocations != null) {
+            for (var toolLocation : options.toolLocations.entrySet()) {
+                formBuilder.add("toolLocation", toolLocation.getKey() + ":" + toolLocation.getValue());
+            }
         }
-        if (options.description != null) {
-            formBody.append("&description=").append(encode(options.description));
+        if (options.environmentVariables != null) {
+            for (var environmentVariable : options.environmentVariables.entrySet()) {
+                formBuilder.add(
+                        "environmentVariable", environmentVariable.getKey() + ":" + environmentVariable.getValue());
+            }
         }
-        if (sMyLabels != null) {
-            formBody.append("&labels=").append(encode(sMyLabels));
-        }
-        for (String toolLocation : toolLocationParams) {
-            formBody.append("&").append(toolLocation);
-        }
-        for (String environmentVariable : environmentVariableParams) {
-            formBody.append("&").append(environmentVariable);
-        }
-        formBody.append("&mode=").append(encode(options.mode.toUpperCase(Locale.ENGLISH)));
-        formBody.append("&hash=").append(encode(hash));
-        formBody.append("&deleteExistingClients=").append(encode(Boolean.toString(options.deleteExistingClients)));
-        formBody.append("&keepDisconnectedClients=").append(encode(Boolean.toString(options.keepDisconnectedClients)));
+        formBuilder
+                .add("mode", options.mode.toUpperCase(Locale.ENGLISH))
+                .add("hash", hash)
+                .add("deleteExistingClients", options.deleteExistingClients)
+                .add("keepDisconnectedClients", options.keepDisconnectedClients);
 
-        HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(formBody.toString()));
+        HttpRequest.Builder builder = formBuilder.build();
         SwarmClient.addAuthorizationHeader(builder, options);
         Crumb csrfCrumb = getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
@@ -390,10 +409,10 @@ public class SwarmClient {
     static synchronized void postLabelRemove(String name, String labels, HttpClient client, Options options, URL url)
             throws IOException, InterruptedException, RetryException {
         URI uri = URI.create(url + "plugin/swarm/removeSlaveLabels");
-        String formBody = "name=" + encode(name) + "&labels=" + encode(labels);
-        HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(formBody));
+        HttpRequest.Builder builder = new FormPostRequestBuilder(uri)
+                .add("name", name)
+                .add("labels", labels)
+                .build();
         SwarmClient.addAuthorizationHeader(builder, options);
         Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
@@ -411,10 +430,10 @@ public class SwarmClient {
     static synchronized void postLabelAppend(String name, String labels, HttpClient client, Options options, URL url)
             throws IOException, InterruptedException, RetryException {
         URI uri = URI.create(url + "plugin/swarm/addSlaveLabels");
-        String formBody = "name=" + encode(name) + "&labels=" + encode(labels);
-        HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(formBody));
+        HttpRequest.Builder builder = new FormPostRequestBuilder(uri)
+                .add("name", name)
+                .add("labels", labels)
+                .build();
         SwarmClient.addAuthorizationHeader(builder, options);
         Crumb csrfCrumb = getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
@@ -427,12 +446,6 @@ public class SwarmClient {
             throw new RetryException(String.format(
                     "Failed to update agent labels. Response code: %s%n%s", response.statusCode(), response.body()));
         }
-    }
-
-    private static synchronized String encode(String value) throws UnsupportedEncodingException {
-        logger.finer("encode() invoked");
-
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     static String getChildElementString(Element parent, String tagName) {
