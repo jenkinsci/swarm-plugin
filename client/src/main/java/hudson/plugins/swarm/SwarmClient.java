@@ -250,9 +250,9 @@ public class SwarmClient {
 
     /**
      * Helper class for building POST requests with form body parameters.
-     * Treats null values as empty strings and converts non-null values via toString.
+     * Skips null values and converts non-null values via toString.
      */
-    static class FormPostRequestBuilder {
+    private static class FormPostRequestBuilder {
         private final URI uri;
         private final StringBuilder formBody = new StringBuilder();
         private boolean first = true;
@@ -262,16 +262,18 @@ public class SwarmClient {
         }
 
         /**
-         * Add a parameter with a value. Null values are converted to empty strings.
+         * Add a parameter with a value. Null values are skipped.
          * Non-null values are converted via toString.
          */
         FormPostRequestBuilder add(String key, Object value) {
+            if (value == null) {
+                return this;
+            }
             if (!first) {
                 formBody.append("&");
             }
             first = false;
-            String stringValue = value != null ? value.toString() : "";
-            formBody.append(key).append("=").append(URLEncoder.encode(stringValue, StandardCharsets.UTF_8));
+            formBody.append(key).append("=").append(URLEncoder.encode(value.toString(), StandardCharsets.UTF_8));
             return this;
         }
 
@@ -280,8 +282,8 @@ public class SwarmClient {
          */
         HttpRequest.Builder build() {
             return HttpRequest.newBuilder(uri)
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(HttpRequest.BodyPublishers.ofString(formBody.toString()));
+                    .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                    .POST(HttpRequest.BodyPublishers.ofString(formBody.toString(), StandardCharsets.UTF_8));
         }
     }
 
