@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>swarm-plugin</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>${changelist}</version>
   <packaging>pom</packaging>
   <name>Swarm Plugin Parent POM</name>
   <description>The Swarm plugin enables nodes to join a nearby Jenkins controller, thereby forming an ad-hoc cluster.</description>
@@ -21,13 +21,6 @@
       <url>https://opensource.org/licenses/MIT</url>
     </license>
   </licenses>
-
-  <developers>
-    <developer>
-      <id>basil</id>
-      <name>Basil Crow</name>
-    </developer>
-  </developers>
 
   <modules>
     <module>client</module>
@@ -42,8 +35,7 @@
   </scm>
 
   <properties>
-    <revision>3.52</revision>
-    <changelist>-SNAPSHOT</changelist>
+    <changelist>999999-SNAPSHOT</changelist>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
