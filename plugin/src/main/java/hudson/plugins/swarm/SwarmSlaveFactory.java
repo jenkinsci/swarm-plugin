@@ -40,6 +40,12 @@ import org.kohsuke.accmod.restrictions.Beta;
 @Restricted(Beta.class)
 public interface SwarmSlaveFactory extends ExtensionPoint {
 
+    /**
+     * Whether there is an existing agent connection of the given name.
+     * We will only cause issues if we trample over an online connection.
+     */
+    boolean haveExistingConnection(String name);
+
     Slave createSlave(
             String name,
             String nodeDescription,
