@@ -2,10 +2,12 @@ package hudson.plugins.swarm;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.model.Computer;
 import hudson.model.Descriptor;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Node;
 import hudson.model.Slave;
+import hudson.security.ACL;
 import hudson.slaves.ComputerLauncher;
 import hudson.slaves.EphemeralNode;
 import hudson.slaves.NodeProperty;
@@ -52,6 +54,36 @@ public class SwarmSlave extends Slave implements EphemeralNode {
     @Override
     public Node asNode() {
         return this;
+    }
+
+    @Override
+    public Computer createComputer() {
+        return new SwarmComputer(this);
+    }
+
+    private static final class SwarmComputer extends SlaveComputer {
+        SwarmComputer(SwarmSlave slave) {
+            super(slave);
+        }
+
+        @NonNull
+        @Override
+        public ACL getACL() {
+            return ACL.lambda2((a, p) -> {
+                if (ACL.SYSTEM2.equals(a)) {
+                    return true;
+                } else if (p == Computer.CONFIGURE || p == Computer.DELETE) {
+                    return false;
+                } else {
+                    return super.getACL().hasPermission2(a, p);
+                }
+            });
+        }
+
+        @Override
+        public boolean isManualLaunchAllowed() {
+            return false;
+        }
     }
 
     @Extension
