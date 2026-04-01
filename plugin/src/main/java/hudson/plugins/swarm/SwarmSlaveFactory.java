@@ -1,0 +1,58 @@
+/*
+ * The MIT License
+ *
+ * Copyright 2026 CloudBees, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+package hudson.plugins.swarm;
+
+import hudson.ExtensionPoint;
+import hudson.model.Descriptor;
+import hudson.model.Node;
+import hudson.model.Slave;
+import hudson.slaves.NodeProperty;
+import java.io.IOException;
+import java.util.List;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.Beta;
+
+/**
+ * Customizable mechanism for creating the actual agent.
+ */
+@Restricted(Beta.class)
+public interface SwarmSlaveFactory extends ExtensionPoint {
+
+    /**
+     * Whether there is an existing agent connection of the given name.
+     * We will only cause issues if we trample over an online connection.
+     */
+    boolean haveExistingConnection(String name);
+
+    Slave createSlave(
+            String name,
+            String nodeDescription,
+            String remoteFS,
+            int numExecutors,
+            Node.Mode mode,
+            String labelString,
+            List<? extends NodeProperty<?>> nodeProperties)
+            throws IOException, Descriptor.FormException;
+}
