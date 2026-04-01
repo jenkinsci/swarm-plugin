@@ -41,6 +41,12 @@ public class Options {
                     + " auto-configured like the default behavior")
     public String tunnel;
 
+    @Option(
+            name = "-noHttp2",
+            usage = "Do not even ask to use HTTP/2; force use of HTTP/1.1."
+                    + " Can work around issues with certain reverse proxies.")
+    public boolean noHttp2;
+
     @Option(name = "-webSocket", usage = "Connect using the WebSocket protocol.", forbids = "-tunnel")
     public boolean webSocket;
 
