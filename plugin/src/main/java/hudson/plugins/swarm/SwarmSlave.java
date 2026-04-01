@@ -10,8 +10,10 @@ import hudson.slaves.ComputerLauncher;
 import hudson.slaves.EphemeralNode;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.RetentionStrategy;
+import hudson.slaves.SlaveComputer;
 import java.io.IOException;
 import java.util.List;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -70,6 +72,13 @@ public class SwarmSlave extends Slave implements EphemeralNode {
 
     @Extension
     public static final class DefaultSwarmSlaveFactory implements SwarmSlaveFactory {
+        @Override
+        public boolean haveExistingConnection(String name) {
+            return Jenkins.get().getNode(name) instanceof SwarmSlave ss
+                    && ss.toComputer() instanceof SlaveComputer sc
+                    && sc.isOnline();
+        }
+
         @Override
         public Slave createSlave(
                 String name,
