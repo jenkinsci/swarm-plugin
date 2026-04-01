@@ -205,6 +205,9 @@ public class SwarmClient {
         logger.fine("createHttpClient() invoked");
 
         HttpClient.Builder builder = HttpClient.newBuilder();
+        if (clientOptions.noHttp2) {
+            builder.version(HttpClient.Version.HTTP_1_1);
+        }
 
         // Set a cookie handler for storing the session associated with the CSRF crumb.
         builder.cookieHandler(new CookieManager());
