@@ -1,11 +1,8 @@
 package hudson.plugins.swarm;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Extension;
 import hudson.model.Node;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
-import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -18,14 +15,8 @@ public class KeepSwarmClientNodeProperty extends NodeProperty<Node> {
     @DataBoundConstructor
     public KeepSwarmClientNodeProperty() {}
 
-    @Extension
-    @Symbol("keepSwarmClient")
-    public static class DescriptorImpl extends NodePropertyDescriptor {
-
-        @NonNull
-        @Override
-        public String getDisplayName() {
-            return "Keep Swarm client node after agent disconnect";
-        }
+    @Override
+    public NodePropertyDescriptor getDescriptor() {
+        return new NodePropertyDescriptor(KeepSwarmClientNodeProperty.class) {};
     }
 }
