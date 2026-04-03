@@ -12,7 +12,7 @@
   <name>Swarm Client</name>
 
   <properties>
-    <micrometer.version>1.15.4</micrometer.version>
+    <micrometer.version>1.16.2</micrometer.version>
   </properties>
 
   <dependencyManagement>
@@ -86,7 +86,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.6.0</version>
+        <version>3.6.1</version>
         <executions>
           <execution>
             <goals>
