@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.io.UnsupportedEncodingException;
 import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.Inet4Address;
@@ -249,6 +248,41 @@ public class SwarmClient {
         }
     }
 
+    /**
+     * Helper class for building POST requests with form body parameters.
+     */
+    private static class FormPostRequestBuilder {
+        private final URI uri;
+        private final StringBuilder formBody = new StringBuilder();
+        private boolean first = true;
+
+        FormPostRequestBuilder(URI uri) {
+            this.uri = uri;
+        }
+
+        /**
+         * Add a parameter with a value. Null values are skipped.
+         * Non-null values are converted via toString.
+         */
+        FormPostRequestBuilder add(String key, Object value) {
+            if (value == null) {
+                return this;
+            }
+            if (!first) {
+                formBody.append("&");
+            }
+            first = false;
+            formBody.append(key).append("=").append(URLEncoder.encode(value.toString(), StandardCharsets.UTF_8));
+            return this;
+        }
+
+        HttpRequest.Builder build() {
+            return HttpRequest.newBuilder(uri)
+                    .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                    .POST(HttpRequest.BodyPublishers.ofString(formBody.toString(), StandardCharsets.UTF_8));
+        }
+    }
+
     private static synchronized Crumb getCsrfCrumb(HttpClient client, Options options, URL url)
             throws IOException, InterruptedException, RetryException {
         if (options.noCrumb) {
@@ -291,22 +325,6 @@ public class SwarmClient {
         logger.fine("createSwarmAgent() invoked");
 
         String labelStr = String.join(" ", options.labels);
-        StringBuilder toolLocationBuilder = new StringBuilder();
-        if (options.toolLocations != null) {
-            for (Map.Entry<String, String> toolLocation : options.toolLocations.entrySet()) {
-                toolLocationBuilder.append(
-                        param("toolLocation", toolLocation.getKey() + ":" + toolLocation.getValue()));
-            }
-        }
-
-        StringBuilder environmentVariablesBuilder = new StringBuilder();
-        if (options.environmentVariables != null) {
-            for (Map.Entry<String, String> environmentVariable : options.environmentVariables.entrySet()) {
-                environmentVariablesBuilder.append(param(
-                        "environmentVariable", environmentVariable.getKey() + ":" + environmentVariable.getValue()));
-            }
-        }
-
         String sMyLabels = labelStr;
         if (sMyLabels.length() > 1000) {
             sMyLabels = "";
@@ -315,21 +333,32 @@ public class SwarmClient {
         Properties props = new Properties();
 
         HttpClient client = createHttpClient(options);
-        URI uri = URI.create(url
-                + "plugin/swarm/createSlave?name="
-                + options.name
-                + "&executors="
-                + options.executors
-                + param("remoteFsRoot", options.fsroot.getAbsolutePath())
-                + param("description", options.description)
-                + param("labels", sMyLabels)
-                + toolLocationBuilder
-                + environmentVariablesBuilder
-                + param("mode", options.mode.toUpperCase(Locale.ENGLISH))
-                + param("hash", hash)
-                + param("deleteExistingClients", Boolean.toString(options.deleteExistingClients))
-                + param("keepDisconnectedClients", Boolean.toString(options.keepDisconnectedClients)));
-        HttpRequest.Builder builder = HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
+        URI uri = URI.create(url + "plugin/swarm/createSlave");
+
+        FormPostRequestBuilder formBuilder = new FormPostRequestBuilder(uri)
+                .add("name", options.name)
+                .add("executors", options.executors)
+                .add("remoteFsRoot", options.fsroot.getAbsolutePath())
+                .add("description", options.description)
+                .add("labels", sMyLabels);
+        if (options.toolLocations != null) {
+            for (var toolLocation : options.toolLocations.entrySet()) {
+                formBuilder.add("toolLocation", toolLocation.getKey() + ":" + toolLocation.getValue());
+            }
+        }
+        if (options.environmentVariables != null) {
+            for (var environmentVariable : options.environmentVariables.entrySet()) {
+                formBuilder.add(
+                        "environmentVariable", environmentVariable.getKey() + ":" + environmentVariable.getValue());
+            }
+        }
+        formBuilder
+                .add("mode", options.mode.toUpperCase(Locale.ENGLISH))
+                .add("hash", hash)
+                .add("deleteExistingClients", options.deleteExistingClients)
+                .add("keepDisconnectedClients", options.keepDisconnectedClients);
+
+        HttpRequest.Builder builder = formBuilder.build();
         SwarmClient.addAuthorizationHeader(builder, options);
         Crumb csrfCrumb = getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
@@ -385,8 +414,11 @@ public class SwarmClient {
 
     static synchronized void postLabelRemove(String name, String labels, HttpClient client, Options options, URL url)
             throws IOException, InterruptedException, RetryException {
-        URI uri = URI.create(url + "plugin/swarm/removeSlaveLabels?name=" + name + SwarmClient.param("labels", labels));
-        HttpRequest.Builder builder = HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
+        URI uri = URI.create(url + "plugin/swarm/removeSlaveLabels");
+        HttpRequest.Builder builder = new FormPostRequestBuilder(uri)
+                .add("name", name)
+                .add("labels", labels)
+                .build();
         SwarmClient.addAuthorizationHeader(builder, options);
         Crumb csrfCrumb = SwarmClient.getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
@@ -403,8 +435,11 @@ public class SwarmClient {
 
     static synchronized void postLabelAppend(String name, String labels, HttpClient client, Options options, URL url)
             throws IOException, InterruptedException, RetryException {
-        URI uri = URI.create(url + "plugin/swarm/addSlaveLabels?name=" + name + param("labels", labels));
-        HttpRequest.Builder builder = HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.noBody());
+        URI uri = URI.create(url + "plugin/swarm/addSlaveLabels");
+        HttpRequest.Builder builder = new FormPostRequestBuilder(uri)
+                .add("name", name)
+                .add("labels", labels)
+                .build();
         SwarmClient.addAuthorizationHeader(builder, options);
         Crumb csrfCrumb = getCsrfCrumb(client, options, url);
         if (csrfCrumb != null) {
@@ -417,21 +452,6 @@ public class SwarmClient {
             throw new RetryException(String.format(
                     "Failed to update agent labels. Response code: %s%n%s", response.statusCode(), response.body()));
         }
-    }
-
-    private static synchronized String encode(String value) throws UnsupportedEncodingException {
-        logger.finer("encode() invoked");
-
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
-    }
-
-    private static synchronized String param(String name, String value) throws UnsupportedEncodingException {
-        logger.finer("param() invoked");
-
-        if (value == null) {
-            return "";
-        }
-        return "&" + name + "=" + encode(value);
     }
 
     static String getChildElementString(Element parent, String tagName) {
