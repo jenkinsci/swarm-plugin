@@ -250,7 +250,6 @@ public class SwarmClient {
 
     /**
      * Helper class for building POST requests with form body parameters.
-     * Skips null values and converts non-null values via toString.
      */
     private static class FormPostRequestBuilder {
         private final URI uri;
@@ -277,9 +276,6 @@ public class SwarmClient {
             return this;
         }
 
-        /**
-         * Build the HttpRequest.Builder with the form body configured.
-         */
         HttpRequest.Builder build() {
             return HttpRequest.newBuilder(uri)
                     .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
