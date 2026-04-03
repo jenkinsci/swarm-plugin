@@ -93,10 +93,6 @@ Because the Swarm client is running on a separate VM, there is no need to worry 
 |`-workDir FILE` |The Remoting working directory where the JAR cache and logs will be stored.
 |===
 
-== Issues
-
-Report issues and enhancements in the https://issues.jenkins.io/[Jenkins issue tracker]. Use the `swarm-plugin` component in the `JENKINS` project.
-
 == Contributing
 
 Refer to our https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md[contribution guidelines].
