@@ -1,5 +1,6 @@
 package hudson.plugins.swarm;
 
+import hudson.ExtensionList;
 import hudson.Functions;
 import hudson.Plugin;
 import hudson.Util;
@@ -227,19 +228,12 @@ public class PluginImpl extends Plugin {
         }
 
         // Check for existing connections.
-        Node node = jenkins.getNode(name);
-        if (node != null && !deleteExistingClients) {
-            Computer computer = node.toComputer();
-            if (computer != null && computer.isOnline()) {
-                /*
-                 * This is an existing connection. We'll only cause issues if we trample over an
-                 * online connection.
-                 */
-                rsp.setStatus(HttpServletResponse.SC_CONFLICT);
-                rsp.setContentType("text/plain; UTF-8");
-                rsp.getWriter().printf("Agent \"%s\" is already created and on-line.%n", name);
-                return;
-            }
+        if (!deleteExistingClients
+                && ExtensionList.lookupFirst(SwarmSlaveFactory.class).haveExistingConnection(name)) {
+            rsp.setStatus(HttpServletResponse.SC_CONFLICT);
+            rsp.setContentType("text/plain; UTF-8");
+            rsp.getWriter().printf("Agent \"%s\" is already created and on-line.%n", name);
+            return;
         }
 
         try {
@@ -247,14 +241,15 @@ public class PluginImpl extends Plugin {
             if (description != null) {
                 nodeDescription += ": " + description;
             }
-            SwarmSlave agent = new SwarmSlave(
-                    name,
-                    nodeDescription,
-                    remoteFsRoot,
-                    String.valueOf(executors),
-                    mode,
-                    "swarm " + Util.fixNull(labels),
-                    nodeProperties);
+            var agent = ExtensionList.lookupFirst(SwarmSlaveFactory.class)
+                    .createSlave(
+                            name,
+                            nodeDescription,
+                            remoteFsRoot,
+                            executors,
+                            mode,
+                            "swarm " + Util.fixNull(labels),
+                            nodeProperties);
             jenkins.addNode(agent);
 
             rsp.setContentType("text/plain; charset=iso-8859-1");

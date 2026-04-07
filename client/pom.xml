@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>swarm-plugin</artifactId>
-    <version>${revision}${changelist}</version>
+    <version>${changelist}</version>
   </parent>
 
   <artifactId>swarm-client</artifactId>
@@ -12,7 +12,7 @@
   <name>Swarm Client</name>
 
   <properties>
-    <micrometer.version>1.15.4</micrometer.version>
+    <micrometer.version>1.16.2</micrometer.version>
   </properties>
 
   <dependencyManagement>
@@ -62,7 +62,7 @@
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>remoting</artifactId>
-      <version>3327.v868139a_d00e0</version>
+      <version>3355.v388858a_47b_33</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -86,7 +86,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.6.0</version>
+        <version>3.6.1</version>
         <executions>
           <execution>
             <goals>

@@ -40,7 +40,6 @@ Because the Swarm client is running on a separate VM, there is no need to worry 
 
 == Documentation
 
-* xref:CHANGELOG.adoc[Changelog]
 * xref:docs/logging.adoc[Logging and Diagnostics]
 * xref:docs/prometheus.adoc[Prometheus Monitoring]
 * xref:docs/proxy.adoc[Proxy Configuration]
@@ -73,6 +72,8 @@ Because the Swarm client is running on a separate VM, there is no need to worry 
 |`-maxRetryInterval N` |Max time to wait before retry in seconds. Default is 60 seconds. (default: 60)
 |`-mode MODE` |The mode controlling how Jenkins allocates jobs to agents. Can be either `normal' (use this node as much as possible) or `exclusive' (only build jobs with label expressions matching this node). Default is `normal'. (default: normal)
 |`-name VAL` |Name of the agent.
+|`-noCrumb` |Do not ask for a CSRF crumb. (default: false, but recommended to set to true)
+|`-noHttp2` |Do not even try to use HTTP/2 protocol (force HTTP/1.1). Some reverse proxies (such as AWS ALB) appear to be confused by the upgrade request and send an invalid request to the Jenkins controller resulting in a 400 error. (default: false)
 |`-noRetryAfterConnected` |Do not retry if a successful connection gets closed. (default: false)
 |`-password VAL` |The Jenkins user API token or password.
 |`-passwordEnvVariable VAL` |Environment variable containing the Jenkins user API token or password.
@@ -91,10 +92,6 @@ Because the Swarm client is running on a separate VM, there is no need to worry 
 |`-webSocketHeader NAME=VALUE` |Additional WebSocket header to set, e.g. for authenticating with reverse proxies. To specify multiple headers, call this flag multiple times, one with each header.
 |`-workDir FILE` |The Remoting working directory where the JAR cache and logs will be stored.
 |===
-
-== Issues
-
-Report issues and enhancements in the https://issues.jenkins.io/[Jenkins issue tracker]. Use the `swarm-plugin` component in the `JENKINS` project.
 
 == Contributing
 
