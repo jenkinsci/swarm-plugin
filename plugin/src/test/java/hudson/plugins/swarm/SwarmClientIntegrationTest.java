@@ -793,14 +793,32 @@ public class SwarmClientIntegrationTest {
 
         // Prevent eventually called SlaveComputer.closeChannel() from sending
         // the disconnection messages; alas, the channel is well protected.
+        // See https://github.com/jenkinsci/jenkins/blob/master/core/src/main/java/hudson/slaves/SlaveComputer.java
         // Use of reflection may be an evil, but a more portable one than
         // pausing the other JVM, or bringing up temporary firewalls.
         // Maybe a better option could be to mock the class so this test runner
         // can toggle how AbstractCIBase.killComputer() acts or not, but in
-        // the end, mocking uses reflection too. So here goes the evil hack:
-        Field fieldChannel = agentComputer.getClass().getDeclaredField("channel");
-        fieldChannel.setAccessible(true);
-        fieldChannel.set(agentComputer, null);
+        // the end, mocking uses reflection too. So here goes the evil hack
+        // to set `agentComputer.channel = null`:
+        try {
+            Field fieldChannel = null;
+            try {
+                fieldChannel = agentComputer.getClass().getDeclaredField("channel");
+            } catch (NoSuchFieldException ignored) {
+                try {
+                    fieldChannel = agentComputer.getClass().getSuperclass().getDeclaredField("channel");
+                } catch (NoSuchFieldException ignored2) {
+                    fieldChannel = SlaveComputer.class.getDeclaredField("channel");
+                }
+            }
+            fieldChannel.setAccessible(true);
+            fieldChannel.set(agentComputer, null);
+        } catch (NoSuchFieldException ex) {
+            logger.log(
+                    Level.WARNING,
+                    "TEST-CASE keepAliveReconnectsRemoved(): Could not set set `agentComputer.channel=null`: "
+                            + ex.toString());
+        }
 
         j.getInstance().removeNode(node);
         logger.log(
