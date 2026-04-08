@@ -453,6 +453,13 @@ public class SwarmClientRule extends ExternalResource {
                 } finally {
                     computer = null;
                 }
+                logger.log(Level.INFO, "Giving some time for agent process to die before temporary directory cleanup.");
+                try {
+                    Thread.sleep(1000L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    interrupted = true;
+                }
             }
         } finally {
             isActive = false;
