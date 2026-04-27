@@ -26,6 +26,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListenerAdapter;
@@ -68,6 +69,12 @@ public class SwarmClientRule extends ExternalResource {
     /** The password or API token to use when connecting to the Jenkins controller. */
     String swarmPassword;
 
+    /** Customized logging level for all java classes in the launched swarm client process. */
+    private final Level logLevelAll;
+
+    /** Customized logging level for hudson.plugins.swarm.* java classes in the launched swarm client process. */
+    private final Level logLevelSwarm;
+
     /**
      * The {@link Computer} object corresponding to the agent within Jenkins, if the client is
      * active.
@@ -84,6 +91,11 @@ public class SwarmClientRule extends ExternalResource {
     private Thread stdoutThread;
 
     /**
+     * A {@link Path} with a copy of the client's standard out stream, if the client is/was active.
+     */
+    private Path stdoutLogPath;
+
+    /**
      * A {@link Tailer} for watching the client's standard error stream, if the client is active.
      */
     private Tailer stderrTailer;
@@ -94,12 +106,27 @@ public class SwarmClientRule extends ExternalResource {
      */
     private Thread stderrThread;
 
+    /**
+     * A {@link Path} with a copy of the client's standard error stream, if the client is/was active.
+     */
+    private Path stderrLogPath;
+
     /** The {@link Process} corresponding to the client, if the client is active. */
     private Process process;
 
     public SwarmClientRule(Supplier<JenkinsRule> j, TemporaryFolder temporaryFolder) {
         this.j = j;
         this.temporaryFolder = temporaryFolder;
+        this.logLevelAll = null;
+        this.logLevelSwarm = null;
+    }
+
+    public SwarmClientRule(
+            Supplier<JenkinsRule> j, TemporaryFolder temporaryFolder, Level logLevelAll, Level logLevelSwarm) {
+        this.j = j;
+        this.temporaryFolder = temporaryFolder;
+        this.logLevelAll = logLevelAll;
+        this.logLevelSwarm = logLevelSwarm;
     }
 
     public GlobalSecurityConfigurationBuilder globalSecurityConfigurationBuilder() {
@@ -164,6 +191,8 @@ public class SwarmClientRule extends ExternalResource {
 
     /**
      * Create a new Swarm agent on the local host and wait for it to come online before returning.
+     * Ensure verbose logging of the client by injecting a JVM option to use a custom logging
+     * configuration file.
      *
      * <p>The function used to generate the launch CLI takes the client JAR path as an argument and
      * returns the list of commands, typically by invoking {@link #getCommand(Path, URL, String,
@@ -187,6 +216,28 @@ public class SwarmClientRule extends ExternalResource {
 
         final List<String> command = commandGenerator.apply(swarmClientJar);
 
+        if (this.logLevelAll != null && this.logLevelSwarm != null) {
+            Path loggingPropFile = Files.createTempFile(
+                            temporaryFolder.getRoot().toPath(), "logging", ".properties")
+                    .toAbsolutePath();
+            logger.log(
+                    Level.INFO,
+                    "Setting up custom logging for client process: default=" + this.logLevelAll + ", swarm="
+                            + this.logLevelSwarm + " via '" + loggingPropFile + "'");
+            Files.write(
+                    loggingPropFile,
+                    ("handlers = java.util.logging.ConsoleHandler\n"
+                                    + ".level = " + this.logLevelAll + "\n"
+                                    + "java.util.logging.ConsoleHandler.level = ALL\n"
+                                    + "java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter\n"
+                                    + "hudson.plugins.swarm.level = " + this.logLevelSwarm + "\n")
+                            .getBytes(StandardCharsets.UTF_8));
+            // Inject as a JVM option, somewhere after ".../bin/java" and
+            // before "-jar". See "client/logging.properties" example file,
+            // or logging docs, for more details about suggested contents:
+            command.add(2, "-Djava.util.logging.config.file=" + loggingPropFile);
+        }
+
         logger.log(Level.INFO, "Starting client process.");
         try {
             ProcessBuilder pb = new ProcessBuilder(command);
@@ -194,17 +245,17 @@ public class SwarmClientRule extends ExternalResource {
             pb.environment().put("ON_SWARM_CLIENT", "true");
 
             // Redirect standard out to a file and start a thread to tail its contents.
-            Path stdout = Files.createTempFile(temporaryFolder.getRoot().toPath(), "stdout", ".log");
-            pb.redirectOutput(stdout.toFile());
-            stdoutTailer = new Tailer(stdout.toFile(), new SwarmClientTailerListener("Standard out"), 200L);
+            stdoutLogPath = Files.createTempFile(temporaryFolder.getRoot().toPath(), "stdout", ".log");
+            pb.redirectOutput(stdoutLogPath.toFile());
+            stdoutTailer = new Tailer(stdoutLogPath.toFile(), new SwarmClientTailerListener("Standard out"), 200L);
             stdoutThread = new Thread(stdoutTailer);
             stdoutThread.setDaemon(true);
             stdoutThread.start();
 
             // Redirect standard error to a file and start a thread to tail its contents.
-            Path stderr = Files.createTempFile(temporaryFolder.getRoot().toPath(), "stderr", ".log");
-            pb.redirectError(stderr.toFile());
-            stderrTailer = new Tailer(stderr.toFile(), new SwarmClientTailerListener("Standard error"), 200L);
+            stderrLogPath = Files.createTempFile(temporaryFolder.getRoot().toPath(), "stderr", ".log");
+            pb.redirectError(stderrLogPath.toFile());
+            stderrTailer = new Tailer(stderrLogPath.toFile(), new SwarmClientTailerListener("Standard error"), 200L);
             stderrThread = new Thread(stderrTailer);
             stderrThread.setDaemon(true);
             stderrThread.start();
@@ -333,6 +384,7 @@ public class SwarmClientRule extends ExternalResource {
             // Stop the process.
             if (process != null) {
                 try {
+                    logger.log(Level.INFO, "Stopping Swarm client process.");
                     process.destroy();
                     assertTrue(process.waitFor(30, TimeUnit.SECONDS));
                     logger.log(Level.INFO, "Swarm client exited with exit value {0}.", process.exitValue());
@@ -401,6 +453,13 @@ public class SwarmClientRule extends ExternalResource {
                 } finally {
                     computer = null;
                 }
+                logger.log(Level.INFO, "Giving some time for agent process to die before temporary directory cleanup.");
+                try {
+                    Thread.sleep(1000L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    interrupted = true;
+                }
             }
         } finally {
             isActive = false;
@@ -430,6 +489,59 @@ public class SwarmClientRule extends ExternalResource {
         if (isActive) {
             tearDown();
         }
+    }
+
+    /** Returns true if contents of either stderr, or stdout, or both,
+     *  match the pattern */
+    public boolean logContains(Pattern pat) {
+        return logContains(pat, true, true);
+    }
+
+    /** Returns true if contents of either stderr (if asked to look into)
+     *  or stdout (if asked to look into), or both, match the pattern */
+    public boolean logContains(Pattern pat, Boolean inStderr, Boolean inStdout) {
+        if (inStderr && stderrLogPath.toFile().exists()) {
+            try {
+                if (Files.lines(stderrLogPath).anyMatch(pat.asMatchPredicate())) return true; // else fall through
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        if (inStdout && stdoutLogPath.toFile().exists()) {
+            try {
+                return Files.lines(stdoutLogPath).anyMatch(pat.asMatchPredicate());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        return false;
+    }
+
+    /** Returns true if contents of either stderr, or stdout, or both,
+     *  contain the substring */
+    public boolean logContains(String needle) {
+        return logContains(needle, true, true);
+    }
+
+    /** Returns true if contents of either stderr (if asked to look into)
+     *  or stdout (if asked to look into), or both, contain the substring */
+    public boolean logContains(String needle, Boolean inStderr, Boolean inStdout) {
+        if (inStderr && stderrLogPath.toFile().exists()) {
+            try {
+                if (Files.lines(stderrLogPath).anyMatch(line -> line.contains(needle)))
+                    return true; // else fall through
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        if (inStdout && stdoutLogPath.toFile().exists()) {
+            try {
+                return Files.lines(stdoutLogPath).anyMatch(line -> line.contains(needle));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        return false;
     }
 
     static class SwarmClientTailerListener extends TailerListenerAdapter {

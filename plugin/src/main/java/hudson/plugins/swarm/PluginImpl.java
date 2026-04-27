@@ -63,6 +63,55 @@ public class PluginImpl extends Plugin {
         normalResponse(req, rsp, node.getLabelString());
     }
 
+    /** Check if an agent exists (both is in the list of Nodes and has an
+     *  associated Computer object).<br/>
+     *
+     *  The effect is to {@link StaplerResponse2#setContentType}{@code
+     *  ("text/plain; charset=UTF-8")} into the response {@code rsp} and
+     *  either write {@code "ok"} if it does, or report the error in
+     *  plain text per {@link #getNodeByName} and
+     *  {@link HttpServletResponse#setStatus}({@link HttpServletResponse#SC_NOT_FOUND}).<br/>
+     *
+     *  Rationale: In practice, agents may get lost on the Jenkins controller
+     *  server side due to networking issues or Jenkins controller JVM or
+     *  hardware/OS lags. Then they can end up being removed from the list
+     *  of agents running current builds or available for new ones.
+     *  In the meanwhile, the actual agent ({@code hudson.plugins.swarm.SwarmClient}
+     *  in the {@code client} part of {@code swarm-plugin} code base) may still think
+     *  that it is connected and available for new builds; it may still be running
+     *  child processes it was requested to before the unilateral disconnection.<br/>
+     *
+     *  The {@code -keepAliveInterval} parameter (off by default) of the agent
+     *  controls how often the running agent pings the controller to (re-)confirm
+     *  its status as seen by the controller, and would try to reconnect if needed.
+     */
+    @SuppressWarnings({"lgtm[jenkins/csrf]", "lgtm[jenkins/no-permission-check]"})
+    public void doCheckSlaveExists(StaplerRequest2 req, StaplerResponse2 rsp, @QueryParameter String name)
+            throws IOException {
+        Node node = getNodeByName(name, rsp);
+        if (node == null) {
+            // getNodeByName() sets SC_NOT_FOUND and issues a message itself
+            return;
+        }
+
+        if (node.toComputer() == null) {
+            // TOTHINK: Keep HTTP-404 here, or another status code to differentiate the two cases?
+            //  If any change would be applied in the future, take care about
+            //  SwarmClient.isCheckSlaveExistsSupported() to know about the
+            //  new status code too.
+            rsp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            rsp.setContentType("text/plain; UTF-8");
+            rsp.getWriter()
+                    .printf("Agent \"%s\" kind of exists, but is not associated with a Computer object.%n", name);
+            return;
+        }
+
+        rsp.setContentType("text/plain; charset=UTF-8");
+        try (Writer writer = rsp.getWriter()) {
+            writer.write("ok");
+        }
+    }
+
     private void normalResponse(StaplerRequest2 req, StaplerResponse2 rsp, String sLabelList) throws IOException {
         rsp.setContentType("text/xml");
 

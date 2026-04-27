@@ -7,10 +7,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import hudson.Functions;
+import hudson.model.Computer;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
 import hudson.plugins.swarm.test.SwarmClientRule;
+import hudson.slaves.SlaveComputer;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
@@ -19,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -26,9 +29,12 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.apache.commons.lang.RandomStringUtils;
@@ -60,7 +66,9 @@ public class SwarmClientIntegrationTest {
             TemporaryFolder.builder().assureDeletion().build();
 
     @Rule(order = 30)
-    public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder);
+    public SwarmClientRule swarmClientRule = new SwarmClientRule(() -> j, temporaryFolder, Level.INFO, Level.FINE);
+
+    private static final Logger logger = Logger.getLogger(SwarmClientIntegrationTest.class.getName());
 
     @Before
     public void configureGlobalSecurity() throws IOException {
@@ -648,5 +656,327 @@ public class SwarmClientIntegrationTest {
 
         // Verify the cleanup worked
         assertEquals(j.getInstance().getNodes().size(), 0);
+    }
+
+    @Test
+    public void keepAliveSendsProbes() throws Exception {
+        String agentName = "keep-alive-agent";
+        Node agentNode = swarmClientRule.createSwarmClientWithName(
+                agentName, "-deleteExistingClients", "-disableClientsUniqueId", "-keepAliveInterval", "2");
+        assertNotNull("Agent should be created before the test case", agentNode);
+
+        // Note: swarmClientRule.waitOnline() is included as part of creation
+        Node node = j.getInstance().getNode(agentName);
+        assertNotNull("Agent should be seen by server as connected before the test case", node);
+
+        assertEquals(
+                "Agent seen by server as connected and the one we created should be the same one", agentNode, node);
+
+        logger.log(Level.INFO, "TEST-CASE keepAliveProbes(): Sleep for 10 seconds, see if there are client probes");
+        Thread.sleep(10000);
+        logger.log(Level.INFO, "TEST-CASE keepAliveProbes(): The sleep is over, one way or another...");
+        assertNotNull("Agent should be still connected", j.getInstance().getNode(agentName));
+
+        assertTrue(
+                "Agent logs should contain start of the KeepAliveThread",
+                swarmClientRule.logContains("Setting up KeepAliveThread for 2 second probes"));
+        // Requires FINE logging verbosity of the client JVM, or louder:
+        assertTrue(
+                "Agent logs should contain a few probes",
+                swarmClientRule.logContains("Checking if agent is still registered"));
+        assertTrue(
+                "Agent logs should contain a few probes",
+                swarmClientRule.logContains("OK: agent is still registered on the controller"));
+
+        j.getInstance().removeNode(node);
+        Thread.sleep(2000);
+        assertTrue(
+                "Agent logs should contain end of the KeepAliveThread",
+                swarmClientRule.logContains("Stopped KeepAliveThread"));
+        // Reconnects after 10 sec by default, should be quiet now
+        assertTrue(
+                "Agent logs should contain a started retry attempt",
+                swarmClientRule.logContains("Retrying in 10 seconds"));
+
+        logger.log(Level.INFO, "TEST-CASE keepAliveProbes(): Remove agent to finish the test case");
+        swarmClientRule.tearDown();
+        // This tends to report just "h.p.swarm.test.SwarmClientRule#tearDown: Swarm client exited with exit value 1."
+        // and nothing from agent itself, at least on platforms like Windows (no signal-sending for graceful shutdown)
+    }
+
+    @Test
+    public void keepAliveReconnectsGraceful() throws Exception {
+        String agentName = "keep-alive-agent";
+        Node agentNode = swarmClientRule.createSwarmClientWithName(
+                agentName, "-deleteExistingClients", "-disableClientsUniqueId", "-keepAliveInterval", "2");
+        assertNotNull("Agent should be created before the test case", agentNode);
+
+        // Note: swarmClientRule.waitOnline() is included as part of creation
+        Node node = j.getInstance().getNode(agentName);
+        assertNotNull("Agent should be seen by server as connected before the test case", node);
+
+        assertEquals(
+                "Agent seen by server as connected and the one we created should be the same one", agentNode, node);
+
+        // Manually remove the node from Jenkins
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsGraceful(): Gracefully removing node as seen by the server (Remoting may close the Channel correctly; keep-alive should not interfere)");
+        j.getInstance().removeNode(node);
+        assertNull(
+                "Agent should have been removed from the Jenkins controller as part of the test case",
+                j.getInstance().getNode(agentName));
+
+        // Wait for the agent to reconnect.
+        // It should check every 2 seconds, find it's missing, and reconnect.
+        // More likely though, the removeNode() activity involved protocol
+        // good-byes so the agent knows it should reconnect due to that.
+        long start = System.currentTimeMillis();
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsGraceful(): Waiting up to 30 seconds for swarm agent node to reconnect to the server and be seen again");
+        while (j.getInstance().getNode(agentName) == null && System.currentTimeMillis() - start < 30000) {
+            Thread.sleep(1000);
+        }
+
+        logger.log(Level.INFO, "TEST-CASE keepAliveReconnectsGraceful(): The sleep is over, one way or another...");
+        assertNotNull("Agent should have reconnected", j.getInstance().getNode(agentName));
+
+        assertTrue(
+                "Agent logs should contain start of the KeepAliveThread",
+                swarmClientRule.logContains("Setting up KeepAliveThread"));
+        assertTrue(
+                "Agent logs should contain end of the KeepAliveThread",
+                swarmClientRule.logContains("Stopped KeepAliveThread"));
+        // Might not live long enough to send keep-alives so not checking for that yet
+
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveProbes(): Sleep for 5 seconds, see if there are client probes after reconnection");
+        Thread.sleep(5000);
+        // These entries MIGHT be from before reconnection if the test rig is slow, but shouldn't be often:
+        assertTrue(
+                "Agent logs should contain a few probes",
+                swarmClientRule.logContains("Checking if agent is still registered"));
+        assertTrue(
+                "Agent logs should contain a few probes",
+                swarmClientRule.logContains("OK: agent is still registered on the controller"));
+
+        logger.log(Level.INFO, "TEST-CASE keepAliveReconnectsGraceful(): Remove agent to finish the test case");
+        swarmClientRule.tearDown();
+    }
+
+    @Test
+    public void keepAliveReconnectsRemoved() throws Exception {
+        String agentName = "keep-alive-agent";
+        Node agentNode = swarmClientRule.createSwarmClientWithName(
+                agentName, "-deleteExistingClients", "-disableClientsUniqueId", "-keepAliveInterval", "2");
+        assertNotNull("Agent should be created before the test case", agentNode);
+
+        // Note: swarmClientRule.waitOnline() is included as part of creation
+        Node node = j.getInstance().getNode(agentName);
+        assertNotNull("Agent should be seen by server as connected before the test case", node);
+
+        assertEquals(
+                "Agent seen by server as connected and the one we created should be the same one", agentNode, node);
+
+        assertTrue("Agent node class is (derived from) SwarmSlave", node instanceof SwarmSlave);
+
+        // Manually remove the node from Jenkins in a way that it does not trigger a graceful disconnect via dialog
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsRemoved(): Unilaterally removing node as seen by the server (without graceful good-byes)");
+        Computer computer = node.toComputer();
+        assertNotNull("Agent computer object is not null", computer);
+        assertTrue("Agent computer class is (derived from) SlaveComputer", computer instanceof SlaveComputer);
+        SlaveComputer agentComputer = ((SlaveComputer) computer);
+
+        // Prevent eventually called SlaveComputer.closeChannel() from sending
+        // the disconnection messages; alas, the channel is well protected.
+        // See https://github.com/jenkinsci/jenkins/blob/master/core/src/main/java/hudson/slaves/SlaveComputer.java
+        // Use of reflection may be an evil, but a more portable one than
+        // pausing the other JVM, or bringing up temporary firewalls.
+        // Maybe a better option could be to mock the class so this test runner
+        // can toggle how AbstractCIBase.killComputer() acts or not, but in
+        // the end, mocking uses reflection too. So here goes the evil hack
+        // to set `agentComputer.channel = null`:
+        try {
+            Field fieldChannel = null;
+            try {
+                fieldChannel = agentComputer.getClass().getDeclaredField("channel");
+            } catch (NoSuchFieldException ignored) {
+                try {
+                    fieldChannel = agentComputer.getClass().getSuperclass().getDeclaredField("channel");
+                } catch (NoSuchFieldException ignored2) {
+                    fieldChannel = SlaveComputer.class.getDeclaredField("channel");
+                }
+            }
+            fieldChannel.setAccessible(true);
+            fieldChannel.set(agentComputer, null);
+        } catch (NoSuchFieldException ex) {
+            logger.log(
+                    Level.WARNING,
+                    "TEST-CASE keepAliveReconnectsRemoved(): Could not set set `agentComputer.channel=null`: "
+                            + ex.toString());
+        }
+
+        j.getInstance().removeNode(node);
+        logger.log(
+                Level.INFO, "TEST-CASE keepAliveReconnectsRemoved(): Checking that node is no longer seen by server");
+        assertNull(
+                "Agent should have been removed from the Jenkins controller as part of the test case",
+                j.getInstance().getNode(agentName));
+
+        // Wait for the agent to reconnect.
+        // It should check every 2 seconds, find it's missing, and reconnect.
+        long start = System.currentTimeMillis();
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsRemoved(): Waiting up to 30 seconds for swarm agent node to reconnect to the server and be seen again");
+        while (j.getInstance().getNode(agentName) == null && System.currentTimeMillis() - start < 30000) {
+            Thread.sleep(1000);
+        }
+
+        logger.log(Level.INFO, "TEST-CASE keepAliveReconnectsRemoved(): The sleep is over, one way or another...");
+        // Jenkins controller side of the test log should only say:
+        //   26.976 [id=154]	INFO	j.s.DefaultJnlpSlaveReceiver#channelClosed:
+        //     IOHub#1: Worker[channel:java.nio.channels.SocketChannel
+        //     [connected local=/127.0.0.1:55060 remote=kubernetes.docker.internal/127.0.0.1:55066]] /
+        //     Computer.threadPoolForRemoting [#7] for keep-alive-agent terminated:
+        //     java.nio.channels.ClosedChannelException
+        assertTrue(
+                "Agent logs should contain start of the KeepAlive check",
+                swarmClientRule.logContains("Checking if agent is still registered on the controller"));
+        assertTrue(
+                "Agent logs should report self-inflicted reconnection",
+                swarmClientRule.logContains(
+                        "WARNING: Agent is no longer registered on the controller. Interrupting connection to trigger reconnection"));
+        assertTrue(
+                "Agent logs should report failure to connect (due to self-inflicted interruption)",
+                swarmClientRule.logContains("hudson.plugins.swarm.RetryException: Failed to establish connection to"));
+        assertTrue(
+                "Agent logs should contain end of the KeepAliveThread",
+                swarmClientRule.logContains("Stopped KeepAliveThread"));
+        assertTrue(swarmClientRule.logContains("Retrying in 10 seconds"));
+
+        assertNotNull("Agent should have reconnected", j.getInstance().getNode(agentName));
+
+        // Note: we get the agent listed a few seconds before it deems the connection finished.
+        // Let it complete, to avoid noise that looks like breakage in the log.
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsRemoved(): Server says that agent reestablished the connection; waiting a bit for it to complete, for a clean finish of the test case");
+        Thread.sleep(5000);
+
+        // Just curious... (so no assertion):
+        Node node2 = j.getInstance().getNode(agentName);
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsRemoved(): Is the new node object same as old? " + (node2 == agentNode));
+        Computer computer2 = node2.toComputer();
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsRemoved(): Is the new computer object same as old? "
+                        + (computer2 == computer));
+
+        logger.log(Level.INFO, "TEST-CASE keepAliveReconnectsRemoved(): Remove agent to finish the test case");
+        swarmClientRule.tearDown();
+    }
+
+    /** An agent may be not seen in "$JENKINS_URL/computers" but still have a Node in the list */
+    @Test
+    public void keepAliveReconnectsDissociatedComputer() throws Exception {
+        String agentName = "keep-alive-agent";
+        Node agentNode = swarmClientRule.createSwarmClientWithName(
+                agentName, "-deleteExistingClients", "-disableClientsUniqueId", "-keepAliveInterval", "2");
+        assertNotNull("Agent should be created before the test case", agentNode);
+
+        // Note: swarmClientRule.waitOnline() is included as part of creation
+        Node node = j.getInstance().getNode(agentName);
+        assertNotNull("Agent should be seen by server as connected before the test case", node);
+
+        assertEquals(
+                "Agent seen by server as connected and the one we created should be the same one", agentNode, node);
+
+        assertTrue("Agent node class is (derived from) SwarmSlave", node instanceof SwarmSlave);
+
+        // Manually remove the node from Jenkins in a way that it does not trigger a graceful disconnect via dialog
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsDissociated(): Unilaterally removing computer object from node (without graceful good-byes)");
+
+        Computer computer = node.toComputer();
+        assertNotNull("Agent computer object is not null", computer);
+        assertTrue("Agent computer class is (derived from) SlaveComputer", computer instanceof SlaveComputer);
+        SlaveComputer agentComputer = ((SlaveComputer) computer);
+
+        Field fieldComputers = jenkins.model.Jenkins.class.getDeclaredField("computers");
+        fieldComputers.setAccessible(true);
+        Object fieldComputersRaw = fieldComputers.get(j.getInstance());
+        assertTrue("Jenkins.instance.computers class is a Map", fieldComputersRaw instanceof Map);
+        // FIXME: Check Map key and value classes?
+        //  Or just let the test crash on discrepancies?
+        Map<Node, Computer> computers = (Map<Node, Computer>) fieldComputersRaw;
+        computers.remove(agentNode);
+
+        logger.log(
+                Level.INFO, "TEST-CASE keepAliveReconnectsDissociated(): Checking that node is still seen by server");
+        assertNotNull(
+                "Agent should not have been removed from the Jenkins controller as part of the test case",
+                j.getInstance().getNode(agentName));
+        logger.log(
+                Level.INFO, "TEST-CASE keepAliveReconnectsDissociated(): Checking that node no longer has a Computer");
+        assertNull(
+                "Agent should have null computer association",
+                j.getInstance().getNode(agentName).toComputer());
+
+        // Wait for the agent to reconnect.
+        // It should check every 2 seconds, find it's missing, and reconnect.
+        long start = System.currentTimeMillis();
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsDissociated(): Waiting up to 30 seconds for swarm agent node to reconnect to the server and be seen again");
+        while ((j.getInstance().getNode(agentName) == null
+                        || j.getInstance().getNode(agentName).toComputer() == null)
+                && System.currentTimeMillis() - start < 30000) {
+            Thread.sleep(1000);
+        }
+
+        logger.log(Level.INFO, "TEST-CASE keepAliveReconnectsDissociated(): The sleep is over, one way or another...");
+        // Jenkins controller side of the test log should only say:
+        //   26.976 [id=154]	INFO	j.s.DefaultJnlpSlaveReceiver#channelClosed:
+        //     IOHub#1: Worker[channel:java.nio.channels.SocketChannel
+        //     [connected local=/127.0.0.1:55060 remote=kubernetes.docker.internal/127.0.0.1:55066]] /
+        //     Computer.threadPoolForRemoting [#7] for keep-alive-agent terminated:
+        //     java.nio.channels.ClosedChannelException
+        assertTrue(
+                "Agent logs should contain start of the KeepAlive check",
+                swarmClientRule.logContains("Checking if agent is still registered on the controller"));
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsDissociated(): Check if the agent noticed it was disconnected");
+        assertTrue(
+                "Agent logs should report self-inflicted reconnection",
+                swarmClientRule.logContains(
+                        "WARNING: Agent is no longer registered on the controller. Interrupting connection to trigger reconnection"));
+        assertTrue(
+                "Agent logs should report failure to connect (due to self-inflicted interruption)",
+                swarmClientRule.logContains("hudson.plugins.swarm.RetryException: Failed to establish connection to"));
+        assertTrue(
+                "Agent logs should contain end of the KeepAliveThread",
+                swarmClientRule.logContains("Stopped KeepAliveThread"));
+        assertTrue(swarmClientRule.logContains("Retrying in 10 seconds"));
+
+        assertNotNull("Agent should have reconnected", j.getInstance().getNode(agentName));
+
+        // Note: we get the agent listed a few seconds before it deems the connection finished.
+        // Let it complete, to avoid noise that looks like breakage in the log.
+        logger.log(
+                Level.INFO,
+                "TEST-CASE keepAliveReconnectsDissociated(): Server says that agent reestablished the connection; waiting a bit for it to complete, for a clean finish of the test case");
+        Thread.sleep(5000);
+
+        logger.log(Level.INFO, "TEST-CASE keepAliveReconnectsDissociated(): Remove agent to finish the test case");
+        swarmClientRule.tearDown();
     }
 }
