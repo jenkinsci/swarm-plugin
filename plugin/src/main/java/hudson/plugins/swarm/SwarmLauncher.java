@@ -1,7 +1,5 @@
 package hudson.plugins.swarm;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Extension;
 import hudson.Functions;
 import hudson.model.Descriptor;
 import hudson.model.Slave;
@@ -87,13 +85,8 @@ public class SwarmLauncher extends JNLPLauncher {
         }
     }
 
-    @Extension
-    public static class DescriptorImpl extends Descriptor<ComputerLauncher> {
-
-        @NonNull
-        @Override
-        public String getDisplayName() {
-            return "Launch Swarm agent";
-        }
+    @Override
+    public Descriptor<ComputerLauncher> getDescriptor() {
+        return new Descriptor<ComputerLauncher>(SwarmLauncher.class) {};
     }
 }
