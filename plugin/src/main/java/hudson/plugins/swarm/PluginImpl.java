@@ -85,7 +85,7 @@ public class PluginImpl extends Plugin {
      *  controls how often the running agent pings the controller to (re-)confirm
      *  its status as seen by the controller, and would try to reconnect if needed.
      */
-    @SuppressWarnings({"lgtm[jenkins/csrf]", "lgtm[jenkins/no-permission-check]"})
+    @SuppressWarnings("lgtm[jenkins/csrf]")
     public void doCheckSlaveExists(StaplerRequest2 req, StaplerResponse2 rsp, @QueryParameter String name)
             throws IOException {
         Node node = getNodeByName(name, rsp);
@@ -93,6 +93,8 @@ public class PluginImpl extends Plugin {
             // getNodeByName() sets SC_NOT_FOUND and issues a message itself
             return;
         }
+
+        node.checkPermission(Computer.EXTENDED_READ);
 
         if (node.toComputer() == null) {
             // TOTHINK: Keep HTTP-404 here, or another status code to differentiate the two cases?
