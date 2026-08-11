@@ -24,7 +24,7 @@ import java.util.Properties;
 import java.util.Set;
 import jenkins.model.Jenkins;
 import jenkins.slaves.JnlpAgentReceiver;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
