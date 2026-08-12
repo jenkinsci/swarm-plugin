@@ -323,6 +323,11 @@ public class SwarmClient {
         return new Crumb(crumbResponse[0], crumbResponse[1]);
     }
 
+    /**
+     * Check if the node {@link #name} is known to the Jenkins
+     * server AND is linked to a {@code Computer} object.
+     * See also: {@code hudson.plugins.swarm.PluginImpl#doCheckSlaveExists()}
+     */
     public boolean isCheckSlaveExistsSupported(URL url) throws IOException, InterruptedException {
         HttpClient client = createHttpClient(options);
         URI uri = URI.create(url + "plugin/swarm/checkSlaveExists?name=" + name);
@@ -331,6 +336,16 @@ public class SwarmClient {
         HttpRequest request = builder.build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        // TOTHINK: Maybe the check should be inverted, e.g. better
+        //  verify success (HTTP-2xx), than one specific failure mode of
+        //  the many that are possible (like HTTP-5xx for proxy/Jenkins
+        //  server error generally, or HTTP-403 from permissions check)?
+        //  On another hand, here we want to know specifically whether
+        //  the server denies knowledge of that node name or does not
+        //  have a Computer attached to that node object, vs. other
+        //  possible persistent (perms) or transient (restart) issues...
+        // In any case, keep in sync with PluginImpl::doCheckSlaveExists()
+        // which sets the status code for this query.
         return response.statusCode() != HttpURLConnection.HTTP_NOT_FOUND;
     }
 
