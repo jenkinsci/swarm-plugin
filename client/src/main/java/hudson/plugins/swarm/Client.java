@@ -177,6 +177,7 @@ public class Client {
     static void run(SwarmClient swarmClient, Options options, String... args) throws InterruptedException {
         logger.info("Connecting to Jenkins controller");
         URL url = swarmClient.getUrl();
+        Thread keepAliveThread = null;
 
         // wait until we get the ACK back
         int retry = 0;
@@ -205,6 +206,35 @@ public class Client {
                     labelFileWatcherThread.start();
                 }
 
+                if (options.keepAliveInterval > 0 && keepAliveThread == null) {
+                    logger.info("Setting up KeepAliveThread for " + options.keepAliveInterval + " second probes");
+                    final Thread mainThread = Thread.currentThread();
+                    keepAliveThread = new Thread(
+                            () -> {
+                                while (!mainThread.isInterrupted()) {
+                                    try {
+                                        Thread.sleep(options.keepAliveInterval * 1000L);
+                                        logger.fine("Checking if agent is still registered on the controller");
+                                        if (!swarmClient.isCheckSlaveExistsSupported(url)) {
+                                            logger.warning("Agent is no longer registered on the controller. "
+                                                    + "Interrupting connection to trigger reconnection...");
+                                            mainThread.interrupt();
+                                            break;
+                                        }
+                                        logger.fine("OK: agent is still registered on the controller");
+                                    } catch (InterruptedException e) {
+                                        logger.fine("KeepAliveThread interrupted");
+                                        break;
+                                    } catch (Exception e) {
+                                        logger.log(Level.SEVERE, "An error occurred in the KeepAliveThread", e);
+                                    }
+                                }
+                            },
+                            "KeepAliveThread");
+                    keepAliveThread.setDaemon(true);
+                    keepAliveThread.start();
+                }
+
                 /*
                  * Prevent Remoting from killing the process on JNLP agent endpoint resolution
                  * exceptions.
@@ -224,6 +254,19 @@ public class Client {
                 }
             } catch (IOException | InterruptedException | RetryException e) {
                 logger.log(Level.SEVERE, "An error occurred", e);
+            } finally {
+                if (keepAliveThread != null) {
+                    logger.info("Stopping KeepAliveThread so it does not disrupt handling a known disconnection");
+                    keepAliveThread.interrupt();
+                    logger.fine("Waiting for KeepAliveThread to not be \"alive\"...");
+                    while (keepAliveThread.isAlive()) {
+                        Thread.sleep(100);
+                    }
+                    logger.info("Stopped KeepAliveThread");
+                    keepAliveThread = null;
+                } else {
+                    logger.fine("KeepAliveThread was already null, no need to stop it");
+                }
             }
 
             int waitTime =

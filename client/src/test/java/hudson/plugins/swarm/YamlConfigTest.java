@@ -31,6 +31,7 @@ public class YamlConfigTest {
                 + "keepDisconnectedClients: false\n"
                 + "labelsFile: ~/l.conf\n"
                 + "pidFile: ~/s.pid\n"
+                + "keepAliveInterval: 123\n"
                 + "prometheusPort: 112233\n";
 
         final Options options = loadYaml(yamlString);
@@ -45,6 +46,7 @@ public class YamlConfigTest {
         assertThat(options.keepDisconnectedClients, equalTo(false));
         assertThat(options.labelsFile, equalTo("~/l.conf"));
         assertThat(options.pidFile, equalTo("~/s.pid"));
+        assertThat(options.keepAliveInterval, equalTo(123));
         assertThat(options.prometheusPort, equalTo(112233));
     }
 
