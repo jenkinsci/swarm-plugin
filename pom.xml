@@ -41,6 +41,7 @@
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <gitHubRepo>jenkinsci/swarm-plugin</gitHubRepo>
     <spotless.check.skip>false</spotless.check.skip>
+    <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
   </properties>
 
   <repositories>
