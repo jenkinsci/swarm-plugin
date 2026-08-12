@@ -94,7 +94,12 @@ public class PluginImpl extends Plugin {
             return;
         }
 
-        node.checkPermission(Computer.EXTENDED_READ);
+        // TOTHINK: Consider Computer.EXTENDED_READ to limit access to
+        //  (swarm) build agent accounts, not just anyone who may read
+        //  anything on this Jenkins controller?
+        //  This may require changes in other places, see discussion at
+        //  https://github.com/jenkinsci/swarm-plugin/pull/749#discussion_r3764581413
+        node.checkPermission(Jenkins.READ);
 
         if (node.toComputer() == null) {
             // TOTHINK: Keep HTTP-404 here, or another status code to differentiate the two cases?
